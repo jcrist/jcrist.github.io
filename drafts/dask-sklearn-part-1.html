@@ -4,7 +4,6 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta id="viewport" name="viewport" content="width=500" />
     <!--RSS FEEDS-->
-        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="Marginally Stable Full Atom Feed"/>
 
     <title>Dask and Scikit-Learn -- Model Parallelism // Marginally Stable</title>
     <link rel="stylesheet" href="/theme/css/normalize.css" type="text/css" />
@@ -66,16 +65,17 @@ across different models), and dive into a daskified implementation of
 <p>Many machine learning algorithms have <em>hyperparameters</em> which can be tuned to
 improve the performance of the resulting estimator. A <a href="https://en.wikipedia.org/wiki/Hyperparameter_optimization#Grid_search">grid
 search</a>
-is one way of optimizing these parameters, and works by doing a parameter sweep
-across a cartesian product of a subset of these parameters (the "grid"), and
-then choosing the best resulting estimator. Since this is fitting many
+is one way of optimizing these parameters &mdash; it works by doing a parameter
+sweep across a cartesian product of a subset of these parameters (the "grid"),
+and then choosing the best resulting estimator. Since this is fitting many
 independent estimators across the same set of data, it can be fairly easily
 parallelized.</p>
 <h2>Grid search with scikit-learn</h2>
 <p>In scikit-learn, a grid search is performed using the <code>GridSearchCV</code> class, and
 can (optionally) be automatically parallelized using
 <a href="https://pythonhosted.org/joblib/index.html">joblib</a>.</p>
-<p>This is best illustrated with an example:</p>
+<p>This is best illustrated with an example. First we'll make an example dataset
+for doing classification against:</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">make_classification</span>
 
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
@@ -132,7 +132,7 @@ Wall time: 21.6 s
 <li>An estimator was created for each parameter combination and test-train set
 (scikit-learn's grid search also does cross validation across 3-folds by
 default).</li>
-<li>Each estimator was fit its corresponding set of training data</li>
+<li>Each estimator was fit on its corresponding set of training data</li>
 <li>Each estimator was then scored on its corresponding set of testing data</li>
 <li>The best set of parameters was chosen based on these scores</li>
 <li>A new estimator was then fit on <em>all</em> of the data, using the best parameters</li>
@@ -246,15 +246,14 @@ attributes on the object. Here we'll just show that they're equivalent:</p>
 </div>
 
 <h2>Why is the dask version faster?</h2>
-<p>If you look at the times above, you'll note that the dask version was <code>~3.8X</code>
+<p>If you look at the times above, you'll note that the dask version was <code>~4X</code>
 faster than the scikit-learn version. This is not because we have optimized any
 of the pieces of the <code>Pipeline</code>, or that there's a significant amount of
 overhead to <code>joblib</code> (on the contrary, joblib does some pretty amazing things,
 and I had to construct a contrived example to beat it this badly). The reason
 is simply that the dask version is doing less work.</p>
 <p>This maybe best explained in pseudocode. The scikit-learn version of the above
-(in serial) looks something like:</p>
-<p>In pseudocode this might look like:</p>
+(in serial) looks something like (pseudocode):</p>
 <div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="ow">in</span> <span class="n">cv</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;pca__n_components&#39;</span><span class="p">]:</span>
         <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;logistic__C&#39;</span><span class="p">]:</span>
@@ -315,11 +314,11 @@ Each rectangle represents data, and each circle represents a task. Each is
 categorized by color:</p>
 <ul>
 <li>
-<p>Red means actively taking up resources. These are tasks executing in a thread
+<p>Red means actively taking up resources. These are tasks executing in a thread,
   or intermediate results occupying memory</p>
 </li>
 <li>
-<p>Blue means finished or released. These are already finished tasks or data
+<p>Blue means finished or released. These are already finished tasks, or data
   that's been released from memory because it's no longer needed</p>
 </li>
 </ul>
@@ -348,6 +347,7 @@ just spun up two local workers to demonstrate, but this works equally well
 across multiple machines.</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">distributed</span> <span class="kn">import</span> <span class="n">Executor</span>
 
+<span class="c1"># Create an Executor, and set it as the default scheduler</span>
 <span class="n">exc</span> <span class="o">=</span> <span class="n">Executor</span><span class="p">(</span><span class="s1">&#39;10.0.0.3:8786&#39;</span><span class="p">,</span> <span class="n">set_as_default</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 <span class="n">exc</span>
 </pre></div>
@@ -400,8 +400,8 @@ Wall time: 7.66 s
 
 </div>
 
-<p>Note that this is slower than the threaded execution, so it doesn't make sense
-for this workload, but for others it might.</p>
+<p>Note that this is slightly slower than the threaded execution, so it doesn't
+make sense for this workload, but for others it might.</p>
 <h2>What worked well</h2>
 <ul>
 <li>
@@ -412,7 +412,7 @@ for this workload, but for others it might.</p>
   instead of working with graphs directly, which also makes it easy to read.</p>
 </li>
 <li>
-<p>Due to the internal hashing used in dask (which is extensible), duplicate
+<p>Due to the internal hashing used in dask (which is extensible!), duplicate
   computations are avoided.</p>
 </li>
 <li>
@@ -441,11 +441,12 @@ for this workload, but for others it might.</p>
   version of <code>GridSearchCV</code> could be a drop-in for the sckit-learn one.</p>
 </li>
 <li>
-<p>This approach is nice, but is really only beneficial when there's duplicate
-  work to be avoided, and that duplicate work is expensive. Repeating the above
-  with only a single estimator (instead of a pipeline) results in identical (or
-  slightly worse) performance than joblib. Similarly, if the repeated steps are
-  cheap the difference in performance is much smaller (try the above using
+<p>The approach presented here is nice, but is really <em>only beneficial when
+  there's duplicate work to be avoided, and that duplicate work is expensive</em>.
+  Repeating the above with only a single estimator (instead of a pipeline)
+  results in identical (or slightly worse) performance than joblib. Similarly,
+  if the repeated steps are cheap the difference in performance is much smaller
+  (try the above using
   <a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectKBest.html">SelectKBest</a>
   instead of <code>PCA</code>).</p>
 </li>
@@ -461,23 +462,10 @@ for this workload, but for others it might.</p>
 suggestions for improvements (or better yet PRs for improvements :))? Please
 feel free to reach out in the comments below, or <a href="https://github.com/jcrist/dask-learn">on
 github</a>.</p>
+<p><em>This work is supported by <a href="http://continuum.io/">Continuum Analytics</a> and the
+<a href="http://www.darpa.mil/program/XDATA">XDATA</a> program as part of the <a href="http://blaze.pydata.org/">Blaze
+Project</a>.</em></p>
 
-    <div class="comments">
-        <div id="disqus_thread"></div>
-        <script type="text/javascript">
-            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-            var disqus_shortname = "marginallystable"; // required: replace example with your forum shortname
-
-            /* * * DON'T EDIT BELOW THIS LINE * * */
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-    </div>
 
 <div class="container bottom">
     <hr>
@@ -491,16 +479,6 @@ github</a>.</p>
         href="https://speakerdeck.com/jcrist">Speaker Deck</a>, or shoot me an <a
     href="mailto:crist042@umn.edu">email</a>.
     </p>
-</div>    <script type="text/javascript">
-        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-        try {
-            var pageTracker = _gat._getTracker("UA-40063290-1");
-            pageTracker._trackPageview();
-            } catch(err) {}
-    </script>
-    </div>
+</div>    </div>
 </body>
 </html>

@@ -7,7 +7,7 @@ library has been built up from these experiments, and can be found
 &lt;p&gt;Before we start, I would like to make the following caveats:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;I am not a machine learning expert. Do not consider this a guide on how to do
-  machine learning, the usage of scikit-learng below is probably naive.&lt;/li&gt;
+  machine learning, the usage of scikit-learn below is probably naive.&lt;/li&gt;
 &lt;li&gt;All of the code discussed here is in flux, and shouldn't be considered stable
   or robust. That said, if you know something about machine learning and want
   to help out, I'd be more than happy to receive issues or pull requests :).&lt;/li&gt;
@@ -139,8 +139,9 @@ attributes on the resulting object:&lt;/p&gt;
 &lt;h2&gt;Grid search with dask-learn&lt;/h2&gt;
 &lt;p&gt;Here we'll repeat the same fit using dask-learn. I've tried to match the
 scikit-learn interface as much as possible, although not everything is
-implemented. Here the only thing that really changes is the
-&lt;code&gt;GridSearchCV&lt;/code&gt; import.&lt;/p&gt;
+implemented. Here the only thing that really changes is the &lt;code&gt;GridSearchCV&lt;/code&gt;
+import. We don't need the &lt;code&gt;n_jobs&lt;/code&gt; keyword, as this will be parallelized across
+all cores by default.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;dklearn.grid_search&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;GridSearchCV&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;DaskGridSearchCV&lt;/span&gt;
 
 &lt;span class="n"&gt;destimator&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;DaskGridSearchCV&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pipe&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;grid&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -264,10 +265,13 @@ look like:&lt;/p&gt;
 
 
 &lt;p&gt;This can still be parallelized, but in a less straightforward manner - the
-graph is a bit more complicated than just a simple map-reduce pattern. Below is
-a GIF showing how the dask scheduler executed the grid search performed above.
-Each rectangle represents data, and each circle represents a task. Each is
-categorized by color:&lt;/p&gt;
+graph is a bit more complicated than just a simple map-reduce pattern.
+Thankfully the &lt;a href="http://dask.pydata.org/en/latest/scheduler-overview.html"&gt;dask
+schedulers&lt;/a&gt; are well
+equipped to handle arbitrary graph topologies. Below is a GIF showing how the
+dask scheduler (the threaded scheduler specifically) executed the grid search
+performed above. Each rectangle represents data, and each circle represents a
+task. Each is categorized by color:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
 &lt;p&gt;Red means actively taking up resources. These are tasks executing in a thread,

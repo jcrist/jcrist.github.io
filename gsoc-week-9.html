@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=500" />
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="Marginally Stable Full Atom Feed"/>
+
+    <title>GSoC Week 9: Docs! // Marginally Stable</title>
+    <link rel="stylesheet" href="/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/code.css" type="text/css" />
+<link rel="stylesheet" href="/theme/css/article.css" type="text/css" />
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+            TeX: { equationNumbers: { autoNumber: "all" } }
+        });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <!--Top image-->
+    <div class="container">
+        <div class="topimage">
+            <img src="/theme/images/logo.png">
+        </div>
+    </div>
+
+    <!--Links and site title-->
+    <div class="topbar">
+        <span><a href="/">Marginally Stable</a></span>
+        <ul>
+                <li><a href="/blog.html">Blog</a></li>
+                <li><a href="/pages/about.html">About</a></li>
+                <li><a href="/pages/links.html">Links</a></li>
+                <li><a href="https://github.com/jcrist/AIOs">AIOS</a></li>
+        </ul>
+    </div>
+    <!--Content, footer, and scripts-->
+    <div class="container">
+    <div class="page-title">
+        <h1>GSoC Week 9: Docs!</h1>
+        <p>Fri 18 July 2014 &mdash; under
+            <a class="post-category" href="/tag/gsoc.html">GSoC</a>,
+            <a class="post-category" href="/tag/sympy.html">sympy</a>,
+            <a class="post-category" href="/tag/pydy.html">pydy</a>,
+            <a class="post-category" href="/tag/dynamics.html">dynamics</a>
+        </p>
+    </div>
+    <p>This week I spent time on all sorts of little things:</p>
+<ul>
+<li>Finished up the refactoring of <code>KanesMethod</code></li>
+<li>Little fixes to <a href="https://github.com/sympy/sympy/pull/7681">my current PR</a>. Just
+  waiting on my mentors to review this, I want to get it merged soon-ish.</li>
+<li>Documentation.</li>
+</ul>
+<p>Writing documentation is the worst<sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup>. After taking time to implement all sorts
+of new interesting things, the last thing I want to do is go back and write about
+them in detail. Which is why it's so important to do early on. <em>Good</em>
+documentation needs to accomplish three things:</p>
+<ol>
+<li>Provide motivation for <em>why</em> your software is necessary/better/useful.</li>
+<li>Describe the user interface, showing <em>how</em> to use each function or class.</li>
+<li>Provide real world <em>examples</em> showing how to tie everything together.</li>
+</ol>
+<p>Python's documentation is interesting in that there are varying ways to do it.
+Some of Sympy's documentation is just a nicely rendered form of the docstrings
+for all the methods. Other modules have a more prose-y explanation of their
+functionality. <code>mechanics</code> is one of those modules.</p>
+<p>In my opinion the prose documentation approach is the better way.
+Having good docstrings is important, but they aren't the end-all of
+documentation<sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup>. Of course, if I have a question the first thing I'm going to
+do is read the docstrings (IPython makes this trivially easy). Only if I still
+have questions afterwards will I turn to the online documentation. However, it'd
+be extremely off-putting if the online documentation was just the docstrings
+again.</p>
+<p>With the various changes I've made so far I needed to:</p>
+<ol>
+<li>Update the <code>LagrangesMethod</code> documentation to reflect the interface change.</li>
+<li>Create a documentation page all about the linearization methods.</li>
+<li>Update all the examples to reflect the new functionality.</li>
+</ol>
+<p>All of these are "done". I still need to go through and proofread, but overall
+I'd say that the current state of the documentation is acceptable. I would like
+to take some time to reorganize the layout of the whole <code>mechanics</code> documentation
+at some point. The current layout isn't the easiest to navigate for what you're
+looking for.</p>
+<p>With this out of the way, the linearization portion of my project is tentatively
+done. I say tentatively because I'm still waiting on my PRs to get merged, and 
+am also still playing around with solving <a href="http://jcrist.github.io/gsoc-week-8.html">the <code>nan</code> issue</a>
+that I've been writing about these last couple weeks.</p>
+<p>With that done, I hope to move on to code generation. I've read the current code
+generation code and documentation, as well as <a href="https://github.com/pydy/pydy/wiki/codegen-planning">this pydy wiki page</a>
+on Jason's ideas about code generation. I'm still a little iffy about the intention
+of this functionality, so I'm waiting until we can all meet to discuss what needs
+to be done. That was supposed to have happened this week, but fell through.
+Hopefully we can set some time aside next week, and I can finally get to work
+on it.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>Not actually the worst.&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p><a href="http://stevelosh.com/blog/2013/09/teach-dont-tell/">This article</a> by Steve
+  Losh is a really good read on this.&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+
+    <div class="comments">
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = "marginallystable"; // required: replace example with your forum shortname
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </div>
+
+<div class="container bottom">
+    <hr>
+    <p>
+        All content copyright 2014-2015 Jim Crist unless otherwise noted.
+        Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+    </p>
+    <p>
+    Find me on <a href="https://github.com/jcrist">GitHub</a>, <a
+        href="https://speakerdeck.com/jcrist">Speaker Deck</a>, or shoot me an <a
+    href="mailto:crist042@umn.edu">email</a>.
+    </p>
+</div>    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+            var pageTracker = _gat._getTracker("UA-40063290-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+    </script>
+    </div>
+</body>
+</html>

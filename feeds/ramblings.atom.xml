@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable</title><link href="/" rel="alternate"></link><link href="/feeds/ramblings.atom.xml" rel="self"></link><id>/</id><updated>2014-02-15T04:10:00-06:00</updated><entry><title>Do the Thing</title><link href="/do-the-thing.html" rel="alternate"></link><published>2014-02-15T04:10:00-06:00</published><author><name>Jim Crist</name></author><id>tag:,2014-02-15:do-the-thing.html</id><summary type="html">&lt;p&gt;This post serves as a resolution. Perhaps it is a new years resolution. "But it's halfway through February already" you might be saying. This is is true, which is why I'm writing this. The resolution is as follows:&lt;/p&gt;
+&lt;h2&gt;&lt;center&gt; "Do the thing" &lt;/center&gt;&lt;/h2&gt;
+&lt;p&gt;Short, simple, to the point. I need to do the thing. This blog was started in November of last year, and has yet to have a single post. I have 3 open source projects I'm in various stages of developement of, and yet can't seem to finish. I'm a student in grad school who desperately needs to finish his research. And yet I can't seem to find the time to accomplish any of this. Why? Because I'm failing to do the thing.&lt;/p&gt;
+&lt;p&gt;There are numerous &lt;a href="http://www.amazon.com/The-Top-Productivity-Books/lm/R2VY1USRYM17P9"&gt;books on the subject&lt;/a&gt;, but in the end it all comes down to doing the thing. Just do the thing. That's really all there is.&lt;/p&gt;
+&lt;p&gt;And so, to you the internet, I promise to do the thing. All the things. By putting this up here, I expect to be held accountable. Currently the list of things includes (in no particular order):&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href="https://github.com/jcrist/Control.jl"&gt;Control.jl&lt;/a&gt; &lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/jcrist/Slicot.jl"&gt;Slicot.jl&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;This blog (I really want to start writing)&lt;/li&gt;
+&lt;li&gt;School&lt;/li&gt;
+&lt;li&gt;Teaching&lt;/li&gt;
+&lt;li&gt;Research&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;That's only 6 things. 5 really, because Control.jl and Slicot.jl are very intertwined. I think I can do it. So here we go. I've blocked Reddit, canceled Netflix. It's time to dive in. Time to do the thing.&lt;/p&gt;
+&lt;hr /&gt;
+&lt;p&gt;P.S. I'm a big fan of Bre Pettis's &lt;a href="http://www.brepettis.com/blog/2009/3/3/the-cult-of-done-manifesto.html"&gt;"Cult of Done Manifesto"&lt;/a&gt;. It's definitely tongue in cheek, but some of the items are pretty good. Especially "Accept that everything is a draft. It helps to get it done".&lt;/p&gt;</summary><category term="ramblings"></category></entry></feed>

@@ -40,7 +40,7 @@
     <div class="container">
     <div class="page-title">
         <h1>Dask and Scikit-Learn -- Model Parallelism</h1>
-        <p>Wed 11 May 2016 &mdash; under
+        <p>Mon 11 July 2016 &mdash; under
             <a class="post-category" href="/tag/dask.html">dask</a>
         </p>
     </div>
@@ -48,7 +48,7 @@
 combining <a href="http://dask.pydata.org/en/latest/">dask</a> and
 <a href="http://scikit-learn.org/stable/">scikit-learn</a>. A small (and extremely alpha)
 library has been built up from these experiments, and can be found
-<a href="https://github.com/jcrist/dask-learn">here</a>.</p>
+<a href="https://github.com/dask/dask-learn">here</a>.</p>
 <p>Before we start, I would like to make the following caveats:</p>
 <ul>
 <li>I am not a machine learning expert. Do not consider this a guide on how to do
@@ -379,19 +379,6 @@ Wall time: 7.66 s
 
 </div>
 
-<div class="highlight"><pre><span></span><span class="o">%</span><span class="n">time</span> <span class="n">destimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-</pre></div>
-
-
-<div class=md_output>
-
-<div class="highlight"><pre><span></span>CPU times: user 1.69 s, sys: 433 ms, total: 2.12 s
-Wall time: 7.66 s
-</pre></div>
-
-
-</div>
-
 <div class="highlight"><pre><span></span><span class="p">(</span><span class="n">destimator</span><span class="o">.</span><span class="n">best_score_</span> <span class="o">==</span> <span class="n">estimator</span><span class="o">.</span><span class="n">best_score_</span> <span class="ow">and</span>
  <span class="n">destimator</span><span class="o">.</span><span class="n">best_params_</span> <span class="o">==</span> <span class="n">estimator</span><span class="o">.</span><span class="n">best_params_</span><span class="p">)</span>
 </pre></div>
@@ -410,7 +397,7 @@ make sense for this workload, but for others it might.</p>
 <h2>What worked well</h2>
 <ul>
 <li>
-<p>The <a href="https://github.com/jcrist/dask-learn/blob/master/dklearn/grid_search.py">code for doing
+<p>The <a href="https://github.com/dask/dask-learn/blob/master/dklearn/grid_search.py">code for doing
   this</a>
   is quite short.  There's also an implementation of
   <a href="http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.RandomizedSearchCV.html"><code>RandomizedSearchCV</code></a>,
@@ -468,7 +455,7 @@ make sense for this workload, but for others it might.</p>
 <h2>Help</h2>
 <p>I am not a machine learning expert. Is any of this useful? Do you have
 suggestions for improvements (or better yet PRs for improvements :))? Please
-feel free to reach out in the comments below, or <a href="https://github.com/jcrist/dask-learn">on
+feel free to reach out in the comments below, or <a href="https://github.com/dask/dask-learn">on
 github</a>.</p>
 <p><em>This work is supported by <a href="http://continuum.io/">Continuum Analytics</a> and the
 <a href="http://www.darpa.mil/program/XDATA">XDATA</a> program as part of the <a href="http://blaze.pydata.org/">Blaze

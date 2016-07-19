@@ -53,16 +53,39 @@ fitting a single model on larger datasets.</p>
 <p>Scikit-learn contains several tools for working with large datasets. The best
 way to learn about them is to check out the <a href="http://scikit-learn.org/stable/modules/scaling_strategies.html">excellent
 documentation</a>.
-In short, a successful approach needs three things:</p>
+In short, scikit-learn's approach needs three things:</p>
 <ol>
 <li>A way to incrementally load data</li>
 <li>A way to efficiently extract features (such as <code>HashingVectorizer</code> and <code>FeatureHasher</code>)</li>
 <li>An incremental learning algorithm (estimators that implement <code>partial_fit</code>)</li>
 </ol>
 <p>Applied together these allow scikit-learn to do out-of-core learning (working
-with data that doesn't fit in RAM).</p>
-<p>To demonstrate the use of these techniques, and how we augment them with dask,
-we'll reproduce <a href="http://scikit-learn.org/stable/auto_examples/applications/plot_out_of_core_classification.html">this text classification
+with data that doesn't fit in RAM). This works well in practice, but does
+present a few issues:</p>
+<ul>
+<li>
+<p>Incremental learning is an inherently serial operation &mdash; the samples are
+  streamed through the estimator updating the coefficients incrementally. Often
+  some of the preprocessing/feature-extraction steps can be parallelized,
+  something scikit-learn doesn't make easy to do.</p>
+</li>
+<li>
+<p>There's a disconnect between in memory estimators, which can be used with
+  <code>GridSearchCV</code>, and incrememental estimators which can't. If you want to
+  optimize hyperparameters when using <code>partial_fit</code> you currently have to
+  implement that part yourself.</p>
+</li>
+<li>
+<p>There are other methods of dealing with larger datasets. One common method is
+  model averaging, where the same model is fit on many partitions, and the
+  resulting coefficients are averaged together at the end. This is presented in
+  <a href="https://speakerdeck.com/ogrisel/scaling-machine-learning-in-python?slide=29">a few</a> <a href="https://github.com/ogrisel/parallel_ml_tutorial/blob/master/notebooks/08%20-%20Large%20Scale%20Text%20Classification%20for%20Sentiment%20Analysis.ipynb">scikit-learn
+  presentations</a>,
+  but not implemented in a builtin way anywhere (yet).</p>
+</li>
+</ul>
+<p>To demonstrate dask-learn's approach to solving these issues, we'll reproduce
+<a href="http://scikit-learn.org/stable/auto_examples/applications/plot_out_of_core_classification.html">this text classification
 example</a>
 from the scikit-learn docs.</p>
 <h2>Out-of-core classification of text documents using <code>dask-learn</code></h2>
@@ -74,7 +97,7 @@ describing its content (e.g. "acq").</p>
 <h3>Preprocessing</h3>
 <p>Following the scikit-learn example, we'll copy-paste in their subclass of
 <code>HTMLParser</code>. This is used for parsing the the <code>.sgm</code> files and yielding them
-one at a time (accomplishing step 1 from above).</p>
+one at a time.</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">sklearn.externals.six.moves</span> <span class="kn">import</span> <span class="n">html_parser</span>
@@ -353,7 +376,7 @@ efficient. The <code>Averaged</code> estimator doesn't have this restriction.</p
 to be shared. This entire graph contains:</p>
 <ul>
 <li>All preprocessing steps</li>
-<li>Train-test splitting </li>
+<li>Train-test splitting</li>
 <li>Both pipeline fits (<code>Averaged</code> and <code>Chained</code>)</li>
 <li>Estimator scoring</li>
 </ul>
@@ -477,7 +500,7 @@ margin: auto;
   efficient.</p>
 </li>
 <li>
-<p>Because the wrapper classes implement the common <code>fit</code>, <code>predict</code>, <code>score</code>
+<p>Since the wrapper classes implement the common <code>fit</code>, <code>predict</code>, <code>score</code>
   interface, they can be dropped into things like <code>GridSearchCV</code>, and
   everything should <em>just work</em>. This means we can do grid search and cross
   validation on out-of-core datasets (something we'll look at more in depth in

@@ -8,16 +8,39 @@ fitting a single model on larger datasets.&lt;/p&gt;
 &lt;p&gt;Scikit-learn contains several tools for working with large datasets. The best
 way to learn about them is to check out the &lt;a href="http://scikit-learn.org/stable/modules/scaling_strategies.html"&gt;excellent
 documentation&lt;/a&gt;.
-In short, a successful approach needs three things:&lt;/p&gt;
+In short, scikit-learn's approach needs three things:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;A way to incrementally load data&lt;/li&gt;
 &lt;li&gt;A way to efficiently extract features (such as &lt;code&gt;HashingVectorizer&lt;/code&gt; and &lt;code&gt;FeatureHasher&lt;/code&gt;)&lt;/li&gt;
 &lt;li&gt;An incremental learning algorithm (estimators that implement &lt;code&gt;partial_fit&lt;/code&gt;)&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Applied together these allow scikit-learn to do out-of-core learning (working
-with data that doesn't fit in RAM).&lt;/p&gt;
-&lt;p&gt;To demonstrate the use of these techniques, and how we augment them with dask,
-we'll reproduce &lt;a href="http://scikit-learn.org/stable/auto_examples/applications/plot_out_of_core_classification.html"&gt;this text classification
+with data that doesn't fit in RAM). This works well in practice, but does
+present a few issues:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Incremental learning is an inherently serial operation &amp;mdash; the samples are
+  streamed through the estimator updating the coefficients incrementally. Often
+  some of the preprocessing/feature-extraction steps can be parallelized,
+  something scikit-learn doesn't make easy to do.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;There's a disconnect between in memory estimators, which can be used with
+  &lt;code&gt;GridSearchCV&lt;/code&gt;, and incrememental estimators which can't. If you want to
+  optimize hyperparameters when using &lt;code&gt;partial_fit&lt;/code&gt; you currently have to
+  implement that part yourself.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;There are other methods of dealing with larger datasets. One common method is
+  model averaging, where the same model is fit on many partitions, and the
+  resulting coefficients are averaged together at the end. This is presented in
+  &lt;a href="https://speakerdeck.com/ogrisel/scaling-machine-learning-in-python?slide=29"&gt;a few&lt;/a&gt; &lt;a href="https://github.com/ogrisel/parallel_ml_tutorial/blob/master/notebooks/08%20-%20Large%20Scale%20Text%20Classification%20for%20Sentiment%20Analysis.ipynb"&gt;scikit-learn
+  presentations&lt;/a&gt;,
+  but not implemented in a builtin way anywhere (yet).&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;To demonstrate dask-learn's approach to solving these issues, we'll reproduce
+&lt;a href="http://scikit-learn.org/stable/auto_examples/applications/plot_out_of_core_classification.html"&gt;this text classification
 example&lt;/a&gt;
 from the scikit-learn docs.&lt;/p&gt;
 &lt;h2&gt;Out-of-core classification of text documents using &lt;code&gt;dask-learn&lt;/code&gt;&lt;/h2&gt;
@@ -29,7 +52,7 @@ describing its content (e.g. "acq").&lt;/p&gt;
 &lt;h3&gt;Preprocessing&lt;/h3&gt;
 &lt;p&gt;Following the scikit-learn example, we'll copy-paste in their subclass of
 &lt;code&gt;HTMLParser&lt;/code&gt;. This is used for parsing the the &lt;code&gt;.sgm&lt;/code&gt; files and yielding them
-one at a time (accomplishing step 1 from above).&lt;/p&gt;
+one at a time.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;re&lt;/span&gt;
 
 &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.externals.six.moves&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;html_parser&lt;/span&gt;
@@ -308,7 +331,7 @@ efficient. The &lt;code&gt;Averaged&lt;/code&gt; estimator doesn't have this res
 to be shared. This entire graph contains:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;All preprocessing steps&lt;/li&gt;
-&lt;li&gt;Train-test splitting &lt;/li&gt;
+&lt;li&gt;Train-test splitting&lt;/li&gt;
 &lt;li&gt;Both pipeline fits (&lt;code&gt;Averaged&lt;/code&gt; and &lt;code&gt;Chained&lt;/code&gt;)&lt;/li&gt;
 &lt;li&gt;Estimator scoring&lt;/li&gt;
 &lt;/ul&gt;
@@ -432,7 +455,7 @@ margin: auto;
   efficient.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;Because the wrapper classes implement the common &lt;code&gt;fit&lt;/code&gt;, &lt;code&gt;predict&lt;/code&gt;, &lt;code&gt;score&lt;/code&gt;
+&lt;p&gt;Since the wrapper classes implement the common &lt;code&gt;fit&lt;/code&gt;, &lt;code&gt;predict&lt;/code&gt;, &lt;code&gt;score&lt;/code&gt;
   interface, they can be dropped into things like &lt;code&gt;GridSearchCV&lt;/code&gt;, and
   everything should &lt;em&gt;just work&lt;/em&gt;. This means we can do grid search and cross
   validation on out-of-core datasets (something we'll look at more in depth in

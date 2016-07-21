@@ -220,7 +220,7 @@ dask-learn.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h3&gt;Parallization patterns&lt;/h3&gt;
+&lt;h3&gt;Parallelization patterns&lt;/h3&gt;
 &lt;p&gt;Dask-learn contains several parallelization patterns for wrapping scikit-learn
 estimators. Here we'll create a &lt;code&gt;Pipeline&lt;/code&gt; for each pattern, which we will
 later fit.&lt;/p&gt;

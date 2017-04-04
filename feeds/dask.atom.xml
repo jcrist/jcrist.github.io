@@ -1,5 +1,396 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable</title><link href="/" rel="alternate"></link><link href="/feeds/dask.atom.xml" rel="self"></link><id>/</id><updated>2016-07-26T16:30:00-05:00</updated><entry><title>Dask and Scikit-Learn -- Putting it all together</title><link href="/dask-sklearn-part-3.html" rel="alternate"></link><published>2016-07-26T16:30:00-05:00</published><author><name>Jim Crist</name></author><id>tag:,2016-07-26:dask-sklearn-part-3.html</id><summary type="html">&lt;p&gt;This is part 3 of a series of posts discussing &lt;a href="https://github.com/dask/dask-learn"&gt;recent
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable</title><link href="/" rel="alternate"></link><link href="/feeds/dask.atom.xml" rel="self"></link><id>/</id><updated>2017-04-04T15:00:00-05:00</updated><entry><title>Introducing Dask-SearchCV</title><link href="/introducing-dask-searchcv.html" rel="alternate"></link><published>2017-04-04T15:00:00-05:00</published><author><name>Jim Crist</name></author><id>tag:,2017-04-04:introducing-dask-searchcv.html</id><summary type="html">&lt;p&gt;Last summer I spent some time experimenting with combining
+&lt;a href="http://dask.pydata.org/en/latest/"&gt;dask&lt;/a&gt; and
+&lt;a href="http://scikit-learn.org/stable/"&gt;scikit-learn&lt;/a&gt; (chronicled in this
+&lt;a href="/dask-sklearn-part-1.html"&gt;series&lt;/a&gt; &lt;a href="/dask-sklearn-part-2.html"&gt;of
+blog&lt;/a&gt;
+&lt;a href="/dask-sklearn-part-3.html"&gt;posts&lt;/a&gt;). The library that work produced was
+extremely alpha, and nothing really came out of it. Recently I picked this work
+up again, and am happy to say that we now have something I can be happy with.
+This involved a few major changes:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;A sharp reduction in scope. The previous rendition tried to implement both
+  &lt;em&gt;model&lt;/em&gt; and &lt;em&gt;data&lt;/em&gt; parallelism. Not being a machine-learning expert, the data
+  parallelism was implemented in a less-than-rigorous manner. The scope is now
+  pared back to just implementing hyperparameter searches (model parallelism),
+  which is something we can do well.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Optimized graph building. Turns out when people are given the option to run
+  grid search across a cluster, they immediately want to scale up the grid
+  size. At the cost of more complicated code, we can handle extremely large
+  grids (e.g. 500,000 candidates now takes seconds for the graph to build, as
+  opposed to minutes before). &lt;em&gt;It should be noted that for grids this size, an
+  active search may perform significantly better&lt;/em&gt;. Relevant issue:
+  &lt;a href="https://github.com/dask/dask-searchcv/issues/29"&gt;#29&lt;/a&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Increased compatibility with Scikit-Learn. Now with only a few exceptions,
+  the implementations of &lt;code&gt;GridSearchCV&lt;/code&gt; and &lt;code&gt;RandomizedSearchCV&lt;/code&gt; should be
+  drop-ins for their scikit-learn counterparts.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;All these changes have led to a name change (previously was &lt;code&gt;dask-learn&lt;/code&gt;). The
+new library is &lt;a href="http://dask-searchcv.readthedocs.io"&gt;&lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;. It can
+be installed via conda or pip:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# conda
+$ conda install dask-searchcv -c conda-forge
+# pip
+$ pip install dask-searchcv
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In this post I'll give a brief overview of the library, and touch on when you
+might want to use it over other options.&lt;/p&gt;
+&lt;h2&gt;What's a grid search?&lt;/h2&gt;
+&lt;p&gt;Many machine learning algorithms have &lt;em&gt;hyperparameters&lt;/em&gt; which can be tuned to
+improve the performance of the resulting estimator. A &lt;a href="https://en.wikipedia.org/wiki/Hyperparameter_optimization#Grid_search"&gt;grid
+search&lt;/a&gt;
+is one way of optimizing these parameters &amp;mdash; it works by doing a parameter
+sweep across a cartesian product of a subset of these parameters (the "grid"),
+and then choosing the best resulting estimator. Since this is fitting many
+independent estimators across the same set of data, it can be fairly easily
+parallelized.&lt;/p&gt;
+&lt;h2&gt;Example using Text Classification&lt;/h2&gt;
+&lt;p&gt;We'll be reproducing &lt;a href="scikit-learn.org/stable/auto_examples/model_selection/grid_search_text_feature_extraction.html"&gt;this
+example&lt;/a&gt;.
+using the newsgroups dataset from the scikit-learn docs.&lt;/p&gt;
+&lt;h3&gt;Setup&lt;/h3&gt;
+&lt;p&gt;First we need to load the data:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.datasets&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;fetch_20newsgroups&lt;/span&gt;
+
+&lt;span class="n"&gt;categories&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;alt.atheism&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;talk.religion.misc&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="n"&gt;data&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;fetch_20newsgroups&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;subset&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;train&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;categories&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;categories&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Number of samples: &lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class=md_output&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Number of samples: 857
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;p&gt;Next, we'll build a pipeline to do the feature extraction and classification.
+This is composed of a
+&lt;a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html"&gt;CountVectorizer&lt;/a&gt;,
+a &lt;a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html"&gt;TfidfTransformer&lt;/a&gt;,
+and a &lt;a href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html"&gt;SGDClassifier&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.feature_extraction.text&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;CountVectorizer&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.feature_extraction.text&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;TfidfTransformer&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.linear_model&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;SGDClassifier&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.pipeline&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Pipeline&lt;/span&gt;
+
+&lt;span class="n"&gt;pipeline&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Pipeline&lt;/span&gt;&lt;span class="p"&gt;([(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;vect&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;CountVectorizer&lt;/span&gt;&lt;span class="p"&gt;()),&lt;/span&gt;
+                     &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;tfidf&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;TfidfTransformer&lt;/span&gt;&lt;span class="p"&gt;()),&lt;/span&gt;
+                     &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;clf&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;SGDClassifier&lt;/span&gt;&lt;span class="p"&gt;())])&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;All of these take several parameters, we'll only do a grid search across a few
+of them:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Parameters of steps are set using &amp;#39;__&amp;#39; separated parameter names:&lt;/span&gt;
+&lt;span class="n"&gt;parameters&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;vect__max_df&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;0.5&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mf"&gt;0.75&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mf"&gt;1.0&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+              &lt;span class="s1"&gt;&amp;#39;vect__ngram_range&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)),&lt;/span&gt;
+              &lt;span class="s1"&gt;&amp;#39;tfidf__use_idf&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+              &lt;span class="s1"&gt;&amp;#39;tfidf__norm&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;l1&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;l2&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+              &lt;span class="s1"&gt;&amp;#39;clf__alpha&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mf"&gt;1e-2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mf"&gt;1e-3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mf"&gt;1e-4&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mf"&gt;1e-5&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+              &lt;span class="s1"&gt;&amp;#39;clf__n_iter&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;50&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+              &lt;span class="s1"&gt;&amp;#39;clf__penalty&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;l2&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;elasticnet&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)}&lt;/span&gt;
+
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.model_selection&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;ParameterGrid&lt;/span&gt;
+&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Number of candidates: &lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ParameterGrid&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class=md_output&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Number of candidates: 576
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;h3&gt;Fitting with Scikit-Learn&lt;/h3&gt;
+&lt;p&gt;In Scikit-Learn, a grid search is performed using the &lt;code&gt;GridSearchCV&lt;/code&gt; class, and
+can (optionally) be automatically parallelized using
+&lt;a href="https://pythonhosted.org/joblib/index.html"&gt;joblib&lt;/a&gt;. Here we'll parallelize
+across 8 processes (the number of cores on my machine).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.model_selection&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;GridSearchCV&lt;/span&gt;
+
+&lt;span class="n"&gt;grid_search&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;GridSearchCV&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pipeline&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;n_jobs&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;%&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt; &lt;span class="n"&gt;grid_search&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class=md_output&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;CPU times: user 39.1 s, sys: 12.7 s, total: 51.8 s
+Wall time: 9min 12s
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;h3&gt;Fitting with Dask-SearchCV&lt;/h3&gt;
+&lt;p&gt;The implementation of &lt;code&gt;GridSearchCV&lt;/code&gt; in Dask-SearchCV is (almost) a drop-in
+replacement for the Scikit-Learn version. Two noticeable differences:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;The &lt;code&gt;n_jobs&lt;/code&gt; parameter is absent. In dask this is a property of the selected
+  scheduler, and doesn't make sense to provide as a parameter directly.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The class takes a &lt;code&gt;get&lt;/code&gt; parameter specifying the
+  &lt;a href="http://dask.pydata.org/en/latest/scheduler-choice.html#choosing-between-schedulers"&gt;scheduler&lt;/a&gt;
+  to use. By default, the global scheduler is used (if set), otherwise the
+  threaded scheduler is used.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In this case, we'll use the distributed scheduler setup locally with 8
+processes, each with a single thread. We choose this setup because:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;We're working with python strings instead of numpy arrays, which means that
+  the GIL is held for some of the tasks. This means we at least want to use a
+  couple processes to get true parallelism (which excludes the threaded
+  scheduler).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;For most graphs, the distributed scheduler will be more efficient than the
+  multiprocessing scheduler, as it can be smarter about moving data between
+  workers. Since a distributed scheduler is easy to setup locally (just create
+  a &lt;code&gt;dask.distributed.Client()&lt;/code&gt;) there's not really a downside to using it when
+  you want multiple processes.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Note the changes between using Scikit-Learn and Dask-SearchCV here are quite
+small:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;dask.distributed&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Client&lt;/span&gt;
+&lt;span class="c1"&gt;# Create a local cluster, and set as the default scheduler&lt;/span&gt;
+&lt;span class="n"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Client&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;client&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class=md_output&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;Client: scheduler=&amp;#39;tcp://127.0.0.1:64485&amp;#39; processes=8 cores=8&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;dask_searchcv&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;dcv&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Only difference here is absence of `n_jobs` parameter&lt;/span&gt;
+&lt;span class="n"&gt;dgrid_search&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;dcv&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;GridSearchCV&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;pipeline&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="o"&gt;%&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt; &lt;span class="n"&gt;dgrid_search&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class=md_output&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;CPU times: user 36.9 s, sys: 9.75 s, total: 46.7 s
+Wall time: 7min 16s
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;h2&gt;Why is the dask version faster?&lt;/h2&gt;
+&lt;p&gt;If you look at the times above, you'll note that the dask version was &lt;code&gt;~1.3X&lt;/code&gt;
+faster than the scikit-learn version. This is not because we have optimized any
+of the pieces of the &lt;code&gt;Pipeline&lt;/code&gt;, or that there's a significant amount of
+overhead to &lt;code&gt;joblib&lt;/code&gt;. The reason is simply that the dask version is doing less
+work.&lt;/p&gt;
+&lt;p&gt;Given a smaller grid&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;parameters&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;vect__ngram_range&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)],&lt;/span&gt;
+              &lt;span class="s1"&gt;&amp;#39;tfidf__norm&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;l1&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;l2&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+              &lt;span class="s1"&gt;&amp;#39;clf__alpha&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mf"&gt;1e-3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mf"&gt;1e-4&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mf"&gt;1e-5&lt;/span&gt;&lt;span class="p"&gt;]}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;and the same pipeline as above, the Scikit-Learn version looks something like
+(simplified):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;scores&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;ngram_range&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;vect__ngram_range&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;norm&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;tfidf__norm&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;alpha&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;clf__alpha&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+            &lt;span class="n"&gt;vect&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;CountVectorizer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ngram_range&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;ngram_range&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;X2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;vect&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit_transform&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;tfidf&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;TfidfTransformer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;norm&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;norm&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;X3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tfidf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit_transform&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;clf&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;SGDClassifier&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;alpha&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;alpha&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;clf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;scores&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;clf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;score&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="n"&gt;best&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;choose_best_parameters&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;scores&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;As a directed acyclic graph, this might look like:&lt;/p&gt;
+&lt;p&gt;&lt;img src="images/unmerged_grid_search_graph.png" alt="Scikit-Learn Grid Search Graph" style="width:100%"&gt;&lt;/p&gt;
+&lt;p&gt;In contrast, the dask version looks more like:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;scores&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[]&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;ngram_range&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;vect__ngram_range&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+    &lt;span class="n"&gt;vect&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;CountVectorizer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ngram_range&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;ngram_range&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;X2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;vect&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit_transform&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;norm&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;tfidf__norm&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+        &lt;span class="n"&gt;tfidf&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;TfidfTransformer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;norm&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;norm&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;X3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tfidf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit_transform&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;alpha&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;clf__alpha&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+            &lt;span class="n"&gt;clf&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;SGDClassifier&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;alpha&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;alpha&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;clf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+            &lt;span class="n"&gt;scores&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;append&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;clf&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;score&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="n"&gt;best&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;choose_best_parameters&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;scores&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;parameters&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;As a directed acyclic graph, this might look like:&lt;/p&gt;
+&lt;p&gt;&lt;img src="images/merged_grid_search_graph.png" alt="Dask-SearchCV Grid Search Graph" style="width:100%"&gt;&lt;/p&gt;
+&lt;p&gt;Looking closely, you can see that the Scikit-Learn version ends up fitting
+earlier steps in the pipeline multiple times with the same parameters and data.
+Due to the increased flexibility of Dask over Joblib, we're able to merge these
+tasks in the graph and only perform the fit step once for any
+parameter/data/estimator combination. For pipelines that have relatively
+expensive early steps, this can be a big win when performing a grid search.&lt;/p&gt;
+&lt;h2&gt;Distributed Grid Search&lt;/h2&gt;
+&lt;p&gt;Since Dask decouples the scheduler from the graph specification, we can easily
+switch from running on a single machine to running distributed with a quick
+change in scheduler. Here I've setup a cluster of 3
+&lt;a href="https://aws.amazon.com/ec2/pricing/on-demand/"&gt;m4.2xlarge&lt;/a&gt; instances for the
+workers (each with 8 single-threaded processes), and another instance for the
+scheduler. This was easy to do with a single command using the
+&lt;a href="https://github.com/dask/dask-ec2"&gt;&lt;code&gt;dask-ec2&lt;/code&gt;&lt;/a&gt; utility:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ dask-ec2 up --keyname mykey --keypair ~/.ssh/mykey.pem --nprocs &lt;span class="m"&gt;8&lt;/span&gt; --type m4.2xlarge
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To switch to using the cluster instead of running locally, we just instantiate
+a new client, and then rerun:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;client&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Client&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;54.146.59.240:8786&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;client&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class=md_output&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&amp;lt;Client: scheduler=&amp;#39;tcp://54.146.59.240:8786&amp;#39; processes=24 cores=24&amp;gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;%&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt; &lt;span class="n"&gt;dgrid_search&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class=md_output&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;CPU times: user 871 ms, sys: 23.3 ms, total: 894 ms
+Wall time: 2min 43s
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;p&gt;Roughly a 3x speedup, which is what we'd expect given 3x more workers. By just
+switching out schedulers we were able to scale our grid search out across
+multiple workers for increased performance.&lt;/p&gt;
+&lt;p&gt;Below you can see the &lt;a href="http://distributed.readthedocs.io/en/latest/web.html"&gt;diagnostic
+plot&lt;/a&gt; for this run. These
+show the operations that each of 24 workers were doing over time. We can see
+that we're keeping the cluster fairly well saturated. There's a fair bit of
+serialization (red), but the values being serialized are small, so this is
+relatively cheap to do. Note that this plot is also a bit misleading, as the
+red boxes are drawn on top of the running tasks, making it look worse than it
+really is.&lt;/p&gt;
+&lt;p&gt;&lt;img src="images/grid_search_task_plot.png" alt="Distributed grid search task plot" style="width:100%"&gt;&lt;/p&gt;
+&lt;h2&gt;Distributed Grid Search with Joblib&lt;/h2&gt;
+&lt;p&gt;For comparison, we'll also run the Scikit-Learn grid search using joblib with
+the &lt;a href="http://distributed.readthedocs.io/en/latest/joblib.html"&gt;distributed&lt;/a&gt;
+backend (which uses dask's distributed scheduler). This is also only a few
+lines changed:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Need to import the backend to register it&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;distributed.joblib&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.externals.joblib&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;parallel_backend&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Use the distributed backend with our current cluster&lt;/span&gt;
+&lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;parallel_backend&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dask.distributed&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;54.146.59.240:8786&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;%&lt;/span&gt;&lt;span class="n"&gt;time&lt;/span&gt; &lt;span class="n"&gt;grid_search&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;target&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class=md_output&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;CPU times: user 12.1 s, sys: 3.26 s, total: 15.3 s
+Wall time: 3min 32s
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;/div&gt;
+
+&lt;h2&gt;Analysis&lt;/h2&gt;
+&lt;p&gt;In this post we performed 4 different grid searches over a pipeline:&lt;/p&gt;
+&lt;pre&gt;
+|    Library     |   Backend    | Cores |   Time   |
++----------------+--------------+-------+----------+
+| Scikit-Learn   |  local       |  8    | 9min 12s |
+| Dask-SearchCV  |  local       |  8    | 7min 16s |
+| Scikit-Learn   |  distributed |  24   | 3min 32s |
+| Dask-SearchCV  |  distributed |  24   | 2min 43s |
+&lt;/pre&gt;
+
+&lt;p&gt;Looking at these numbers we can see that both the Scikit-Learn and
+Dask-SearchCV implementations scale as more cores are added. However, the
+Dask-SearchCV implementation is faster in both cases because it's able to merge
+redundant calls to &lt;code&gt;fit&lt;/code&gt; and can avoid unnecessary work. For this simple
+pipeline this saves only a minute or two, but for more expensive
+transformations or larger grids the savings may be substantial.&lt;/p&gt;
+&lt;h2&gt;When would you use this?&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;For single estimators (no &lt;code&gt;Pipeline&lt;/code&gt; or &lt;code&gt;FeatureUnion&lt;/code&gt;) Dask-SearchCV
+  performs only a small constant factor faster off of using Scikit-Learn with
+  the distributed backend. The benefits of using Dask-SearchCV in these cases
+  will be minimal.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;If the model contains meta estimators (&lt;code&gt;Pipeline&lt;/code&gt; or &lt;code&gt;FeatureUnion&lt;/code&gt;) then you
+  may start seeing performance benefits, especially if early steps in the
+  pipeline are relatively expensive.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;If the data your're fitting on is already on a cluster, then Dask-SearchCV
+  will (currently) be more efficient, as it works nicely with remote data. You
+  can pass dask arrays, dataframes or delayed objects to &lt;code&gt;fit&lt;/code&gt;, and everything
+  will work fine without having to bring the data back locally.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;If your data is too large for Scikit-Learn to work nicely, then this library
+  won't help you. This is just for scheduling Scikit-Learn fits in an
+  intelligent way on small-medium data, it doesn't reimplement any of the
+  algorithms found in Scikit-Learn.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Future work&lt;/h2&gt;
+&lt;p&gt;Currently we just mirror the Scikit-Learn classes &lt;code&gt;GridSearchCV&lt;/code&gt; and
+&lt;code&gt;RandomizedSearchCV&lt;/code&gt; for doing passive searches through a parameter space.
+While we &lt;a href="https://github.com/dask/dask-searchcv/issues/29"&gt;can handle very large
+grids&lt;/a&gt; at some point switching
+to an active search method might be best. Something like this could be built up
+using the asynchronous methods in distributed, and I think would be fun to work
+on. If you have knowledge in this domain, please weigh in on the &lt;a href="https://github.com/dask/dask-searchcv/issues/32"&gt;related
+issue&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;Acknowledgements&lt;/h2&gt;
+&lt;p&gt;This work is supported by &lt;a href="http://continuum.io/"&gt;Continuum Analytics&lt;/a&gt;, &lt;a href="http://www.darpa.mil/program/XDATA"&gt;the
+XDATA program&lt;/a&gt;, and the Data Driven
+Discovery Initiative from the &lt;a href="https://www.moore.org/"&gt;Moore Foundation&lt;/a&gt;.&lt;/p&gt;</summary><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Putting it all together</title><link href="/dask-sklearn-part-3.html" rel="alternate"></link><published>2016-07-26T16:30:00-05:00</published><author><name>Jim Crist</name></author><id>tag:,2016-07-26:dask-sklearn-part-3.html</id><summary type="html">&lt;p&gt;This is part 3 of a series of posts discussing &lt;a href="https://github.com/dask/dask-learn"&gt;recent
 work&lt;/a&gt; with dask and scikit-learn.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;

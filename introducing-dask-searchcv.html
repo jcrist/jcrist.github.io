@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=500" />
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="Marginally Stable Full Atom Feed"/>
+
+    <title>Introducing Dask-SearchCV // Marginally Stable</title>
+    <link rel="stylesheet" href="/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/code.css" type="text/css" />
+<link rel="stylesheet" href="/theme/css/article.css" type="text/css" />
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+            TeX: { equationNumbers: { autoNumber: "all" } }
+        });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <!--Top image-->
+    <div class="container">
+        <div class="topimage">
+            <img src="/theme/images/logo.png">
+        </div>
+    </div>
+
+    <!--Links and site title-->
+    <div class="topbar">
+        <span><a href="/">Marginally Stable</a></span>
+        <ul>
+                <li><a href="/blog.html">Blog</a></li>
+                <li><a href="/pages/about.html">About</a></li>
+                <li><a href="https://github.com/jcrist/AIOs">AIOS</a></li>
+        </ul>
+    </div>
+    <!--Content, footer, and scripts-->
+    <div class="container">
+    <div class="page-title">
+        <h1>Introducing Dask-SearchCV</h1>
+        <p>Tue 04 April 2017 &mdash; under
+            <a class="post-category" href="/tag/dask.html">dask</a>
+        </p>
+    </div>
+    <p>Last summer I spent some time experimenting with combining
+<a href="http://dask.pydata.org/en/latest/">dask</a> and
+<a href="http://scikit-learn.org/stable/">scikit-learn</a> (chronicled in this
+<a href="/dask-sklearn-part-1.html">series</a> <a href="/dask-sklearn-part-2.html">of
+blog</a>
+<a href="/dask-sklearn-part-3.html">posts</a>). The library that work produced was
+extremely alpha, and nothing really came out of it. Recently I picked this work
+up again, and am happy to say that we now have something I can be happy with.
+This involved a few major changes:</p>
+<ul>
+<li>
+<p>A sharp reduction in scope. The previous rendition tried to implement both
+  <em>model</em> and <em>data</em> parallelism. Not being a machine-learning expert, the data
+  parallelism was implemented in a less-than-rigorous manner. The scope is now
+  pared back to just implementing hyperparameter searches (model parallelism),
+  which is something we can do well.</p>
+</li>
+<li>
+<p>Optimized graph building. Turns out when people are given the option to run
+  grid search across a cluster, they immediately want to scale up the grid
+  size. At the cost of more complicated code, we can handle extremely large
+  grids (e.g. 500,000 candidates now takes seconds for the graph to build, as
+  opposed to minutes before). <em>It should be noted that for grids this size, an
+  active search may perform significantly better</em>. Relevant issue:
+  <a href="https://github.com/dask/dask-searchcv/issues/29">#29</a>.</p>
+</li>
+<li>
+<p>Increased compatibility with Scikit-Learn. Now with only a few exceptions,
+  the implementations of <code>GridSearchCV</code> and <code>RandomizedSearchCV</code> should be
+  drop-ins for their scikit-learn counterparts.</p>
+</li>
+</ul>
+<p>All these changes have led to a name change (previously was <code>dask-learn</code>). The
+new library is <a href="http://dask-searchcv.readthedocs.io"><code>dask-searchcv</code></a>. It can
+be installed via conda or pip:</p>
+<div class="highlight"><pre><span></span># conda
+$ conda install dask-searchcv -c conda-forge
+# pip
+$ pip install dask-searchcv
+</pre></div>
+
+
+<p>In this post I'll give a brief overview of the library, and touch on when you
+might want to use it over other options.</p>
+<h2>What's a grid search?</h2>
+<p>Many machine learning algorithms have <em>hyperparameters</em> which can be tuned to
+improve the performance of the resulting estimator. A <a href="https://en.wikipedia.org/wiki/Hyperparameter_optimization#Grid_search">grid
+search</a>
+is one way of optimizing these parameters &mdash; it works by doing a parameter
+sweep across a cartesian product of a subset of these parameters (the "grid"),
+and then choosing the best resulting estimator. Since this is fitting many
+independent estimators across the same set of data, it can be fairly easily
+parallelized.</p>
+<h2>Example using Text Classification</h2>
+<p>We'll be reproducing <a href="scikit-learn.org/stable/auto_examples/model_selection/grid_search_text_feature_extraction.html">this
+example</a>.
+using the newsgroups dataset from the scikit-learn docs.</p>
+<h3>Setup</h3>
+<p>First we need to load the data:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">fetch_20newsgroups</span>
+
+<span class="n">categories</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;alt.atheism&#39;</span><span class="p">,</span> <span class="s1">&#39;talk.religion.misc&#39;</span><span class="p">]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">fetch_20newsgroups</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="n">categories</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of samples: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+</pre></div>
+
+
+<div class=md_output>
+
+<div class="highlight"><pre><span></span>Number of samples: 857
+</pre></div>
+
+
+</div>
+
+<p>Next, we'll build a pipeline to do the feature extraction and classification.
+This is composed of a
+<a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html">CountVectorizer</a>,
+a <a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html">TfidfTransformer</a>,
+and a <a href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html">SGDClassifier</a>.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">CountVectorizer</span>
+<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">TfidfTransformer</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">SGDClassifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
+
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([(</span><span class="s1">&#39;vect&#39;</span><span class="p">,</span> <span class="n">CountVectorizer</span><span class="p">()),</span>
+                     <span class="p">(</span><span class="s1">&#39;tfidf&#39;</span><span class="p">,</span> <span class="n">TfidfTransformer</span><span class="p">()),</span>
+                     <span class="p">(</span><span class="s1">&#39;clf&#39;</span><span class="p">,</span> <span class="n">SGDClassifier</span><span class="p">())])</span>
+</pre></div>
+
+
+<p>All of these take several parameters, we'll only do a grid search across a few
+of them:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Parameters of steps are set using &#39;__&#39; separated parameter names:</span>
+<span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;vect__max_df&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+              <span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+              <span class="s1">&#39;tfidf__use_idf&#39;</span><span class="p">:</span> <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">),</span>
+              <span class="s1">&#39;tfidf__norm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;l1&#39;</span><span class="p">,</span> <span class="s1">&#39;l2&#39;</span><span class="p">),</span>
+              <span class="s1">&#39;clf__alpha&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1e-2</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">),</span>
+              <span class="s1">&#39;clf__n_iter&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span>
+              <span class="s1">&#39;clf__penalty&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="s1">&#39;elasticnet&#39;</span><span class="p">)}</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">ParameterGrid</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of candidates: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">ParameterGrid</span><span class="p">(</span><span class="n">parameters</span><span class="p">)))</span>
+</pre></div>
+
+
+<div class=md_output>
+
+<div class="highlight"><pre><span></span>Number of candidates: 576
+</pre></div>
+
+
+</div>
+
+<h3>Fitting with Scikit-Learn</h3>
+<p>In Scikit-Learn, a grid search is performed using the <code>GridSearchCV</code> class, and
+can (optionally) be automatically parallelized using
+<a href="https://pythonhosted.org/joblib/index.html">joblib</a>. Here we'll parallelize
+across 8 processes (the number of cores on my machine).</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
+
+<span class="n">grid_search</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+
+<span class="o">%</span><span class="n">time</span> <span class="n">grid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+</pre></div>
+
+
+<div class=md_output>
+
+<div class="highlight"><pre><span></span>CPU times: user 39.1 s, sys: 12.7 s, total: 51.8 s
+Wall time: 9min 12s
+</pre></div>
+
+
+</div>
+
+<h3>Fitting with Dask-SearchCV</h3>
+<p>The implementation of <code>GridSearchCV</code> in Dask-SearchCV is (almost) a drop-in
+replacement for the Scikit-Learn version. Two noticeable differences:</p>
+<ul>
+<li>
+<p>The <code>n_jobs</code> parameter is absent. In dask this is a property of the selected
+  scheduler, and doesn't make sense to provide as a parameter directly.</p>
+</li>
+<li>
+<p>The class takes a <code>get</code> parameter specifying the
+  <a href="http://dask.pydata.org/en/latest/scheduler-choice.html#choosing-between-schedulers">scheduler</a>
+  to use. By default, the global scheduler is used (if set), otherwise the
+  threaded scheduler is used.</p>
+</li>
+</ul>
+<p>In this case, we'll use the distributed scheduler setup locally with 8
+processes, each with a single thread. We choose this setup because:</p>
+<ul>
+<li>
+<p>We're working with python strings instead of numpy arrays, which means that
+  the GIL is held for some of the tasks. This means we at least want to use a
+  couple processes to get true parallelism (which excludes the threaded
+  scheduler).</p>
+</li>
+<li>
+<p>For most graphs, the distributed scheduler will be more efficient than the
+  multiprocessing scheduler, as it can be smarter about moving data between
+  workers. Since a distributed scheduler is easy to setup locally (just create
+  a <code>dask.distributed.Client()</code>) there's not really a downside to using it when
+  you want multiple processes.</p>
+</li>
+</ul>
+<p>Note the changes between using Scikit-Learn and Dask-SearchCV here are quite
+small:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask.distributed</span> <span class="kn">import</span> <span class="n">Client</span>
+<span class="c1"># Create a local cluster, and set as the default scheduler</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+<span class="n">client</span>
+</pre></div>
+
+
+<div class=md_output>
+
+<div class="highlight"><pre><span></span>&lt;Client: scheduler=&#39;tcp://127.0.0.1:64485&#39; processes=8 cores=8&gt;
+</pre></div>
+
+
+</div>
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dask_searchcv</span> <span class="kn">as</span> <span class="nn">dcv</span>
+
+<span class="c1"># Only difference here is absence of `n_jobs` parameter</span>
+<span class="n">dgrid_search</span> <span class="o">=</span> <span class="n">dcv</span><span class="o">.</span><span class="n">GridSearchCV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+
+<span class="o">%</span><span class="n">time</span> <span class="n">dgrid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+</pre></div>
+
+
+<div class=md_output>
+
+<div class="highlight"><pre><span></span>CPU times: user 36.9 s, sys: 9.75 s, total: 46.7 s
+Wall time: 7min 16s
+</pre></div>
+
+
+</div>
+
+<h2>Why is the dask version faster?</h2>
+<p>If you look at the times above, you'll note that the dask version was <code>~1.3X</code>
+faster than the scikit-learn version. This is not because we have optimized any
+of the pieces of the <code>Pipeline</code>, or that there's a significant amount of
+overhead to <code>joblib</code>. The reason is simply that the dask version is doing less
+work.</p>
+<p>Given a smaller grid</p>
+<div class="highlight"><pre><span></span><span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
+              <span class="s1">&#39;tfidf__norm&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;l1&#39;</span><span class="p">,</span> <span class="s1">&#39;l2&#39;</span><span class="p">],</span>
+              <span class="s1">&#39;clf__alpha&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">]}</span>
+</pre></div>
+
+
+<p>and the same pipeline as above, the Scikit-Learn version looks something like
+(simplified):</p>
+<div class="highlight"><pre><span></span><span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">ngram_range</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">norm</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;tfidf__norm&#39;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;clf__alpha&#39;</span><span class="p">]:</span>
+            <span class="n">vect</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">ngram_range</span><span class="o">=</span><span class="n">ngram_range</span><span class="p">)</span>
+            <span class="n">X2</span> <span class="o">=</span> <span class="n">vect</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">tfidf</span> <span class="o">=</span> <span class="n">TfidfTransformer</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+            <span class="n">X3</span> <span class="o">=</span> <span class="n">tfidf</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X2</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">clf</span> <span class="o">=</span> <span class="n">SGDClassifier</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+            <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X3</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clf</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X3</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+<span class="n">best</span> <span class="o">=</span> <span class="n">choose_best_parameters</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+</pre></div>
+
+
+<p>As a directed acyclic graph, this might look like:</p>
+<p><img src="images/unmerged_grid_search_graph.png" alt="Scikit-Learn Grid Search Graph" style="width:100%"></p>
+<p>In contrast, the dask version looks more like:</p>
+<div class="highlight"><pre><span></span><span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">ngram_range</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">]:</span>
+    <span class="n">vect</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">ngram_range</span><span class="o">=</span><span class="n">ngram_range</span><span class="p">)</span>
+    <span class="n">X2</span> <span class="o">=</span> <span class="n">vect</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">norm</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;tfidf__norm&#39;</span><span class="p">]:</span>
+        <span class="n">tfidf</span> <span class="o">=</span> <span class="n">TfidfTransformer</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">)</span>
+        <span class="n">X3</span> <span class="o">=</span> <span class="n">tfidf</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X2</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;clf__alpha&#39;</span><span class="p">]:</span>
+            <span class="n">clf</span> <span class="o">=</span> <span class="n">SGDClassifier</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">)</span>
+            <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X3</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clf</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X3</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+<span class="n">best</span> <span class="o">=</span> <span class="n">choose_best_parameters</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
+</pre></div>
+
+
+<p>As a directed acyclic graph, this might look like:</p>
+<p><img src="images/merged_grid_search_graph.png" alt="Dask-SearchCV Grid Search Graph" style="width:100%"></p>
+<p>Looking closely, you can see that the Scikit-Learn version ends up fitting
+earlier steps in the pipeline multiple times with the same parameters and data.
+Due to the increased flexibility of Dask over Joblib, we're able to merge these
+tasks in the graph and only perform the fit step once for any
+parameter/data/estimator combination. For pipelines that have relatively
+expensive early steps, this can be a big win when performing a grid search.</p>
+<h2>Distributed Grid Search</h2>
+<p>Since Dask decouples the scheduler from the graph specification, we can easily
+switch from running on a single machine to running distributed with a quick
+change in scheduler. Here I've setup a cluster of 3
+<a href="https://aws.amazon.com/ec2/pricing/on-demand/">m4.2xlarge</a> instances for the
+workers (each with 8 single-threaded processes), and another instance for the
+scheduler. This was easy to do with a single command using the
+<a href="https://github.com/dask/dask-ec2"><code>dask-ec2</code></a> utility:</p>
+<div class="highlight"><pre><span></span>$ dask-ec2 up --keyname mykey --keypair ~/.ssh/mykey.pem --nprocs <span class="m">8</span> --type m4.2xlarge
+</pre></div>
+
+
+<p>To switch to using the cluster instead of running locally, we just instantiate
+a new client, and then rerun:</p>
+<div class="highlight"><pre><span></span><span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s1">&#39;54.146.59.240:8786&#39;</span><span class="p">)</span>
+<span class="n">client</span>
+</pre></div>
+
+
+<div class=md_output>
+
+<div class="highlight"><pre><span></span>&lt;Client: scheduler=&#39;tcp://54.146.59.240:8786&#39; processes=24 cores=24&gt;
+</pre></div>
+
+
+</div>
+
+<div class="highlight"><pre><span></span><span class="o">%</span><span class="n">time</span> <span class="n">dgrid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+</pre></div>
+
+
+<div class=md_output>
+
+<div class="highlight"><pre><span></span>CPU times: user 871 ms, sys: 23.3 ms, total: 894 ms
+Wall time: 2min 43s
+</pre></div>
+
+
+</div>
+
+<p>Roughly a 3x speedup, which is what we'd expect given 3x more workers. By just
+switching out schedulers we were able to scale our grid search out across
+multiple workers for increased performance.</p>
+<p>Below you can see the <a href="http://distributed.readthedocs.io/en/latest/web.html">diagnostic
+plot</a> for this run. These
+show the operations that each of 24 workers were doing over time. We can see
+that we're keeping the cluster fairly well saturated. There's a fair bit of
+serialization (red), but the values being serialized are small, so this is
+relatively cheap to do. Note that this plot is also a bit misleading, as the
+red boxes are drawn on top of the running tasks, making it look worse than it
+really is.</p>
+<p><img src="images/grid_search_task_plot.png" alt="Distributed grid search task plot" style="width:100%"></p>
+<h2>Distributed Grid Search with Joblib</h2>
+<p>For comparison, we'll also run the Scikit-Learn grid search using joblib with
+the <a href="http://distributed.readthedocs.io/en/latest/joblib.html">distributed</a>
+backend (which uses dask's distributed scheduler). This is also only a few
+lines changed:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Need to import the backend to register it</span>
+<span class="kn">import</span> <span class="nn">distributed.joblib</span>
+<span class="kn">from</span> <span class="nn">sklearn.externals.joblib</span> <span class="kn">import</span> <span class="n">parallel_backend</span>
+
+<span class="c1"># Use the distributed backend with our current cluster</span>
+<span class="k">with</span> <span class="n">parallel_backend</span><span class="p">(</span><span class="s1">&#39;dask.distributed&#39;</span><span class="p">,</span> <span class="s1">&#39;54.146.59.240:8786&#39;</span><span class="p">):</span>
+    <span class="o">%</span><span class="n">time</span> <span class="n">grid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+</pre></div>
+
+
+<div class=md_output>
+
+<div class="highlight"><pre><span></span>CPU times: user 12.1 s, sys: 3.26 s, total: 15.3 s
+Wall time: 3min 32s
+</pre></div>
+
+
+</div>
+
+<h2>Analysis</h2>
+<p>In this post we performed 4 different grid searches over a pipeline:</p>
+<pre>
+|    Library     |   Backend    | Cores |   Time   |
++----------------+--------------+-------+----------+
+| Scikit-Learn   |  local       |  8    | 9min 12s |
+| Dask-SearchCV  |  local       |  8    | 7min 16s |
+| Scikit-Learn   |  distributed |  24   | 3min 32s |
+| Dask-SearchCV  |  distributed |  24   | 2min 43s |
+</pre>
+
+<p>Looking at these numbers we can see that both the Scikit-Learn and
+Dask-SearchCV implementations scale as more cores are added. However, the
+Dask-SearchCV implementation is faster in both cases because it's able to merge
+redundant calls to <code>fit</code> and can avoid unnecessary work. For this simple
+pipeline this saves only a minute or two, but for more expensive
+transformations or larger grids the savings may be substantial.</p>
+<h2>When would you use this?</h2>
+<ul>
+<li>
+<p>For single estimators (no <code>Pipeline</code> or <code>FeatureUnion</code>) Dask-SearchCV
+  performs only a small constant factor faster off of using Scikit-Learn with
+  the distributed backend. The benefits of using Dask-SearchCV in these cases
+  will be minimal.</p>
+</li>
+<li>
+<p>If the model contains meta estimators (<code>Pipeline</code> or <code>FeatureUnion</code>) then you
+  may start seeing performance benefits, especially if early steps in the
+  pipeline are relatively expensive.</p>
+</li>
+<li>
+<p>If the data your're fitting on is already on a cluster, then Dask-SearchCV
+  will (currently) be more efficient, as it works nicely with remote data. You
+  can pass dask arrays, dataframes or delayed objects to <code>fit</code>, and everything
+  will work fine without having to bring the data back locally.</p>
+</li>
+<li>
+<p>If your data is too large for Scikit-Learn to work nicely, then this library
+  won't help you. This is just for scheduling Scikit-Learn fits in an
+  intelligent way on small-medium data, it doesn't reimplement any of the
+  algorithms found in Scikit-Learn.</p>
+</li>
+</ul>
+<h2>Future work</h2>
+<p>Currently we just mirror the Scikit-Learn classes <code>GridSearchCV</code> and
+<code>RandomizedSearchCV</code> for doing passive searches through a parameter space.
+While we <a href="https://github.com/dask/dask-searchcv/issues/29">can handle very large
+grids</a> at some point switching
+to an active search method might be best. Something like this could be built up
+using the asynchronous methods in distributed, and I think would be fun to work
+on. If you have knowledge in this domain, please weigh in on the <a href="https://github.com/dask/dask-searchcv/issues/32">related
+issue</a>.</p>
+<h2>Acknowledgements</h2>
+<p>This work is supported by <a href="http://continuum.io/">Continuum Analytics</a>, <a href="http://www.darpa.mil/program/XDATA">the
+XDATA program</a>, and the Data Driven
+Discovery Initiative from the <a href="https://www.moore.org/">Moore Foundation</a>.</p>
+
+    <div class="comments">
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = "marginallystable"; // required: replace example with your forum shortname
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </div>
+
+<div class="container bottom">
+    <hr>
+    <p>
+        All content copyright 2014-2016 Jim Crist unless otherwise noted.
+        Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+    </p>
+    <p>
+    Find me on <a href="https://twitter.com/jiminy_crist">Twitter</a>, <a 
+        href="https://github.com/jcrist">GitHub</a>, <a
+        href="https://speakerdeck.com/jcrist">Speaker Deck</a>, or shoot me an <a
+    href="mailto:crist042@umn.edu">email</a>.
+    </p>
+</div>    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+            var pageTracker = _gat._getTracker("UA-40063290-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+    </script>
+    </div>
+</body>
+</html>

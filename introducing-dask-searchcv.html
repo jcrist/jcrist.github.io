@@ -44,7 +44,13 @@
             <a class="post-category" href="/tag/dask.html">dask</a>
         </p>
     </div>
-    <p>Last summer I spent some time experimenting with combining
+    <h2>Summary</h2>
+<p>We introduce <a href="http://dask-searchcv.readthedocs.io">a new library</a> for doing
+distributed hyperparameter optimization with Scikit-Learn estimators. We
+compare it to the existing Scikit-Learn implementations, and discuss when it
+may be useful compared to other approaches.</p>
+<h2>Introduction</h2>
+<p>Last summer I spent some time experimenting with combining
 <a href="http://dask.pydata.org/en/latest/">dask</a> and
 <a href="http://scikit-learn.org/stable/">scikit-learn</a> (chronicled in this
 <a href="/dask-sklearn-part-1.html">series</a> <a href="/dask-sklearn-part-2.html">of
@@ -98,7 +104,7 @@ and then choosing the best resulting estimator. Since this is fitting many
 independent estimators across the same set of data, it can be fairly easily
 parallelized.</p>
 <h2>Example using Text Classification</h2>
-<p>We'll be reproducing <a href="scikit-learn.org/stable/auto_examples/model_selection/grid_search_text_feature_extraction.html">this
+<p>We'll be reproducing <a href="http://scikit-learn.org/stable/auto_examples/model_selection/grid_search_text_feature_extraction.html">this
 example</a>.
 using the newsgroups dataset from the scikit-learn docs.</p>
 <h3>Setup</h3>
@@ -135,7 +141,7 @@ and a <a href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_m
 </pre></div>
 
 
-<p>All of these take several parameters, we'll only do a grid search across a few
+<p>All of these take several parameters. We'll only do a grid search across a few
 of them:</p>
 <div class="highlight"><pre><span></span><span class="c1"># Parameters of steps are set using &#39;__&#39; separated parameter names:</span>
 <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;vect__max_df&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
@@ -192,8 +198,8 @@ replacement for the Scikit-Learn version. Two noticeable differences:</p>
 <li>
 <p>The class takes a <code>get</code> parameter specifying the
   <a href="http://dask.pydata.org/en/latest/scheduler-choice.html#choosing-between-schedulers">scheduler</a>
-  to use. By default, the global scheduler is used (if set), otherwise the
-  threaded scheduler is used.</p>
+  to use. By default, if the global scheduler is set then it is used, and if
+  the global scheduler is not set then the threaded scheduler is used.</p>
 </li>
 </ul>
 <p>In this case, we'll use the distributed scheduler setup locally with 8
@@ -306,8 +312,8 @@ parameter/data/estimator combination. For pipelines that have relatively
 expensive early steps, this can be a big win when performing a grid search.</p>
 <h2>Distributed Grid Search</h2>
 <p>Since Dask decouples the scheduler from the graph specification, we can easily
-switch from running on a single machine to running distributed with a quick
-change in scheduler. Here I've setup a cluster of 3
+switch from running on a single machine to running on a cluster
+with a quick change in scheduler. Here I've setup a cluster of 3
 <a href="https://aws.amazon.com/ec2/pricing/on-demand/">m4.2xlarge</a> instances for the
 workers (each with 8 single-threaded processes), and another instance for the
 scheduler. This was easy to do with a single command using the
@@ -350,22 +356,21 @@ multiple workers for increased performance.</p>
 <p>Below you can see the <a href="http://distributed.readthedocs.io/en/latest/web.html">diagnostic
 plot</a> for this run. These
 show the operations that each of 24 workers were doing over time. We can see
-that we're keeping the cluster fairly well saturated. There's a fair bit of
-serialization (red), but the values being serialized are small, so this is
-relatively cheap to do. Note that this plot is also a bit misleading, as the
-red boxes are drawn on top of the running tasks, making it look worse than it
-really is.</p>
+that we're keeping the cluster fairly well saturated with work (blue) and not
+idle time (white). There's a fair bit of serialization (red), but the values
+being serialized are small, so this is relatively cheap to do. Note that this
+plot is also a bit misleading, as the red boxes are drawn on top of the running
+tasks, making it look worse than it really is.</p>
 <p><img src="images/grid_search_task_plot.png" alt="Distributed grid search task plot" style="width:100%"></p>
 <h2>Distributed Grid Search with Joblib</h2>
 <p>For comparison, we'll also run the Scikit-Learn grid search using joblib with
-the <a href="http://distributed.readthedocs.io/en/latest/joblib.html">distributed</a>
-backend (which uses dask's distributed scheduler). This is also only a few
-lines changed:</p>
+the <a href="http://distributed.readthedocs.io/en/latest/joblib.html"><code>dask.distributed</code></a>
+backend. This is also only a few lines changed:</p>
 <div class="highlight"><pre><span></span><span class="c1"># Need to import the backend to register it</span>
 <span class="kn">import</span> <span class="nn">distributed.joblib</span>
 <span class="kn">from</span> <span class="nn">sklearn.externals.joblib</span> <span class="kn">import</span> <span class="n">parallel_backend</span>
 
-<span class="c1"># Use the distributed backend with our current cluster</span>
+<span class="c1"># Use the dask.distributed backend with our current cluster</span>
 <span class="k">with</span> <span class="n">parallel_backend</span><span class="p">(</span><span class="s1">&#39;dask.distributed&#39;</span><span class="p">,</span> <span class="s1">&#39;54.146.59.240:8786&#39;</span><span class="p">):</span>
     <span class="o">%</span><span class="n">time</span> <span class="n">grid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
 </pre></div>
@@ -397,13 +402,13 @@ Dask-SearchCV implementation is faster in both cases because it's able to merge
 redundant calls to <code>fit</code> and can avoid unnecessary work. For this simple
 pipeline this saves only a minute or two, but for more expensive
 transformations or larger grids the savings may be substantial.</p>
-<h2>When would you use this?</h2>
+<h2>When is this useful?</h2>
 <ul>
 <li>
 <p>For single estimators (no <code>Pipeline</code> or <code>FeatureUnion</code>) Dask-SearchCV
-  performs only a small constant factor faster off of using Scikit-Learn with
-  the distributed backend. The benefits of using Dask-SearchCV in these cases
-  will be minimal.</p>
+  performs only a small constant factor faster than using Scikit-Learn with the
+  <code>dask.distributed</code> backend. The benefits of using Dask-SearchCV in these
+  cases will be minimal.</p>
 </li>
 <li>
 <p>If the model contains meta estimators (<code>Pipeline</code> or <code>FeatureUnion</code>) then you
@@ -418,9 +423,9 @@ transformations or larger grids the savings may be substantial.</p>
 </li>
 <li>
 <p>If your data is too large for Scikit-Learn to work nicely, then this library
-  won't help you. This is just for scheduling Scikit-Learn fits in an
-  intelligent way on small-medium data, it doesn't reimplement any of the
-  algorithms found in Scikit-Learn.</p>
+  won't help you. This is just for scheduling Scikit-Learn estimator fits in an
+  intelligent way on small-medium data. It doesn't reimplement any of the
+  algorithms found in Scikit-Learn to scale to larger datasets.</p>
 </li>
 </ul>
 <h2>Future work</h2>
@@ -429,13 +434,15 @@ transformations or larger grids the savings may be substantial.</p>
 While we <a href="https://github.com/dask/dask-searchcv/issues/29">can handle very large
 grids</a> at some point switching
 to an active search method might be best. Something like this could be built up
-using the asynchronous methods in distributed, and I think would be fun to work
-on. If you have knowledge in this domain, please weigh in on the <a href="https://github.com/dask/dask-searchcv/issues/32">related
-issue</a>.</p>
-<h2>Acknowledgements</h2>
-<p>This work is supported by <a href="http://continuum.io/">Continuum Analytics</a>, <a href="http://www.darpa.mil/program/XDATA">the
+using the asynchronous methods in <code>dask.distributed</code>, and I think would be fun
+to work on. If you have knowledge in this domain, please weigh in on the
+<a href="https://github.com/dask/dask-searchcv/issues/32">related issue</a>.</p>
+<hr />
+<p><em>This work is supported by <a href="http://continuum.io/">Continuum Analytics</a>, <a href="http://www.darpa.mil/program/XDATA">the
 XDATA program</a>, and the Data Driven
-Discovery Initiative from the <a href="https://www.moore.org/">Moore Foundation</a>.</p>
+Discovery Initiative from the <a href="https://www.moore.org/">Moore Foundation</a>.
+Thanks also to <a href="http://matthewrocklin.com/blog/">Matthew Rocklin</a> and <a href="https://github.com/electronwill">Will
+Warner</a> for feedback on drafts of this post.</em></p>
 
     <div class="comments">
         <div id="disqus_thread"></div>
@@ -464,7 +471,7 @@ Discovery Initiative from the <a href="https://www.moore.org/">Moore Foundation<
     Find me on <a href="https://twitter.com/jiminy_crist">Twitter</a>, <a 
         href="https://github.com/jcrist">GitHub</a>, <a
         href="https://speakerdeck.com/jcrist">Speaker Deck</a>, or shoot me an <a
-    href="mailto:crist042@umn.edu">email</a>.
+    href="mailto:jiminy.crist@gmail.com">email</a>.
     </p>
 </div>    <script type="text/javascript">
         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

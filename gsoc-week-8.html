@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=500" />
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="Marginally Stable Full Atom Feed"/>
+
+    <title>GSoC Week 8: Try, try, try again... // Marginally Stable</title>
+    <link rel="stylesheet" href="/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/code.css" type="text/css" />
+<link rel="stylesheet" href="/theme/css/article.css" type="text/css" />
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+            TeX: { equationNumbers: { autoNumber: "all" } }
+        });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <!--Top image-->
+    <div class="container">
+        <div class="topimage">
+            <img src="/theme/images/logo.png">
+        </div>
+    </div>
+
+    <!--Links and site title-->
+    <div class="topbar">
+        <span><a href="/">Marginally Stable</a></span>
+        <ul>
+                <li><a href="/blog.html">Blog</a></li>
+                <li><a href="/pages/about.html">About</a></li>
+                <li><a href="/pages/talks.html">Talks</a></li>
+                <li><a href="https://github.com/jcrist/AIOs">AIOS</a></li>
+        </ul>
+    </div>
+    <!--Content, footer, and scripts-->
+    <div class="container">
+    <div class="page-title">
+        <h1>GSoC Week 8: Try, try, try again...</h1>
+        <p>Fri 11 July 2014 &mdash; under
+            <a class="post-category" href="/tag/gsoc.html">GSoC</a>,
+            <a class="post-category" href="/tag/sympy.html">sympy</a>,
+            <a class="post-category" href="/tag/pydy.html">pydy</a>,
+            <a class="post-category" href="/tag/dynamics.html">dynamics</a>
+        </p>
+    </div>
+    <p>I'm still struggling to solve the <code>nan</code> and <code>oo</code> issue I've discussed in my
+post <a href="http://jcrist.github.io/gsoc-week-6.html">a couple weeks ago</a>.
+<a href="http://jcrist.github.io/gsoc-week-7.html">Last week</a> I showed off a custom
+written subs function for use inside <code>sympy.physics.mechanics</code> that helped with
+speed considerably, and <em>attempted</em> to solve the <code>nan</code> problem. This worked
+great for small-medium expressions, but failed on large ones. Or did it? I'm not
+sure anymore.</p>
+<p><a href="https://github.com/sympy/sympy/pull/7464">This pull request</a> brought up something
+that I had witnessed, but never really thought about as a potential source of my
+issues. To summarize, Sympy's current (hopefully soon to be old) caching system
+never clears. Ever. For interactive work, or short running sessions this is fine.
+However, for the huge expressions generated in <code>mechanics</code>, this can be a source
+of memory issues, as the cache grows to hold all sub-expressions that were cached.</p>
+<p>It turns out that <code>simplify</code> is one of those functions that is cached. This may
+explain why when I tried to use <code>msubs</code> with <code>smart_subs=True</code> (which crawls the
+expression tree and does selective simplification) this resulted in <em>all</em> of my
+RAM being used up (4 GB!!!). I haven't had a chance to pull in this PR into my
+repo and test it out, but it sounds like it should fix the problem. Instead of
+growing infinitely, the cache uses a <a href="http:
+//en.wikipedia.org/wiki/Cache_algorithms#Least_Recently_Used">least recently used (LRU)</a> algorithm to
+determine what stays and what is removed. The cache size can be set by the user,
+so those that prefer speed over memory use can still cache everything. Per his
+benchmarks it seems to be only 10% slower, which shouldn't be much of a problem.
+Overall, I'm really psyched to start using this. Perhaps with this the <code>smart_subs</code>
+I wrote up will work, even if it takes a while. If not, I'm kind-of out of ideas.</p>
+<p>I spent some time this week trying out a few other ways of solving this problem.
+So far none of them have worked.</p>
+<h3>1. Using <code>cse</code>, and applying simplify selectively to the sub-expressions.</h3>
+<p>The basic idea here was to apply <code>cse</code> on the expression, and then evaluate
+each sub-expression. If it evaluated to <code>nan</code>, simplify it, then evaluate it
+again.</p>
+<p>This seemed like a good idea at first, but upon closer examination it
+falls apart. The issue is that the expressions that could cancel/simplify out
+are often broken into <em>separate sub-expressions</em>. This means that they are
+evaluated numerically separately, and only once combined will they result in
+a <code>nan</code>, at which point they can't be simplified anyway.</p>
+<h3>2. Taking the limit of the bad sub-expressions.</h3>
+<p>This was another idea that seemed good until I tried it. Similar to the <code>smart_subs</code>
+I talked about <a href="http://jcrist.github.io/gsoc-week-7.html">last week</a>, except this
+time it's taking the limit of the bad sub-expressions as they approach the operating
+point. The thought being that it may be computationaly cheaper to find the limit
+than to apply <code>simplify</code> and then evaluate.</p>
+<p>There were several problems iwth this design. The first being that <code>Sympy</code> has no
+functionality for finding multivariable limits. These can't be calculated
+iteratively either (by that I mean find the limit for x, then the limit for y, then
+the limit for z, etc...), as the part that could "simplify out" could already be
+gone.</p>
+<p>The second, and more serious issue, is that there was no way to tell if the limit
+at that point was equal to the value the expression should actually evaluate too, or if it
+is just the value of the <em>limit at that point</em>. For example:</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">expr</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">op_point</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">op_point</span><span class="p">)</span>
+<span class="n">nan</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">limit</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">)</span>
+<span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">limit</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+<span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+</pre></div>
+
+
+<p>Using the method described above, it would seem that the expression should just
+evaluate to <code>1/2</code>. However, if you actually plot this expression, you'll find
+that there is a discontinuity at <code>a = 1</code>. From either side it approaches 1/2,
+but at 1 it is actually <code>nan</code>.</p>
+<h3>3. Numerical perturbation about the setpoint to find the limit of the bad sub-expressions.</h3>
+<p>The idea here was to calculate the limit of the sub-expressions through numerical
+evaluation and perturbation. This fails for all the reasons described above, as
+well as the fact that Sympy is a symbolic computation library, and we should be
+able to do this symbolically.</p>
+<hr>
+<p>Unfortunately those were all the ideas I had to solve this problem. If the algorithm described
+last week doesn't end up working using the new cacheing system, I'm kind of stumped.
+Back on <a href="http://www.seas.upenn.edu/~terfan/strugglebus/pennapps2013f/">the struggle bus</a>...</p>
+<hr>
+<h2>Meanwhile...</h2>
+<p>As another <em>potential</em> solution, I've set about refactoring the <code>KanesMethod</code> class
+in the hope that I'll find some way of generating expressions that are smaller
+than they currently are. The first step was rewriting to make it readable, more
+modular, and remove the dead code that had built up over the years. This is done.
+In it's current state it passes all tests, and runs them in half the time that it
+had before!!! Still no major reduction in expression size, but I'll hopefully find
+some magical place in the code that could be made more efficient. We'll see.</p>
+<p>I'm also working on the documentation for the linearization stuff that's already
+done, as well as waiting on someone to finally review my
+<a href="https://github.com/sympy/sympy/pull/7681">PR for LagrangesMethod support</a>. I hope to
+get that merged soon so that I can get started on the code generation portion of this
+project.</p>
+
+    <div class="comments">
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = "marginallystable"; // required: replace example with your forum shortname
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </div>
+
+<div class="container bottom">
+    <hr>
+    <p>
+        All content copyright 2014-2018 Jim Crist unless otherwise noted.
+        Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+    </p>
+    <p>
+    Find me on <a href="https://twitter.com/jiminy_crist">Twitter</a>, <a 
+        href="https://github.com/jcrist">GitHub</a>, <a
+        href="https://speakerdeck.com/jcrist">Speaker Deck</a>, or shoot me an <a
+    href="mailto:jiminy.crist@gmail.com">email</a>.
+    </p>
+</div>    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+            var pageTracker = _gat._getTracker("UA-40063290-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+    </script>
+    </div>
+</body>
+</html>

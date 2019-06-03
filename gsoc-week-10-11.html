@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=500" />
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="Marginally Stable Full Atom Feed"/>
+
+    <title>GSoC Week 10 & 11: Bogged down in details // Marginally Stable</title>
+    <link rel="stylesheet" href="/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/code.css" type="text/css" />
+<link rel="stylesheet" href="/theme/css/article.css" type="text/css" />
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+            TeX: { equationNumbers: { autoNumber: "all" } }
+        });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <!--Top image-->
+    <div class="container">
+        <div class="topimage">
+            <img src="/theme/images/logo.png">
+        </div>
+    </div>
+
+    <!--Links and site title-->
+    <div class="topbar">
+        <span><a href="/">Marginally Stable</a></span>
+        <ul>
+                <li><a href="/blog.html">Blog</a></li>
+                <li><a href="/pages/about.html">About</a></li>
+                <li><a href="/pages/talks.html">Talks</a></li>
+                <li><a href="https://github.com/jcrist/AIOs">AIOS</a></li>
+        </ul>
+    </div>
+    <!--Content, footer, and scripts-->
+    <div class="container">
+    <div class="page-title">
+        <h1>GSoC Week 10 & 11: Bogged down in details</h1>
+        <p>Fri 01 August 2014 &mdash; under
+            <a class="post-category" href="/tag/gsoc.html">GSoC</a>,
+            <a class="post-category" href="/tag/sympy.html">sympy</a>,
+            <a class="post-category" href="/tag/pydy.html">pydy</a>,
+            <a class="post-category" href="/tag/dynamics.html">dynamics</a>
+        </p>
+    </div>
+    <p>I missed my post last week due to my research for grad school all going to hell
+at the worst possible time :(. There wasn't much to report on last week, so I'm
+not too perturbed. Turns out even with PRs done and tested, it still takes a
+long time to get them merged and have everyone agree on them. Fortunately I
+made up for it this week; as of now I am officially working on code generation!
+This is behind schedule on my original timeline, but should have been expected,
+as per <a href="http://en.wikipedia.org/wiki/Hofstadter%27s_law">Hofstadter's law</a>:</p>
+<blockquote>
+<p><strong>Hofstadter's Law:</strong> "It always takes longer than you expect, even when you
+take into account Hofstadter's Law."</p>
+</blockquote>
+<p>Things are moving ahead now, and I have some hope left that I can accomplish
+(most of) everything I set out to do.</p>
+<h2>Project Status:</h2>
+<p>I set out to accomplish a number of things this summer. Here's the status of
+each project goal:</p>
+<ul>
+<li>
+<p><strong>General Linearization Form:</strong></p>
+<p>Done!</p>
+</li>
+<li>
+<p><strong>Linearization methods for Kane's and Lagrange's Methods:</strong></p>
+<p>Done! Lagrange stuff got merged last week.</p>
+</li>
+<li>
+<p><strong>Documentation for the above:</strong></p>
+<p>Done? This PR is waiting for review, but I think it's good.</p>
+</li>
+<li>
+<p><strong>Pre-linearized solution methods:</strong></p>
+<p>Nixed from the plan due to lack of interest.</p>
+</li>
+<li>
+<p><strong>Code Generation:</strong></p>
+<p>In Progress...</p>
+</li>
+</ul>
+<p>I also accomplished a few other things, that I found necessary for my project:</p>
+<ul>
+<li>
+<p><strong>Refactored <code>KanesMethod</code> and <code>LagrangesMethod</code>:</strong></p>
+<p>This resulted in more readable, pythonic code, and also a speed/memory
+improvement. PR for this is still awaiting review.</p>
+</li>
+<li>
+<p><strong>Faster <code>subs</code> function for <code>mechanics</code>:</strong></p>
+<p>My <code>msubs</code> implementation is several orders of magnitude faster than <code>subs</code>
+for the kinds of expressions seen in <code>mechanics</code> (even without the benefit
+of cacheing that <code>subs</code> has). This is in a PR awaiting review.</p>
+</li>
+<li>
+<p><strong>Soooo much work on the <code>nan</code> and <code>oo</code> issue:</strong></p>
+<p>Still not solved for <em>all</em> cases... :(</p>
+</li>
+</ul>
+<h2>TODO:</h2>
+<p>There are only 3 weeks left of GSoC! In my last remaining weeks, here's what I
+plan to get done:</p>
+<ul>
+<li>
+<p><strong>Get the Bicycle Example working:</strong></p>
+<p>After my work everything runs faster, results in smaller, more tractable
+expressions, and uses less memory. Except for the bicycle example. For some
+unknown reason I can not get this thing to result in anything except <code>nan</code>.
+This is a regress in performance (even though everything else runs better),
+and needs to be solved.</p>
+</li>
+<li>
+<p><strong>Code generation:</strong></p>
+<p>I've already got some stuff working, and it's really exciting. More on this
+below.</p>
+</li>
+<li>
+<p><strong>Get all my current stuff merged:</strong></p>
+<p>All that works needs to get into <code>Sympy</code>. As not everyone else is being paid
+to do this, it can take some time and effort to get things through the
+review process and into master, but I have hope that my remaining
+contributions will eventually make it in.</p>
+</li>
+</ul>
+<p>I think I can do it, but it'll be a stretch.</p>
+<h2>Code Generation</h2>
+<p>Sympy currently contains some facilities for code generation, but they lack
+support for the matrices that are necessary for working with dynamics problems.
+I hope to remedy that, as well as to make general improvements to the entire
+codegen module.</p>
+<p>Code generation in sympy has three levels:</p>
+<ol>
+<li>
+<p><strong>Code Printers <code>ccode</code>, <code>fcode</code>, and the like</strong></p>
+<p>These are printers that know how to print <em>simple</em> sympy expressions using
+functionality and syntax found in that language. For example, <code>ccode</code> will
+print exponents using <code>pow</code>, which is found in the <code>math</code> library in C.
+These printers don't have any knowledge of functions, multiple statements,
+or header files. They simply print a single expression out on one line.</p>
+</li>
+<li>
+<p><strong>The <code>codegen</code> submodule</strong></p>
+<p>This submodule contains facilities for representing generalized <em>routines</em>,
+and generating functions in various languages (currently C and FORTRAN)
+that can be compiled as a library without any changes. They know about 
+function and variable declarations, header files, library imports, and
+multi-line statements. However, they have no idea how to make this
+generated code work with python.</p>
+</li>
+<li>
+<p><strong>Code wrapping, usually accessed through <code>autowrap</code></strong></p>
+<p>This is where the functionality for <em>wrapping</em> the generated code lives.
+Using the functionality provided here, one can compile and wrap generated
+code, and then call it from python. The <code>autowrap</code> function is the main
+entry point, allowing for all 3 steps to be done in one call.</p>
+</li>
+</ol>
+<p>The first thing I wanted to fix was getting code generation to work with
+matrices and matrix expressions. This turned out to be harder (and more
+confusing) than I expected. There is currently support for a "matrix like"
+object named <code>sympy.tensor.IndexedBase</code>, but I really don't understand the
+purpose behind it. Reading through the code and examples though it seems to be
+for representing indexed loop operations in a concise form. This unfortunately
+has nothing to do with the indexed types (matrices) that I plan on
+implementing.</p>
+<p>I spent a long time reading through the code and playing around with it using
+pdb trying to figure out the control flow in the codegen function, and am still
+a little lost. Most of what's there seems to be for supporting the <code>Indexed</code>
+operations.  After some time trying to bend them to work for matrices, I
+changed plans and now am supporting <code>Matrix</code> and <code>MatrixExpr</code> types for matrix
+operations only.  <code>Indexed</code> types can be used elsewhere, but they shouldn't be
+used for representing matrices with expressions inside them.</p>
+<p>I currently have this "working", but am not happy with it yet. The current
+layout of the module made for some hacky work adding in matrix support. I plan
+on doing some refactoring to make this implementation cleaner. Currently, on
+my codegen branch the following is supported:</p>
+<ul>
+<li>
+<p><strong>Generating C code for a matrix with expressions in each element:</strong></p>
+<p>Matrices are set as input-output type arguments, and are modified in place
+before being returned.</p>
+</li>
+<li>
+<p><strong>Passing in a <code>MatrixSymbol</code> as an argument:</strong> </p>
+<p>Here the plan is to use matrices to pass in a large number of arguments.
+You can think of this kind of like a vector. There's another symbolic
+vector type as well in Sympy (<code>DeferredVector</code>). I may end up supporting
+it, but I'm not really sure what it's for. In its current implementation,
+the following works:</p>
+<div class="highlight"><pre><span></span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span><span class="p">,</span> <span class="n">q5</span><span class="p">]</span>
+<span class="n">q_vec</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">sub_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">q_vec</span><span class="p">))</span>
+<span class="c1"># Replaces each q with elements from q_vec</span>
+<span class="n">expr</span> <span class="o">=</span> <span class="n">msubs</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">q_vec</span><span class="p">)</span>
+<span class="c1"># Generate a function that takes a numpy array (q) and returns expr</span>
+<span class="c1"># This works if expr is an expression, or a matrix</span>
+<span class="n">func</span> <span class="o">=</span> <span class="n">autowrap</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+</pre></div>
+
+
+</li>
+</ul>
+<p>After I clean this up, I plan to add support for:</p>
+<ul>
+<li>
+<p><strong>Common Subexpression Elimination (cse):</strong></p>
+<p>Even though modern compilers do this already, experimentation shows that
+the large expressions generated in <code>mechanics</code> benefit from generated code
+having cse performed. This will be implemented as a boolean kwarg (default
+False).  When True, sympy's <code>cse</code> function will be run on the expression,
+and the code for each subexpression will be generated, followed by the
+final expression.  I actually don't think this will be too difficult to
+implement, and should give some speed improvements on the compiled code (at
+the cost of slower generation).</p>
+</li>
+<li>
+<p><strong>A <code>ctypes</code> code-wrapper:</strong></p>
+<p>Currently the only code wrappers supported are <code>f2py</code> and <code>cython</code>, neither
+of which is in the standard library. While the wrappers generated with those
+functions may be more robust, a ctypes wrapper is also possible, with the
+added benefit that <code>ctypes</code> is in the standard lib.</p>
+</li>
+<li>
+<p><strong>Support for matrix expressions:</strong></p>
+<p>In an ideal world, I'd implement the excellent work done by Matthew
+Rocklin, discussed in <a href="http://pyvideo.org/video/2028/matrix-expressions-and-blaslapack-scipy-2013-pr">this video from SciPy
+2013</a>.
+The idea here is that we have some knowledge about each of the matrices
+involved in an <em>expression</em> (for example $A^{-1} B$). We may know that A is
+positive definite, or symmetric, or upper triangular, etc... For each case,
+there may be a faster inversion routine that we could take advantage of
+rather than using a one-size-fits-all inverse function. As I don't have time
+to implement support for all possible operations, and the many BLAS/LAPACK
+routines that support them, I'll focus just on the inverse, as it's commonly
+found in expressions in <code>mechanics</code>. The thought is, we should be able to
+run:</p>
+<div class="highlight"><pre><span></span><span class="n">func</span> <span class="o">=</span> <span class="n">autowrap</span><span class="p">(</span><span class="n">Inverse</span><span class="p">(</span><span class="n">M</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">)</span>
+</pre></div>
+
+
+<p>And have code generated that solves the expression in a fast manner, without
+having to symbolically find the inverse of <code>M</code> and combine it with <code>F</code> into
+one matrix beforehand.</p>
+</li>
+</ul>
+<p>Of course this is a wishlist, and it's unlikely all of this will be accomplished
+in the next 3 weeks. Still, I plan to keep supporting <code>sympy</code> after my GSoC
+ends, so if it's not done by then it will eventually get there.</p>
+<hr>
+<h3>Other exciting news of the week:</h3>
+<p>I got accepted to the GSoC reunion at the end of October! As this is the 10th
+annual GSoC, Google is throwing a big reunion shindig for past and present
+students. As there are lots of us, only a few were chosen based on a lottery,
+and I made it through! I'm very excited to meet other students that completed
+the program, listen to some interesting talks, and see the GooglePlex. I also
+bought my tickets to get there a day early so I have some time to explore the
+bay area. Last time I was out there I was 14, and I didn't get to see much
+of the area. If you also got accepted/live out and would be interested in
+meeting up, let me know! I'll be in San Jose/San Francisco October 23-26.</p>
+
+    <div class="comments">
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = "marginallystable"; // required: replace example with your forum shortname
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </div>
+
+<div class="container bottom">
+    <hr>
+    <p>
+        All content copyright 2014-2018 Jim Crist unless otherwise noted.
+        Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+    </p>
+    <p>
+    Find me on <a href="https://twitter.com/jiminy_crist">Twitter</a>, <a 
+        href="https://github.com/jcrist">GitHub</a>, <a
+        href="https://speakerdeck.com/jcrist">Speaker Deck</a>, or shoot me an <a
+    href="mailto:jiminy.crist@gmail.com">email</a>.
+    </p>
+</div>    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+            var pageTracker = _gat._getTracker("UA-40063290-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+    </script>
+    </div>
+</body>
+</html>

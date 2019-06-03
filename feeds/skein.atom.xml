@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable - skein</title><link href="/" rel="alternate"></link><link href="/feeds/skein.atom.xml" rel="self"></link><id>/</id><updated>2018-08-14T12:00:00-05:00</updated><entry><title>Introducing Skein: Deploy Python on Apache YARN the Easy Way</title><link href="/introducing-skein.html" rel="alternate"></link><published>2018-08-14T12:00:00-05:00</published><updated>2018-08-14T12:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2018-08-14:/introducing-skein.html</id><summary type="html">&lt;p class="first last"&gt;New tools to simplify deploying Python applications on Apache YARN.&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="summary"&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;We introduce &lt;a class="reference external" href="https://jcrist.github.io/skein/"&gt;a new tool and library&lt;/a&gt; for
+deploying applications on Apache YARN. We provide background on why this work
+was necessary, and demonstrate deploying a simple Python application on a YARN
+cluster.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="introduction"&gt;
+&lt;h2&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;&lt;a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html"&gt;Apache YARN&lt;/a&gt; is the resource management and job scheduling framework
+native to Hadoop clusters. It is responsible for scheduling applications on the
+cluster (deciding where and when an application gets the resources it
+requested) and provisioning these resources in a secure and robust way.&lt;/p&gt;
+&lt;p&gt;Many data-processing frameworks (e.g. Spark, Flink, Storm, etc...) support YARN
+as a deployment option. As a contributor to &lt;a class="reference external" href="http://dask.pydata.org/"&gt;Dask&lt;/a&gt;, I sought to improve our
+deployment support for YARN. This proved difficult for several reasons:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;YARN is a JVM-only framework, and requires a non-trivial amount of Java to
+get things working (for example, Spark's YARN support is ~6000 lines of
+Scala). Dask is written in Python.&lt;/li&gt;
+&lt;li&gt;Applications that deploy on YARN need to distribute their resources with
+them. For Java applications this is straightforward - just bundle everything
+into a JAR and you're done. With Python things aren't so easy.&lt;/li&gt;
+&lt;li&gt;YARN security (if enabled) uses &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Kerberos_(protocol)"&gt;Kerberos&lt;/a&gt;, which can be tricky to support
+properly. Kerberos is so difficult to get right that one of the core Hadoop
+developers &lt;a class="reference external" href="https://steveloughran.gitbooks.io/kerberos_and_hadoop/sections/kerberos_the_madness.html"&gt;wrote a book&lt;/a&gt;
+where it's compared to the horrors found in &lt;a class="reference external" href="https://en.wikipedia.org/wiki/H._P._Lovecraft"&gt;H.P. Lovecraft&lt;/a&gt; novels. This,
+coupled with the myriad of configuration options YARN supports can makes
+testing applications difficult.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;img alt="sometimes things are difficult" class="align-center" src="/images/one-does-not-simply-deploy-on-yarn.jpg" style="width: 60%;" /&gt;
+&lt;p&gt;I'm fairly happy with the set of tools we've developed to solve these problems.
+The remainder of this post discusses them in detail.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="skein-easy-deployment-on-yarn"&gt;
+&lt;h2&gt;Skein: Easy Deployment on YARN&lt;/h2&gt;
+&lt;p&gt;&lt;a class="reference external" href="https://jcrist.github.io/skein/"&gt;Skein&lt;/a&gt; is a &lt;em&gt;declarative&lt;/em&gt; tool for deploying applications on YARN. Users write
+application specifications either in YAML or using the native Python API, and
+Skein handles deploying and managing them on YARN.&lt;/p&gt;
+&lt;p&gt;Highlights:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Skein applications are written declaratively using a specificatin reminiscent
+of &lt;a class="reference external" href="https://docs.docker.com/compose/overview/"&gt;docker-compose&lt;/a&gt;. While YARN is extremely flexible, Skein is opinionated
+about how an application should be structured. Sane defaults and reduced
+options help simplify the user API and greatly reduce the amount of code
+needed to deploy on YARN.&lt;/li&gt;
+&lt;li&gt;Every Skein application contains a &lt;a class="reference external" href="https://jcrist.github.io/skein/key-value-store.html"&gt;key-value store&lt;/a&gt; running on the
+application master. This provides a way for containers to share runtime
+configuration parameters (e.g. dynamically chosen addresses and ports), as
+well as coordinate state between containers.&lt;/li&gt;
+&lt;li&gt;Skein applications are dynamic. Containers can be started and stopped at
+runtime, allowing for services to scale to your needs.&lt;/li&gt;
+&lt;li&gt;Skein was designed &amp;quot;API first&amp;quot;, meaning both the &lt;a class="reference external" href="https://jcrist.github.io/skein/api.html"&gt;Python API&lt;/a&gt; and &lt;a class="reference external" href="https://jcrist.github.io/skein/cli.html"&gt;CLI&lt;/a&gt; are
+first-class-citizens, and should (hopefully) feel natural and intuitive (if
+you find any rough edges, please &lt;a class="reference external" href="https://github.com/jcrist/skein/issues"&gt;file an issue&lt;/a&gt;).&lt;/li&gt;
+&lt;li&gt;Skein contains two (unfortunately necessary-ish) Java processes written as
+&lt;a class="reference external" href="http://grpc.io/"&gt;gRPC&lt;/a&gt; services. This provides a clear separation between the application
+language and Java, and means that other language bindings besides Python are
+possible, allowing other languages to take advantage of this work.&lt;/li&gt;
+&lt;li&gt;Skein is tested on multiple Hadoop configurations, including both &lt;tt class="docutils literal"&gt;simple&lt;/tt&gt;
+and &lt;tt class="docutils literal"&gt;kerberos&lt;/tt&gt; security, to help ensure support across all clusters.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div class="section" id="example-echo-server"&gt;
+&lt;h2&gt;Example: Echo Server&lt;/h2&gt;
+&lt;p&gt;To illustrate the intended workflow, we'll implement a simple echo server and
+client, and use Skein to deploy on YARN.&lt;/p&gt;
+&lt;p&gt;The full code for this example can be found &lt;a class="reference external" href="https://github.com/jcrist/skein/blob/master/examples/echo_server/"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="section" id="the-echo-server"&gt;
+&lt;h3&gt;The Echo Server&lt;/h3&gt;
+&lt;p&gt;The echo server is based off &lt;a class="reference external" href="https://docs.python.org/3/library/asyncio-stream.html#tcp-echo-server-using-streams"&gt;this example&lt;/a&gt;
+from the asyncio docs. The full server code is available &lt;a class="reference external" href="https://github.com/jcrist/skein/blob/master/examples/echo_server/server.py"&gt;here&lt;/a&gt;.
+Walking through some of the Skein-specific bits:&lt;/p&gt;
+&lt;p&gt;Since the server could be run on any machine, we may not be sure what ports are
+available on that machine, or the host address of the machine as seen from the
+edge node. To handle this we start the server on a dynamic port, and then
+determine the hostname and port at runtime.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Setup the server with a dynamically chosen port&lt;/span&gt;
+&lt;span class="n"&gt;loop&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;asyncio&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_event_loop&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;coro&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;asyncio&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;start_server&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;handle_echo&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;0.0.0.0&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;server&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run_until_complete&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;coro&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Determine the dynamically chosen address&lt;/span&gt;
+&lt;span class="n"&gt;host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;gethostbyname&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;gethostname&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+&lt;span class="n"&gt;port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;server&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sockets&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getsockname&lt;/span&gt;&lt;span class="p"&gt;()[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="n"&gt;address&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s1"&gt;:&lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To communicate this dynamic address back to the client, we store the address in
+the &lt;a class="reference external" href="https://jcrist.github.io/skein/key-value-store.html"&gt;key-value store&lt;/a&gt;. To allow scaling up to multiple server instances (a bit
+contrived for this example) we append the server's &lt;tt class="docutils literal"&gt;container_id&lt;/tt&gt; to a fixed
+prefix (&lt;tt class="docutils literal"&gt;'address.'&lt;/tt&gt;) to ensure a unique key.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Form a unique key to store the address using the current container id&lt;/span&gt;
+&lt;span class="n"&gt;key&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;address.&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="n"&gt;skein&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;properties&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;container_id&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We then store the server address in the key-value store. Note that we set the
+current &lt;tt class="docutils literal"&gt;container_id&lt;/tt&gt; as the &lt;em&gt;owner&lt;/em&gt; of the key. This makes use of Skein's
+key-value store &lt;a class="reference external" href="https://jcrist.github.io/skein/key-value-store.html#ownership"&gt;ownership model&lt;/a&gt;. When the server's container exits (whether
+successfully or due to failure), the key will be deleted. This helps ensure
+that when servers shutdown their address is no longer available to the echo
+client.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Connect to the application master&lt;/span&gt;
+&lt;span class="n"&gt;app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;skein&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ApplicationClient&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;from_current&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+&lt;span class="c1"&gt;# The key-value store only accepts bytes as values&lt;/span&gt;
+&lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;address&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;encode&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Store the server address in the key-value store, assigning the current&lt;/span&gt;
+&lt;span class="c1"&gt;# container as the owner of the key. This ensures that the key is deleted if&lt;/span&gt;
+&lt;span class="c1"&gt;# the container exits.&lt;/span&gt;
+&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;kv&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;put&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;owner&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;skein&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;properties&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;container_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The remainder of the echo server implementation is generic &lt;tt class="docutils literal"&gt;asyncio&lt;/tt&gt;
+operations - providing a handler, starting up the server, and running the event
+loop until shutdown.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="the-echo-client"&gt;
+&lt;h3&gt;The Echo Client&lt;/h3&gt;
+&lt;p&gt;The echo client is based off &lt;a class="reference external" href="https://docs.python.org/3/library/asyncio-stream.html#asyncio-tcp-echo-client-streams"&gt;this example&lt;/a&gt;
+from the asyncio docs. The full client code is available &lt;a class="reference external" href="https://github.com/jcrist/skein/blob/master/examples/echo_server/client.py"&gt;here&lt;/a&gt;.
+Walking through some of the Skein-specific bits:&lt;/p&gt;
+&lt;p&gt;When using either the &lt;a class="reference external" href="https://jcrist.github.io/skein/cli.html"&gt;CLI&lt;/a&gt; or the &lt;a class="reference external" href="https://jcrist.github.io/skein/api.html"&gt;Python API&lt;/a&gt;, most operations require an
+&lt;em&gt;application id&lt;/em&gt;. This is a unique identifier for your application in YARN, and
+is used both by Skein and by external tools (for example, the &lt;tt class="docutils literal"&gt;yarn&lt;/tt&gt; CLI
+command). In our example echo-client here we provide the application id via the
+command-line, and then use it to connect to the application&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Get the application id from the command-line args&lt;/span&gt;
+&lt;span class="n"&gt;app_id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Connect to the application&lt;/span&gt;
+&lt;span class="n"&gt;app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;skein&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Client&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Before we can send a message to the echo server, we first need to get its
+address. This again is done through the &lt;a class="reference external" href="https://jcrist.github.io/skein/key-value-store.html"&gt;key-value store&lt;/a&gt;. However, instead of
+getting the address of a single echo server, we'll loop through all registered
+addresses and message each of them. To do this we use the &lt;a class="reference external" href="https://jcrist.github.io/skein/api.html#skein.kv.KeyValueStore.get_prefix"&gt;get_prefix&lt;/a&gt;
+method to get all keys that start with &lt;tt class="docutils literal"&gt;address.&lt;/tt&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;async&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;echo_all&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;message&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Send and recieve a message from all running echo servers&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="c1"&gt;# Loop through all registered server addresses&lt;/span&gt;
+    &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;address&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;app&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;kv&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_prefix&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;address.&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+        &lt;span class="c1"&gt;# Parse the host and port from the stored address&lt;/span&gt;
+        &lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;address&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decode&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+        &lt;span class="c1"&gt;# Send the message to the echo server&lt;/span&gt;
+        &lt;span class="n"&gt;await&lt;/span&gt; &lt;span class="n"&gt;tcp_echo_client&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;message&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;loop&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The remainder of the client implementation is generic - provide a async
+function to message each server, start the event loop, and run until all
+futures have completed.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="packaging-the-python-environment"&gt;
+&lt;h3&gt;Packaging the Python Environment&lt;/h3&gt;
+&lt;p&gt;Skein doesn't mandate a specific way of distributing application
+files/executables. File resources may already exist on every node, or may need
+to be distributed with the application. For Python applications, one way of
+handling this is to use the &lt;a class="reference external" href="https://conda.io/docs/"&gt;conda package manager&lt;/a&gt; to create a Python
+environment, and &lt;a class="reference external" href="https://conda.github.io/conda-pack/"&gt;conda-pack&lt;/a&gt; to package that environment for distribution.
+This is what we'll do here.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;#&lt;/span&gt; Create a new environment with all dependencies
+&lt;span class="gp"&gt;$&lt;/span&gt; conda create -y -n demo -c conda-forge python skein conda-pack
+&lt;span class="go"&gt;...&lt;/span&gt;
+
+&lt;span class="gp"&gt;#&lt;/span&gt; Activate the environment
+&lt;span class="gp"&gt;$&lt;/span&gt; conda activate demo
+
+&lt;span class="gp"&gt;#&lt;/span&gt; Package the environment into environment.tar.gz
+&lt;span class="gp"&gt;$&lt;/span&gt; conda-pack -o environment.tar.gz
+&lt;span class="go"&gt;Collecting packages...&lt;/span&gt;
+&lt;span class="go"&gt;Packing environment at &amp;#39;/home/jcrist/miniconda/envs/demo&amp;#39; to &amp;#39;environment.tar.gz&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;[########################################] | 100% Completed | 16.6s&lt;/span&gt;
+
+&lt;span class="gp"&gt;#&lt;/span&gt; See the size of the output environment
+&lt;span class="gp"&gt;$&lt;/span&gt; du -h environment.tar.gz
+&lt;span class="go"&gt;102M    environment.tar.gz&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;During &lt;a class="reference external" href="https://hortonworks.com/blog/resource-localization-in-yarn-deep-dive/"&gt;YARN Resource Localization&lt;/a&gt; this environment can then be unpacked and
+linked as a directory in every container.&lt;/p&gt;
+&lt;p&gt;For more information on file distribution in Skein, see the &lt;a class="reference external" href="https://jcrist.github.io/skein/distributing-files.html"&gt;distributing files
+docs&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="the-application-specification"&gt;
+&lt;h3&gt;The Application Specification&lt;/h3&gt;
+&lt;p&gt;With a completed server and client implementation, we now need to write the
+application specification. We'll only make use of a few of the specification
+fields here; the full schema can be found in the &lt;a class="reference external" href="https://jcrist.github.io/skein/specification.html"&gt;specification docs&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The echo server specification can be found &lt;a class="reference external" href="https://github.com/jcrist/skein/blob/master/examples/echo_server/spec.yaml"&gt;here&lt;/a&gt;,
+and is also duplicated below:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;echoserver&lt;/span&gt;
+
+&lt;span class="nt"&gt;services&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="nt"&gt;server&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="nt"&gt;resources&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="nt"&gt;vcores&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;1&lt;/span&gt;
+            &lt;span class="nt"&gt;memory&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;256&lt;/span&gt;
+        &lt;span class="nt"&gt;files&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="c1"&gt;# A packaged conda environment to be distributed with the&lt;/span&gt;
+            &lt;span class="c1"&gt;# application. During YARN resource localization this will be&lt;/span&gt;
+            &lt;span class="c1"&gt;# automatically unpacked into the directory ``environment``.&lt;/span&gt;
+            &lt;span class="nt"&gt;environment&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;environment.tar.gz&lt;/span&gt;
+            &lt;span class="c1"&gt;# The server implementation.&lt;/span&gt;
+            &lt;span class="nt"&gt;server.py&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;server.py&lt;/span&gt;
+        &lt;span class="nt"&gt;commands&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="c1"&gt;# Activate the conda environment&lt;/span&gt;
+            &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;source environment/bin/activate&lt;/span&gt;
+            &lt;span class="c1"&gt;# Start the server&lt;/span&gt;
+            &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;python server.py&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We define a single service &lt;tt class="docutils literal"&gt;server&lt;/tt&gt;, and specify that each instance needs
+one virtual-core (usually equal to one CPU, cluster specific) and 256 MB of
+memory. For file resources, we specify the packaged Conda environment, as well
+as the server script. These will be mapped to &lt;tt class="docutils literal"&gt;./environment/&lt;/tt&gt; and
+&lt;tt class="docutils literal"&gt;./server.py&lt;/tt&gt; in the container environment respectively. Finally we provide a
+list of commands to run to start the service. For some services this may be
+more complicated, but here it's just activating the packaged Conda environment
+and running the server script.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="running-the-application"&gt;
+&lt;h3&gt;Running the Application&lt;/h3&gt;
+&lt;p&gt;We're now ready to start the application. This could be done using the &lt;a class="reference external" href="https://jcrist.github.io/skein/api.html"&gt;Python
+API&lt;/a&gt;, but here we'll make use of the &lt;a class="reference external" href="https://jcrist.github.io/skein/cli.html"&gt;CLI&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;#&lt;/span&gt; Start the application, and store the application id as APPID
+&lt;span class="gp"&gt;$&lt;/span&gt; &lt;span class="nv"&gt;APPID&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;skein application submit spec.yaml&lt;span class="sb"&gt;`&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This validates the specification, uploads any necessary file resources to HDFS,
+and then submits the application to YARN. To check on the status of the
+application we can use the &lt;tt class="docutils literal"&gt;skein application status&lt;/tt&gt; command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;#&lt;/span&gt; Check the application status
+&lt;span class="gp"&gt;$&lt;/span&gt; skein application status &lt;span class="nv"&gt;$APPID&lt;/span&gt;
+&lt;span class="go"&gt;APPLICATION_ID                    NAME          STATE      STATUS       CONTAINERS    VCORES    MEMORY    RUNTIME&lt;/span&gt;
+&lt;span class="go"&gt;application_1534186866311_0009    echoserver    RUNNING    UNDEFINED    2             2         768       8s&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This shows 2 running containers: one for the application master, and one for
+our echo server. You can also navigate to the YARN Web-UI to check on the
+status of the application, based on the given application ID:&lt;/p&gt;
+&lt;img alt="The YARN web-ui" class="align-center" src="/images/skein_resourcemanager_echoserver.png" style="width: 90%;" /&gt;
+&lt;p&gt;Trying out our echo client:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;$&lt;/span&gt; python client.py &lt;span class="nv"&gt;$APPID&lt;/span&gt;
+&lt;span class="go"&gt;Connecting to server at 172.18.0.4:41846&lt;/span&gt;
+&lt;span class="go"&gt;Sent: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;Received: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And it works! We see communication with a single echo server; the dynamic
+address was found at &lt;tt class="docutils literal"&gt;172.18.0.4:41846&lt;/tt&gt;, and the message was sent and
+returned successfully.&lt;/p&gt;
+&lt;p&gt;Next, lets try scaling up the number of echo servers using the &lt;tt class="docutils literal"&gt;skein
+container scale&lt;/tt&gt; command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;#&lt;/span&gt; Scale to &lt;span class="m"&gt;4&lt;/span&gt; server instances
+&lt;span class="gp"&gt;$&lt;/span&gt; skein container scale &lt;span class="nv"&gt;$APPID&lt;/span&gt; --service server --number &lt;span class="m"&gt;4&lt;/span&gt;
+
+&lt;span class="gp"&gt;#&lt;/span&gt; List all &lt;span class="sb"&gt;``&lt;/span&gt;server&lt;span class="sb"&gt;``&lt;/span&gt; containers &lt;span class="k"&gt;for&lt;/span&gt; this application
+&lt;span class="gp"&gt;$&lt;/span&gt; skein container ls &lt;span class="nv"&gt;$APPID&lt;/span&gt; --service server
+&lt;span class="go"&gt;SERVICE    ID          STATE      RUNTIME&lt;/span&gt;
+&lt;span class="go"&gt;server     server_0    RUNNING    2m&lt;/span&gt;
+&lt;span class="go"&gt;server     server_1    RUNNING    4s&lt;/span&gt;
+&lt;span class="go"&gt;server     server_2    RUNNING    3s&lt;/span&gt;
+&lt;span class="go"&gt;server     server_3    RUNNING    2s&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Running the echo client again:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;$&lt;/span&gt; python client.py &lt;span class="nv"&gt;$APPID&lt;/span&gt;
+&lt;span class="go"&gt;python client.py $APPID&lt;/span&gt;
+&lt;span class="go"&gt;Connecting to server at 172.18.0.4:41846&lt;/span&gt;
+&lt;span class="go"&gt;Sent: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;Received: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;Connecting to server at 172.18.0.4:42547&lt;/span&gt;
+&lt;span class="go"&gt;Sent: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;Received: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;Connecting to server at 172.18.0.4:37295&lt;/span&gt;
+&lt;span class="go"&gt;Sent: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;Received: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;Connecting to server at 172.18.0.4:45087&lt;/span&gt;
+&lt;span class="go"&gt;Sent: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;span class="go"&gt;Received: &amp;#39;Hello World!&amp;#39;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This time we see communication with 4 different echo servers, one for each
+server instance.&lt;/p&gt;
+&lt;p&gt;Finally, we can shutdown our application using the &lt;tt class="docutils literal"&gt;skein application
+shutdown&lt;/tt&gt; command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;#&lt;/span&gt; Shutdown the application
+&lt;span class="gp"&gt;$&lt;/span&gt; skein application shutdown &lt;span class="nv"&gt;$APPID&lt;/span&gt;
+
+&lt;span class="gp"&gt;#&lt;/span&gt; Show the application was shutdown
+&lt;span class="gp"&gt;$&lt;/span&gt; skein application status &lt;span class="nv"&gt;$APPID&lt;/span&gt;
+&lt;span class="go"&gt;APPLICATION_ID                    NAME          STATE       STATUS       CONTAINERS    VCORES    MEMORY    RUNTIME&lt;/span&gt;
+&lt;span class="go"&gt;application_1534186866311_0009    echoserver    FINISHED    SUCCEEDED    0             0         0         5m&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note that if the &lt;tt class="docutils literal"&gt;python server.py&lt;/tt&gt; command exited itself (perhaps via a
+&lt;tt class="docutils literal"&gt;shutdown&lt;/tt&gt; endpoint on the server), then the manual shutdown command wouldn't
+be necessary. This can be nice for things like batch processing jobs that have
+a distinct end, as they can then be submitted and run to completion without
+further human intervention.&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;To review, in the above example we&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Wrote a demo echo server and client.&lt;/li&gt;
+&lt;li&gt;Added YARN deployment support using Skein&lt;/li&gt;
+&lt;li&gt;Packaged the application dependencies using &lt;a class="reference external" href="https://conda.github.io/conda-pack/"&gt;conda-pack&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Started, scaled, and stopped the echo server on YARN&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;All without writing a line of Java. Additionally, the Python code that was
+needed to support YARN deployment was relatively short. While this example was
+simplistic, we've found that real-world applications (such as the &lt;a class="reference external" href="http://dask-yarn.readthedocs.io/"&gt;dask-yarn&lt;/a&gt;
+library) remain just as clear and concise (although this is more of a testament
+to Python than to Skein).&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="testing-skein"&gt;
+&lt;h2&gt;Testing Skein&lt;/h2&gt;
+&lt;p&gt;As mentioned at the top, due to the myriad of configuration options, testing
+that an application works on all YARN clusters can be difficult. The YARN
+documentation &lt;a class="reference external" href="https://hadoop.apache.org/docs/stable/hadoop-yarn/hadoop-yarn-site/YarnApplicationSecurity.html"&gt;is pretty adamant about this&lt;/a&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+If you don’t test your YARN application in a secure Hadoop cluster, it
+won’t work.&lt;/blockquote&gt;
+&lt;p&gt;To test Skein, an external tool &lt;a class="reference external" href="https://github.com/jcrist/hadoop-test-cluster"&gt;hadoop-test-cluster&lt;/a&gt; was developed. This is a
+pip-installable tool for creating and working with tiny dockerized test
+clusters. Images with both &lt;tt class="docutils literal"&gt;simple&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;kerberos&lt;/tt&gt; security configurations
+are available, and the tool is written to allow extending with further options.&lt;/p&gt;
+&lt;p&gt;Assuming you have docker already installed, using a kerberized test cluster is
+as easy as&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="gp"&gt;#&lt;/span&gt; Start the cluster, mounting the &lt;span class="nb"&gt;local&lt;/span&gt; directory
+&lt;span class="gp"&gt;$&lt;/span&gt; htcluster startup --image kerberos --mount .:workdir
+
+&lt;span class="gp"&gt;#&lt;/span&gt; Login
+&lt;span class="gp"&gt;$&lt;/span&gt; htcluster login
+
+&lt;span class="gp"&gt;#&lt;/span&gt; Or run a &lt;span class="nb"&gt;command&lt;/span&gt; externally
+&lt;span class="gp"&gt;$&lt;/span&gt; htcluster &lt;span class="nb"&gt;exec&lt;/span&gt; -- py.test mylibrary
+
+&lt;span class="gp"&gt;#&lt;/span&gt; Shutdown the cluster
+&lt;span class="gp"&gt;$&lt;/span&gt; htcluster shutdown
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Making the tests easy to run locally has eased development, and helps ensure
+Skein is robust across different Hadoop deployments.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="review-and-future-work"&gt;
+&lt;h2&gt;Review and Future Work&lt;/h2&gt;
+&lt;p&gt;We presented three new tools:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://jcrist.github.io/skein/"&gt;Skein&lt;/a&gt; for easy deployment of applications on YARN.&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://conda.github.io/conda-pack/"&gt;conda-pack&lt;/a&gt; for packaging the dependencies of these applications for
+distribution.&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/jcrist/hadoop-test-cluster"&gt;hadoop-test-cluster&lt;/a&gt; for no-fuss testing of Hadoop applications locally.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Taken together, these tools help provide a workflow for bringing Python
+applications to a traditionally Java based ecosystem.&lt;/p&gt;
+&lt;p&gt;These tools are currently being used to deploy Dask on YARN in the &lt;a class="reference external" href="http://dask-yarn.readthedocs.io/"&gt;dask-yarn&lt;/a&gt;
+libary. Similar work is being investigated for &lt;a class="reference external" href="https://github.com/ray-project/ray/issues/2214"&gt;deploying Ray on YARN&lt;/a&gt;, as well as adding a
+non-Spark kernelspec to &lt;a class="reference external" href="https://github.com/jupyter-incubator/enterprise_gateway"&gt;Jupyter Enterprise Gateway&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;If this workflow looks useful to you, please feel free to reach out on &lt;a class="reference external" href="https://github.com/jcrist/skein"&gt;github&lt;/a&gt;. Issues, pull-requests, and discussions
+are welcome!&lt;/p&gt;
+&lt;hr class="docutils" /&gt;
+&lt;p&gt;&lt;em&gt;This work was made possible by my employer Anaconda Inc., as well as
+contributions and feedback from the larger Python community&lt;/em&gt;&lt;/p&gt;
+&lt;!-- - - Links - - --&gt;
+&lt;/div&gt;
+</content><category term="skein"></category></entry></feed>

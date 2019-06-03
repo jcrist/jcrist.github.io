@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=500" />
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="Marginally Stable Full Atom Feed"/>
+
+    <title>Deploying Dask on YARN // Marginally Stable</title>
+    <link rel="stylesheet" href="/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="/theme/css/code.css" type="text/css" />
+<link rel="stylesheet" href="/theme/css/article.css" type="text/css" />
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+            TeX: { equationNumbers: { autoNumber: "all" } }
+        });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <!--Top image-->
+    <div class="container">
+        <div class="topimage">
+            <img src="/theme/images/logo.png">
+        </div>
+    </div>
+
+    <!--Links and site title-->
+    <div class="topbar">
+        <span><a href="/">Marginally Stable</a></span>
+        <ul>
+                <li><a href="/blog.html">Blog</a></li>
+                <li><a href="/pages/about.html">About</a></li>
+                <li><a href="/pages/talks.html">Talks</a></li>
+                <li><a href="https://github.com/jcrist/AIOs">AIOS</a></li>
+        </ul>
+    </div>
+    <!--Content, footer, and scripts-->
+    <div class="container">
+    <div class="page-title">
+        <h1>Deploying Dask on YARN</h1>
+        <p>Wed 15 August 2018 &mdash; under
+            <a class="post-category" href="/tag/dask.html">dask</a>,
+            <a class="post-category" href="/tag/skein.html">skein</a>
+        </p>
+    </div>
+    <div class="section" id="summary">
+<h2>Summary</h2>
+<p>We present <a class="reference external" href="http://dask-yarn.readthedocs.io/">dask-yarn</a>, a library for deploying <a class="reference external" href="http://dask.pydata.org/">Dask</a> on <a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html">Apache YARN</a>. We
+discuss the status of this tool, and possibilities for future work.</p>
+</div>
+<div class="section" id="introduction">
+<h2>Introduction</h2>
+<p><a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html">Apache YARN</a> is the resource management and job scheduling framework native
+to Hadoop clusters. Many data-processing frameworks like Spark or Flink support
+YARN as a deployment option. As a contributor to <a class="reference external" href="http://dask.pydata.org/">Dask</a>, I sought to improve
+our YARN support. This work resulted in two new libraries:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://jcrist.github.io/skein/">Skein</a> - a generic library for deploying applications on YARN (you can read
+more about this library in <a class="reference external" href="http://jcrist.github.io/introducing-skein.html">my previous blogpost</a>).</li>
+<li><a class="reference external" href="http://dask-yarn.readthedocs.io/">Dask-Yarn</a> - a library for deploying Dask on YARN, using Skein as the backend.</li>
+</ul>
+<p>These tools empower users to use Dask for data-engineering tasks on Hadoop
+clusters, providing access to a field traditionally occupied by Spark and other
+&quot;big-data&quot; tools. If you use a Hadoop cluster and have been wanting to try
+Dask, I hope you'll give dask-yarn a try.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage</h2>
+<p>Dask-Yarn provides an implementation of Dask's <tt class="docutils literal">Cluster</tt> interface. This
+is the same interface provided by other Dask deployment libraries like
+<a class="reference external" href="https://dask-kubernetes.readthedocs.io/">dask-kubernetes</a> and <a class="reference external" href="https://dask-jobqueue.readthedocs.io/">dask-jobqueue</a>. It provides methods for starting,
+stopping, and scaling a Dask cluster on YARN, all from within Python.</p>
+<p>The library currently is intended to be used from an edge node - user driving
+code (whether a script or an interactive terminal) is run on the edge node,
+while Dask's scheduler and workers are run in YARN containers. For comparison,
+this is similar to <a class="reference external" href="https://spark.apache.org/docs/latest/running-on-yarn.html#launching-spark-on-yarn">Spark's client mode</a>
+for YARN deployment. In the future a <tt class="docutils literal"><span class="pre">dask-yarn</span> submit</tt> command may be
+developed to allow submitting the driving code to also run in a container as
+part of the application (similar to <tt class="docutils literal"><span class="pre">spark-submit</span></tt> in cluster mode).</p>
+<p>Dask-Yarn is agnostic to how Python environments are managed, but provides
+special support for distributing <a class="reference external" href="https://conda.io/docs/">Conda</a> environments packaged using
+<a class="reference external" href="https://conda.github.io/conda-pack/">conda-pack</a>. If an alternative method is desired, users can specify this by
+providing their own <a class="reference external" href="https://jcrist.github.io/skein/specification.html">specification</a>. Please see <a class="reference external" href="https://dask-yarn.readthedocs.io/en/latest/#distributing-python-environments">Distributing Python
+Environments</a>
+in the dask-yarn documentation for more information.</p>
+<div class="section" id="example">
+<h3>Example</h3>
+<p>Here we provide a quick example of starting and using a Dask cluster on YARN.
+This assumes you're logged into the edge node and <a class="reference external" href="https://conda.io/docs/">Conda</a> is available.</p>
+<p>First, we create a new conda environment for our dependencies.</p>
+<div class="highlight"><pre><span></span><span class="gp">#</span> Create a new conda environment <span class="k">for</span> our dependencies
+<span class="gp">$</span> conda create -n demo -c conda-forge dask-yarn conda-pack ipython pyarrow
+<span class="go">...</span>
+
+<span class="gp">#</span> Activate the environment
+<span class="gp">$</span> conda activate demo
+</pre></div>
+<p>Next we package this environment for distribution. We can do this using the
+<tt class="docutils literal">conda pack</tt> command. This packages the environment into a relocatable
+tarball so it can be distributed to the YARN containers.</p>
+<div class="highlight"><pre><span></span><span class="gp">#</span> Package the environment into environment.tar.gz
+<span class="gp">$</span> conda pack -o environment.tar.gz
+<span class="go">Collecting packages...</span>
+<span class="go">Packing environment at &#39;/home/jcrist/miniconda/envs/demo&#39; to &#39;environment.tar.gz&#39;</span>
+<span class="go">[########################################] | 100% Completed | 45.8s</span>
+</pre></div>
+<p>Now we can launch a Dask cluster and use it to do some work. We'll work
+interactively in IPython, but the same code could be part of a
+script/application.</p>
+<p>To start a cluster we create a <tt class="docutils literal">YarnCluster</tt> object. We'll create a cluster
+with 4 workers, each with 4 GB of memory and 2 cores.</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">dask_yarn</span> <span class="kn">import</span> <span class="n">YarnCluster</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">cluster</span> <span class="o">=</span> <span class="n">YarnCluster</span><span class="p">(</span><span class="n">environment</span><span class="o">=</span><span class="s1">&#39;environment.tar.gz&#39;</span><span class="p">,</span>
+<span class="o">...</span><span class="p">:</span>                          <span class="n">worker_vcores</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="o">...</span><span class="p">:</span>                          <span class="n">worker_memory</span><span class="o">=</span><span class="s1">&#39;4GB&#39;</span>
+<span class="o">...</span><span class="p">:</span>                          <span class="n">n_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+<p>Next we connect to the cluster by creating a <tt class="docutils literal">dask.distributed.Client</tt>.</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">dask.distributed</span> <span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">cluster</span><span class="p">)</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">client</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="o">&lt;</span><span class="n">Client</span><span class="p">:</span> <span class="n">scheduler</span><span class="o">=</span><span class="s1">&#39;tcp://172.18.0.2:36217&#39;</span> <span class="n">processes</span><span class="o">=</span><span class="mi">4</span> <span class="n">cores</span><span class="o">=</span><span class="mi">8</span><span class="o">&gt;</span>
+</pre></div>
+<p>From the above we can see that we have 4 workers, and 8 cores total. You can
+verify things are indeed running on YARN by checking the YARN Web-UI. You'll
+need the application id, which is available as an attribute on the
+<tt class="docutils literal">YarnCluster</tt> object.</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">cluster</span><span class="o">.</span><span class="n">app_id</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="s1">&#39;application_1534359864394_0001&#39;</span>
+</pre></div>
+<img alt="YARN Web-UI" class="align-center" src="/images/dask-yarn-resourcemanager.png" style="width: 90%;" />
+<p>Now we can do whatever computations we want to do. Perhaps we want to read some
+parquet files off of HDFS and compute a few statistics.</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">7</span><span class="p">]:</span> <span class="n">ddf</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="s1">&#39;hdfs:///user/jcrist/nycflights.parquet&#39;</span><span class="p">)</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">8</span><span class="p">]:</span> <span class="n">ddf</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">ddf</span><span class="o">.</span><span class="n">Origin</span><span class="p">)</span><span class="o">.</span><span class="n">DepDelay</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">8</span><span class="p">]:</span>
+<span class="n">Origin</span>
+<span class="n">EWR</span>     <span class="mf">9.308481</span>
+<span class="n">JFK</span>    <span class="mf">10.118569</span>
+<span class="n">LGA</span>     <span class="mf">6.939973</span>
+<span class="n">Name</span><span class="p">:</span> <span class="n">DepDelay</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">float64</span>
+</pre></div>
+<p>The number of workers can be scaled up and down dynamically as needed using the
+<tt class="docutils literal">YarnCluster</tt> object.</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">9</span><span class="p">]:</span> <span class="n">cluster</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>  <span class="c1"># Scale up to 8 workers</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">10</span><span class="p">]:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="o">.</span><span class="n">workers</span><span class="p">())</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">10</span><span class="p">]:</span> <span class="mi">8</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">11</span><span class="p">]:</span> <span class="n">cluster</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Scale down to 2 workers</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">12</span><span class="p">]:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster</span><span class="o">.</span><span class="n">workers</span><span class="p">())</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">12</span><span class="p">]:</span> <span class="mi">2</span>
+</pre></div>
+<p>When you're done, you can manually shutdown the cluster by calling the
+<tt class="docutils literal">YarnCluster.shutdown</tt> method. If you don't manually call <tt class="docutils literal">shutdown</tt>, the
+cluster will be automatically shutdown on exit.</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">13</span><span class="p">]:</span> <span class="n">cluster</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="when-is-this-useful">
+<h2>When is this Useful?</h2>
+<p>This functionality brings Dask to anyone that has access to a cluster edge
+node. If you can run <tt class="docutils literal">spark submit</tt> on your cluster, then dask-yarn should
+work fine for you. This allows Dask to be used for many data-engineering tasks,
+bringing Dask to a field traditionally occupied by Spark and other &quot;big-data&quot;
+tools.</p>
+<p>For users without direct access to the cluster this may be less useful. One
+possibility for bringing support to users with restricted access is to build a
+service similar to <a class="reference external" href="http://livy.incubator.apache.org/">Livy</a> that runs on an edge node and securely proxies
+connections to Dask clusters running on YARN. See <a class="reference external" href="https://github.com/dask/distributed/issues/2043">this issue</a> for more discussion.</p>
+</div>
+<div class="section" id="conclusion-and-future-work">
+<h2>Conclusion and Future Work</h2>
+<p>Is this tool useful for you? Are there missing features that would make it more
+useful? Please <a class="reference external" href="https://github.com/dask/dask-yarn/issues">let us know</a>! Feedback
+is critical to improving the deployment experience for everyone.</p>
+<p>In the immediate future I plan to add support for <a class="reference external" href="http://dask.pydata.org/en/latest/setup/adaptive.html">adaptive deployments</a>, as
+well as a <tt class="docutils literal"><span class="pre">dask-yarn</span></tt> CLI to allow submitting jobs to run on the cluster
+(similar to <tt class="docutils literal"><span class="pre">spark-submit</span></tt> in cluster mode).</p>
+<hr class="docutils" />
+<p><em>This work was made possible by my employer Anaconda Inc., as well as
+contributions and feedback from the larger Python community</em></p>
+</div>
+
+
+    <div class="comments">
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = "marginallystable"; // required: replace example with your forum shortname
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </div>
+
+<div class="container bottom">
+    <hr>
+    <p>
+        All content copyright 2014-2018 Jim Crist unless otherwise noted.
+        Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+    </p>
+    <p>
+    Find me on <a href="https://twitter.com/jiminy_crist">Twitter</a>, <a 
+        href="https://github.com/jcrist">GitHub</a>, <a
+        href="https://speakerdeck.com/jcrist">Speaker Deck</a>, or shoot me an <a
+    href="mailto:jiminy.crist@gmail.com">email</a>.
+    </p>
+</div>    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        try {
+            var pageTracker = _gat._getTracker("UA-40063290-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+    </script>
+    </div>
+</body>
+</html>

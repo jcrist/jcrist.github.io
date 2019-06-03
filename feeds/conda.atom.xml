@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable - conda</title><link href="/" rel="alternate"></link><link href="/feeds/conda.atom.xml" rel="self"></link><id>/</id><updated>2019-06-03T14:30:00-05:00</updated><entry><title>Smaller Docker images with Conda</title><link href="/conda-docker-tips.html" rel="alternate"></link><published>2019-06-03T14:30:00-05:00</published><updated>2019-06-03T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2019-06-03:/conda-docker-tips.html</id><summary type="html">&lt;p class="first last"&gt;Tips for reducing the size of docker images that use Conda&lt;/p&gt;
+</summary><content type="html">&lt;div class="section" id="summary"&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;We provide a few tips for reducing the size of docker images that use Conda,
+reducing an example docker image to 15% of its original size.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="introduction"&gt;
+&lt;h2&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;&lt;a class="reference external" href="https://conda.io/docs/"&gt;Conda&lt;/a&gt; is a useful tool for managing application dependencies. When combined
+with &lt;a class="reference external" href="https://www.docker.com/"&gt;Docker&lt;/a&gt; for deployment you can have a nice workflow for reproducible
+application environments.&lt;/p&gt;
+&lt;p&gt;If you're not careful though, you can end up with extremely large Docker
+images. Larger images increase disk usage, are slower to upload/download, and
+have an increased attack surface. While image size isn't always important, I
+wanted to see how small an image I could reasonably create running &lt;a class="reference external" href="https://dask.org/"&gt;Dask&lt;/a&gt; (a
+&lt;a class="reference external" href="https://conda.io/docs/"&gt;Conda&lt;/a&gt; backed application).&lt;/p&gt;
+&lt;p&gt;The end result is a set of docker images for running &lt;a class="reference external" href="https://dask.org/"&gt;Dask&lt;/a&gt;, which can be found
+&lt;a class="reference external" href="https://github.com/jcrist/alpine-dask-docker"&gt;here&lt;/a&gt;. Below we'll walk through all the steps involved in reducing the image
+size.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-0-initial-working-image-1-69-gb"&gt;
+&lt;h2&gt;Step 0: Initial Working Image (1.69 GB)&lt;/h2&gt;
+&lt;p&gt;We'll be working through reducing the size of an image for running the Dask
+Scheduler/Workers (a simplified version of those found in the official
+&lt;a class="reference external" href="https://github.com/dask/dask-docker"&gt;dask-docker images&lt;/a&gt;. The &lt;tt class="docutils literal"&gt;Dockerfile&lt;/tt&gt; is as follows:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;dask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.2.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;numpy&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.16.3 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;pandas&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.24.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;tini&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.18.0
+
+&lt;span class="k"&gt;ENTRYPOINT&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;tini&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;-g&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;--&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It installs a few dependencies, and sets &lt;a class="reference external" href="https://github.com/krallin/tini"&gt;tini&lt;/a&gt; as the entrypoint. Building and
+testing that it works:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Build the image&lt;/span&gt;
+$ docker build . -t myimage
+...
+
+&lt;span class="c1"&gt;# Start a dask scheduler&lt;/span&gt;
+$ docker run myimage dask-scheduler
+distributed.scheduler - INFO - -----------------------------------------------
+distributed.scheduler - INFO - Clear task state
+distributed.scheduler - INFO -   Scheduler at:     tcp://172.17.0.2:8786
+distributed.scheduler - INFO -       bokeh at:                     :8787
+distributed.scheduler - INFO - Local Directory:    /tmp/scheduler-wcgj6uqw
+distributed.scheduler - INFO - -----------------------------------------------
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Everything works as expected, hooray! Unfortunately our image size is a bit
+larger than we'd like:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker image ls myimage
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+myimage             latest              8856981797ab        &lt;span class="m"&gt;2&lt;/span&gt; minutes ago       &lt;span class="m"&gt;1&lt;/span&gt;.69GB
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Our naive image is 1.69 GB, just for running the dask scheduler! Surely we can
+do better than that!&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-1-don-t-use-mkl-729-mb"&gt;
+&lt;h2&gt;Step 1: Don't use MKL (729 MB)&lt;/h2&gt;
+&lt;p&gt;When using the &lt;tt class="docutils literal"&gt;defaults&lt;/tt&gt; Conda channel, &lt;tt class="docutils literal"&gt;mkl&lt;/tt&gt; is installed as the BLAS
+library. While fast, the binaries included are rather large:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ du -ch /opt/conda/lib/libmkl_* &lt;span class="p"&gt;|&lt;/span&gt; grep total
+746M    total
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The easiest fix for this is to use &lt;tt class="docutils literal"&gt;openblas&lt;/tt&gt; instead of &lt;tt class="docutils literal"&gt;mkl&lt;/tt&gt;, which can
+be done by adding &lt;tt class="docutils literal"&gt;nomkl&lt;/tt&gt; as a dependency. Users using the &lt;a class="reference external" href="https://conda-forge.org/"&gt;Conda-Forge&lt;/a&gt;
+channel will get &lt;tt class="docutils literal"&gt;openblas&lt;/tt&gt; by default and won't need the &lt;tt class="docutils literal"&gt;nomkl&lt;/tt&gt;
+dependency.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes &lt;span class="se"&gt;\&lt;/span&gt;
+    nomkl &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;dask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.2.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;numpy&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.16.3 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;pandas&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.24.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;tini&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.18.0
+
+&lt;span class="k"&gt;ENTRYPOINT&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;tini&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;-g&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;--&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker image ls myimage
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+myimage             latest              da9de3dd648d        &lt;span class="m"&gt;18&lt;/span&gt; seconds ago      729MB
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-2-cleanup-after-a-conda-install-633-mb"&gt;
+&lt;h2&gt;Step 2: Cleanup after a Conda install (633 MB)&lt;/h2&gt;
+&lt;p&gt;Files added to docker images are stored in immutable layers. After each command
+the filesystem is checkpointed, and the diff from the previous command stored
+as a layer (kind of like git). As such, it's best to have &lt;tt class="docutils literal"&gt;RUN&lt;/tt&gt; commands that
+install things using a package manager (like &lt;tt class="docutils literal"&gt;conda&lt;/tt&gt;) also cleanup extraneous
+files after the install.&lt;/p&gt;
+&lt;p&gt;For &lt;tt class="docutils literal"&gt;conda&lt;/tt&gt;, the most thorough cleanup command is &lt;tt class="docutils literal"&gt;conda clean &lt;span class="pre"&gt;-afy&lt;/span&gt;&lt;/tt&gt;. This
+removes cache files, package tarballs, and the entire package cache. To ensure
+only necessary files are saved in each layer, you'll want to add this to the
+end of any &lt;tt class="docutils literal"&gt;RUN&lt;/tt&gt; command that installs packages with &lt;tt class="docutils literal"&gt;conda&lt;/tt&gt;.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes &lt;span class="se"&gt;\&lt;/span&gt;
+    nomkl &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;dask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.2.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;numpy&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.16.3 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;pandas&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.24.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;tini&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.18.0 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; conda clean -afy
+
+&lt;span class="k"&gt;ENTRYPOINT&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;tini&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;-g&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;--&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker image ls myimage
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+myimage             latest              1e28ae036d28        &lt;span class="m"&gt;13&lt;/span&gt; seconds ago      633MB
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-3-avoid-updating-existing-packages-633-mb"&gt;
+&lt;h2&gt;Step 3: Avoid updating existing packages (633 MB)&lt;/h2&gt;
+&lt;p&gt;Just as you want to cleanup Conda's cache files at the end of each &lt;tt class="docutils literal"&gt;RUN&lt;/tt&gt;
+command, you also want to ensure you don't update any installed packages.
+Updates to packages will result in both the original version and the new
+version being stored in layers in the image, increasing image size. The
+&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;--freeze-installed&lt;/span&gt;&lt;/tt&gt; flag tells Conda to avoid updating already installed
+packages, and should be added to any &lt;tt class="docutils literal"&gt;install&lt;/tt&gt; command. This isn't super
+important for this image, but becomes more important if multiple rounds of
+&lt;tt class="docutils literal"&gt;conda install&lt;/tt&gt; commands are used.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes --freeze-installed &lt;span class="se"&gt;\&lt;/span&gt;
+    nomkl &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;dask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.2.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;numpy&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.16.3 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;pandas&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.24.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;tini&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.18.0 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; conda clean -afy
+
+&lt;span class="k"&gt;ENTRYPOINT&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;tini&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;-g&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;--&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker image ls myimage
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+myimage             latest              b85824ca515e        &lt;span class="m"&gt;16&lt;/span&gt; seconds ago      633MB
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-4-remove-additional-unnecessary-files-577-mb"&gt;
+&lt;h2&gt;Step 4: Remove additional unnecessary files (577 MB)&lt;/h2&gt;
+&lt;p&gt;Besides the cache files removed above, &lt;tt class="docutils literal"&gt;conda&lt;/tt&gt; also may install files that
+aren't 100% necessary for your application. These are things that are included
+in a &lt;tt class="docutils literal"&gt;conda&lt;/tt&gt; package, but you may not need and end up just taking up space.
+In our case, we remove the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p class="first"&gt;Python Bytecode Files: 54 MB&lt;/p&gt;
+&lt;p&gt;Every Python source file installed by Conda has a corresponding bytecode
+cache file (&lt;tt class="docutils literal"&gt;*.pyc&lt;/tt&gt;) installed as well. These files are redundant and can
+be removed. To prevent Python from recreating them at runtime we also set the
+&lt;tt class="docutils literal"&gt;PYTHONDONTWRITEBYTECODE&lt;/tt&gt; environment variable&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Static Libraries: 42 MB&lt;/p&gt;
+&lt;p&gt;Several packages come with static libraries that we won't be needing in our
+Docker image. Ideally these static libraries should be split into separate
+packages (I &lt;a class="reference external" href="https://github.com/conda-forge/openssl-feedstock/issues/45"&gt;filed&lt;/a&gt; &lt;a class="reference external" href="https://github.com/conda-forge/openblas-feedstock/issues/69"&gt;a few&lt;/a&gt; &lt;a class="reference external" href="https://github.com/conda-forge/python-feedstock/issues/260"&gt;issues&lt;/a&gt; on the major
+offenders, but this will take some time and community effort to fix). For now
+we can remove them manually.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;JavaScript Source Maps: 19 MB&lt;/p&gt;
+&lt;p&gt;Several libraries (&lt;tt class="docutils literal"&gt;bokeh&lt;/tt&gt;, &lt;tt class="docutils literal"&gt;jupyterlab&lt;/tt&gt;, etc...) distribute JavaScript
+source maps (&lt;tt class="docutils literal"&gt;*.js.map&lt;/tt&gt;) as part of the library. These source maps are useful for
+debugging, but aren't needed in production and can be removed. As with the
+static libraries above, there are issues for removing these but they'll take
+time to handle.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p class="first"&gt;Unminified Bokeh JavaScript: 16 MB&lt;/p&gt;
+&lt;p&gt;Bokeh distributes both minified and unminified JavaScript resources. We only
+use the minified version in Dask, so we can remove the unminified files.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Applying these changes to our Dockerfile:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+
+&lt;span class="k"&gt;ENV&lt;/span&gt; &lt;span class="nv"&gt;PYTHONDONTWRITEBYTECODE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nb"&gt;true&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes --freeze-installed &lt;span class="se"&gt;\&lt;/span&gt;
+    nomkl &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;dask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.2.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;numpy&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.16.3 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;pandas&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.24.2 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="nv"&gt;tini&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.18.0 &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; conda clean -afy &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; find /opt/conda/ -follow -type f -name &lt;span class="s1"&gt;&amp;#39;*.a&amp;#39;&lt;/span&gt; -delete &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; find /opt/conda/ -follow -type f -name &lt;span class="s1"&gt;&amp;#39;*.pyc&amp;#39;&lt;/span&gt; -delete &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; find /opt/conda/ -follow -type f -name &lt;span class="s1"&gt;&amp;#39;*.js.map&amp;#39;&lt;/span&gt; -delete &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; find /opt/conda/lib/python*/site-packages/bokeh/server/static -follow -type f -name &lt;span class="s1"&gt;&amp;#39;*.js&amp;#39;&lt;/span&gt; ! -name &lt;span class="s1"&gt;&amp;#39;*.min.js&amp;#39;&lt;/span&gt; -delete
+
+&lt;span class="k"&gt;ENTRYPOINT&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;tini&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;-g&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;--&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker image ls myimage
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+myimage             latest              5744d3087c78        &lt;span class="m"&gt;8&lt;/span&gt; seconds ago       577MB
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="step-5-use-a-smaller-base-image-258-mb"&gt;
+&lt;h2&gt;Step 5: Use a smaller base image (258 MB)&lt;/h2&gt;
+&lt;p&gt;So far we've been using the &lt;tt class="docutils literal"&gt;miniconda3&lt;/tt&gt; base image provided by Anaconda.
+This image is built on &lt;tt class="docutils literal"&gt;debian&lt;/tt&gt;, and has lots of features we don't need.
+Instead, we can build our image on &lt;a class="reference external" href="https://alpinelinux.org/"&gt;Alpine Linux&lt;/a&gt;, a much slimmer base image.
+Since Alpine Linux uses &lt;tt class="docutils literal"&gt;musl&lt;/tt&gt; by default (while Conda packages are built on
+&lt;tt class="docutils literal"&gt;glibc&lt;/tt&gt;) we need to do some workarounds to keep everything working. These
+patches have been applied, and a new miniconda base image is available at
+&lt;a class="reference external" href="https://cloud.docker.com/repository/docker/jcrist/alpine-conda"&gt;jcrist/alpine-conda&lt;/a&gt;. This image
+already has &lt;tt class="docutils literal"&gt;tini&lt;/tt&gt; installed and sets &lt;tt class="docutils literal"&gt;PYTHONDONTWRITEBYTECODE&lt;/tt&gt;, so we can
+drop those from our dockerfile.&lt;/p&gt;
+&lt;p&gt;Updating our Dockerfile:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; jcrist/alpine-conda:4.6.8&lt;/span&gt;
+
+&lt;span class="k"&gt;RUN&lt;/span&gt; /opt/conda/bin/conda install --yes --freeze-installed &lt;span class="se"&gt;\&lt;/span&gt;
+        &lt;span class="nv"&gt;dask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.2.2 &lt;span class="se"&gt;\&lt;/span&gt;
+        &lt;span class="nv"&gt;numpy&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.16.3 &lt;span class="se"&gt;\&lt;/span&gt;
+        &lt;span class="nv"&gt;pandas&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;.24.2 &lt;span class="se"&gt;\&lt;/span&gt;
+        nomkl &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; /opt/conda/bin/conda clean -afy &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; find /opt/conda/ -follow -type f -name &lt;span class="s1"&gt;&amp;#39;*.a&amp;#39;&lt;/span&gt; -delete &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; find /opt/conda/ -follow -type f -name &lt;span class="s1"&gt;&amp;#39;*.pyc&amp;#39;&lt;/span&gt; -delete &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; find /opt/conda/ -follow -type f -name &lt;span class="s1"&gt;&amp;#39;*.js.map&amp;#39;&lt;/span&gt; -delete &lt;span class="se"&gt;\&lt;/span&gt;
+    &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; find /opt/conda/lib/python*/site-packages/bokeh/server/static -follow -type f -name &lt;span class="s1"&gt;&amp;#39;*.js&amp;#39;&lt;/span&gt; ! -name &lt;span class="s1"&gt;&amp;#39;*.min.js&amp;#39;&lt;/span&gt; -delete
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ docker image ls myimage
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+myimage             latest              cfc76843c98c        &lt;span class="m"&gt;51&lt;/span&gt; seconds ago      258MB
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="conclusion-and-future-work"&gt;
+&lt;h2&gt;Conclusion and Future Work&lt;/h2&gt;
+&lt;p&gt;Applying the above steps we went from &lt;tt class="docutils literal"&gt;1.69 GB&lt;/tt&gt; with our naive dockerfile
+down to &lt;tt class="docutils literal"&gt;258 MB&lt;/tt&gt; with the optimized version, &lt;tt class="docutils literal"&gt;~15%&lt;/tt&gt; the size of the
+original version! These images distribute much faster over the network, which
+can lead to faster application startup on a fresh cluster.&lt;/p&gt;
+&lt;p&gt;The final images can be found in the &lt;a class="reference external" href="https://github.com/jcrist/alpine-dask-docker"&gt;alpine-dask-docker&lt;/a&gt; repository, and
+should be direct drop ins for their debian-based counterparts found for the
+standard &lt;a class="reference external" href="https://github.com/dask/dask-docker"&gt;dask-docker images&lt;/a&gt;. In particular, they should work with the
+existing &lt;a class="reference external" href="https://github.com/helm/charts/tree/master/stable/dask"&gt;dask helm chart&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;To make creating smaller images easier, some work is being done in the
+Conda-Forge community to reduce package size - splitting out static libraries
+and removing unnecessary files from the package.  Likewise, the above
+techniques may be applied to the official Anaconda &lt;a class="reference external" href="https://hub.docker.com/r/continuumio/miniconda3"&gt;miniconda3 base image&lt;/a&gt;.
+If you're interested in this effort, please feel free to reach out to the
+appropriate repos/feedstocks.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="conda"></category><category term="docker"></category></entry></feed>

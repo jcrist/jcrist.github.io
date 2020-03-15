@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2019-06-03T14:30:00-05:00</updated><entry><title>Smaller Docker images with Conda</title><link href="/conda-docker-tips.html" rel="alternate"></link><published>2019-06-03T14:30:00-05:00</published><updated>2019-06-03T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2019-06-03:/conda-docker-tips.html</id><summary type="html">&lt;p class="first last"&gt;Tips for reducing the size of docker images that use Conda&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/all.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2019-06-03T14:30:00-05:00</updated><entry><title>Smaller Docker images with Conda</title><link href="https://jcristharif.com/conda-docker-tips.html" rel="alternate"></link><published>2019-06-03T14:30:00-05:00</published><updated>2019-06-03T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2019-06-03:/conda-docker-tips.html</id><summary type="html">&lt;p class="first last"&gt;Tips for reducing the size of docker images that use Conda&lt;/p&gt;
 </summary><content type="html">&lt;div class="section" id="summary"&gt;
 &lt;h2&gt;Summary&lt;/h2&gt;
 &lt;p&gt;We provide a few tips for reducing the size of docker images that use Conda,
@@ -243,7 +243,7 @@ techniques may be applied to the official Anaconda &lt;a class="reference extern
 If you're interested in this effort, please feel free to reach out to the
 appropriate repos/feedstocks.&lt;/p&gt;
 &lt;/div&gt;
-</content><category term="conda"></category><category term="docker"></category></entry><entry><title>Deploying Dask on YARN</title><link href="/dask-on-yarn.html" rel="alternate"></link><published>2018-08-15T16:00:00-05:00</published><updated>2018-08-15T16:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2018-08-15:/dask-on-yarn.html</id><summary type="html">&lt;p class="first last"&gt;Development status of deploying Dask on YARN&lt;/p&gt;
+</content><category term="conda"></category><category term="conda"></category><category term="docker"></category></entry><entry><title>Deploying Dask on YARN</title><link href="https://jcristharif.com/dask-on-yarn.html" rel="alternate"></link><published>2018-08-15T16:00:00-05:00</published><updated>2018-08-15T16:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2018-08-15:/dask-on-yarn.html</id><summary type="html">&lt;p class="first last"&gt;Development status of deploying Dask on YARN&lt;/p&gt;
 </summary><content type="html">&lt;div class="section" id="summary"&gt;
 &lt;h2&gt;Summary&lt;/h2&gt;
 &lt;p&gt;We present &lt;a class="reference external" href="http://dask-yarn.readthedocs.io/"&gt;dask-yarn&lt;/a&gt;, a library for deploying &lt;a class="reference external" href="http://dask.pydata.org/"&gt;Dask&lt;/a&gt; on &lt;a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html"&gt;Apache YARN&lt;/a&gt;. We
@@ -388,7 +388,7 @@ well as a &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;dask-yarn&l
 &lt;p&gt;&lt;em&gt;This work was made possible by my employer Anaconda Inc., as well as
 contributions and feedback from the larger Python community&lt;/em&gt;&lt;/p&gt;
 &lt;/div&gt;
-</content><category term="dask"></category><category term="skein"></category></entry><entry><title>Introducing Skein: Deploy Python on Apache YARN the Easy Way</title><link href="/introducing-skein.html" rel="alternate"></link><published>2018-08-14T12:00:00-05:00</published><updated>2018-08-14T12:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2018-08-14:/introducing-skein.html</id><summary type="html">&lt;p class="first last"&gt;New tools to simplify deploying Python applications on Apache YARN.&lt;/p&gt;
+</content><category term="dask"></category><category term="dask"></category><category term="skein"></category></entry><entry><title>Introducing Skein: Deploy Python on Apache YARN the Easy Way</title><link href="https://jcristharif.com/introducing-skein.html" rel="alternate"></link><published>2018-08-14T12:00:00-05:00</published><updated>2018-08-14T12:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2018-08-14:/introducing-skein.html</id><summary type="html">&lt;p class="first last"&gt;New tools to simplify deploying Python applications on Apache YARN.&lt;/p&gt;
 </summary><content type="html">&lt;div class="section" id="summary"&gt;
 &lt;h2&gt;Summary&lt;/h2&gt;
 &lt;p&gt;We introduce &lt;a class="reference external" href="https://jcrist.github.io/skein/"&gt;a new tool and library&lt;/a&gt; for
@@ -745,7 +745,7 @@ are welcome!&lt;/p&gt;
 contributions and feedback from the larger Python community&lt;/em&gt;&lt;/p&gt;
 &lt;!-- - - Links - - --&gt;
 &lt;/div&gt;
-</content><category term="skein"></category></entry><entry><title>Reading List, 2017</title><link href="/reading-2017.html" rel="alternate"></link><published>2018-01-01T12:30:00-06:00</published><updated>2018-01-01T12:30:00-06:00</updated><author><name>Jim Crist</name></author><id>tag:None,2018-01-01:/reading-2017.html</id><summary type="html">&lt;p&gt;Everything I read in 2017&lt;/p&gt;</summary><content type="html">&lt;p&gt;Growing up I used to read &lt;em&gt;a lot&lt;/em&gt;, but fell out of habit during college due to
+</content><category term="skein"></category><category term="skein"></category></entry><entry><title>Reading List, 2017</title><link href="https://jcristharif.com/reading-2017.html" rel="alternate"></link><published>2018-01-01T12:30:00-06:00</published><updated>2018-01-01T12:30:00-06:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2018-01-01:/reading-2017.html</id><summary type="html">&lt;p&gt;Everything I read in 2017&lt;/p&gt;</summary><content type="html">&lt;p&gt;Growing up I used to read &lt;em&gt;a lot&lt;/em&gt;, but fell out of habit during college due to
 lack of time. This year my new year's resolution was to read again. I set a
 goal of reading 26 books (1 every 2 weeks), and managed to exceed that by 3.
 Going to shoot for 30 in 2018 :). Here it is, everything I read in 2017:&lt;/p&gt;
@@ -832,7 +832,7 @@ I still can't get through it).&lt;/p&gt;
   (for incoming freshman), and is the most recently published book I read. I
   loved it enough to mail it to my sister, who's passing it on. Recommend.&lt;/p&gt;
 &lt;/li&gt;
-&lt;/ul&gt;</content><category term="ramblings"></category></entry><entry><title>Introducing Dask-SearchCV</title><link href="/introducing-dask-searchcv.html" rel="alternate"></link><published>2017-04-04T15:00:00-05:00</published><updated>2017-04-04T15:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2017-04-04:/introducing-dask-searchcv.html</id><summary type="html">&lt;p&gt;A new library for distributed hyperparameter optimization&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;/ul&gt;</content><category term="Ramblings"></category><category term="ramblings"></category></entry><entry><title>Introducing Dask-SearchCV</title><link href="https://jcristharif.com/introducing-dask-searchcv.html" rel="alternate"></link><published>2017-04-04T15:00:00-05:00</published><updated>2017-04-04T15:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2017-04-04:/introducing-dask-searchcv.html</id><summary type="html">&lt;p&gt;A new library for distributed hyperparameter optimization&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Summary&lt;/h2&gt;
 &lt;p&gt;We introduce &lt;a href="http://dask-searchcv.readthedocs.io"&gt;a new library&lt;/a&gt; for doing
 distributed hyperparameter optimization with Scikit-Learn estimators. We
 compare it to the existing Scikit-Learn implementations, and discuss when it
@@ -841,9 +841,9 @@ may be useful compared to other approaches.&lt;/p&gt;
 &lt;p&gt;Last summer I spent some time experimenting with combining
 &lt;a href="http://dask.pydata.org/en/latest/"&gt;dask&lt;/a&gt; and
 &lt;a href="http://scikit-learn.org/stable/"&gt;scikit-learn&lt;/a&gt; (chronicled in this
-&lt;a href="/dask-sklearn-part-1.html"&gt;series&lt;/a&gt; &lt;a href="/dask-sklearn-part-2.html"&gt;of
+&lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;series&lt;/a&gt; &lt;a href="https://jcristharif.com/dask-sklearn-part-2.html"&gt;of
 blog&lt;/a&gt;
-&lt;a href="/dask-sklearn-part-3.html"&gt;posts&lt;/a&gt;). The library that work produced was
+&lt;a href="https://jcristharif.com/dask-sklearn-part-3.html"&gt;posts&lt;/a&gt;). The library that work produced was
 extremely alpha, and nothing really came out of it. Recently I picked this work
 up again, and am happy to say that we now have something I can be happy with.
 This involved a few major changes:&lt;/p&gt;
@@ -1223,8 +1223,8 @@ to work on. If you have knowledge in this domain, please weigh in on the
 XDATA program&lt;/a&gt;, and the Data Driven
 Discovery Initiative from the &lt;a href="https://www.moore.org/"&gt;Moore Foundation&lt;/a&gt;.
 Thanks also to &lt;a href="http://matthewrocklin.com/blog/"&gt;Matthew Rocklin&lt;/a&gt; and &lt;a href="https://github.com/electronwill"&gt;Will
-Warner&lt;/a&gt; for feedback on drafts of this post.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Putting it all together</title><link href="/dask-sklearn-part-3.html" rel="alternate"></link><published>2016-07-26T16:30:00-05:00</published><updated>2016-07-26T16:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2016-07-26:/dask-sklearn-part-3.html</id><summary type="html">&lt;p&gt;Combining model-parallelism and data-parallelism&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
-exists. Please see &lt;a href="/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
+Warner&lt;/a&gt; for feedback on drafts of this post.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Putting it all together</title><link href="https://jcristharif.com/dask-sklearn-part-3.html" rel="alternate"></link><published>2016-07-26T16:30:00-05:00</published><updated>2016-07-26T16:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2016-07-26:/dask-sklearn-part-3.html</id><summary type="html">&lt;p&gt;Combining model-parallelism and data-parallelism&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
+exists. Please see &lt;a href="https://jcristharif.com/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
 and the &lt;a href="http://dask-searchcv.readthedocs.io/en/latest/"&gt;corresponding
 documentation&lt;/a&gt; for the current
 state of things.&lt;/em&gt;&lt;/p&gt;
@@ -1232,13 +1232,13 @@ state of things.&lt;/em&gt;&lt;/p&gt;
 work&lt;/a&gt; with dask and scikit-learn.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;a href="/dask-sklearn-part-1.html"&gt;In part 1&lt;/a&gt; we discussed model-parallelism
+&lt;p&gt;&lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;In part 1&lt;/a&gt; we discussed model-parallelism
   &amp;mdash; fitting several models across the same data. We found that in some
   cases we could eliminate repeated work, resulting in improved performance of
   &lt;code&gt;GridSearchCV&lt;/code&gt; and &lt;code&gt;RandomizedSearchCV&lt;/code&gt;.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;a href="/dask-sklearn-part-2.html"&gt;In part 2&lt;/a&gt; we discussed patterns for
+&lt;p&gt;&lt;a href="https://jcristharif.com/dask-sklearn-part-2.html"&gt;In part 2&lt;/a&gt; we discussed patterns for
   data-parallelism &amp;mdash; fitting a single model on partitioned data. We found
   that by implementing simple parallel patterns with a scikit-learn compatible
   interface we could fit models on larger datasets in a clean and standard way.&lt;/p&gt;
@@ -1472,18 +1472,6 @@ the relationship between certain features and our target variable.&lt;/p&gt;
 Bokeh.set_log_level("info");
 &lt;/script&gt;
 
-&lt;style&gt;
-    html {
-    width: 100%;
-    height: 100%;
-    }
-    body {
-    width: 90%;
-    height: 100%;
-    margin: auto;
-    }
-&lt;/style&gt;
-
 &lt;p&gt;&lt;/head&gt;
 &lt;body&gt;&lt;/p&gt;
 &lt;div class="bk-root"&gt;
@@ -1619,7 +1607,7 @@ We'll hold back &lt;code&gt;20%&lt;/code&gt; of the rows:&lt;/p&gt;
 
 
 &lt;h2&gt;Create an estimator&lt;/h2&gt;
-&lt;p&gt;As discussed in &lt;a href="/dask-sklearn-part-2.html"&gt;the previous post&lt;/a&gt;,
+&lt;p&gt;As discussed in &lt;a href="https://jcristharif.com/dask-sklearn-part-2.html"&gt;the previous post&lt;/a&gt;,
 dask-learn contains several parallelization patterns for wrapping scikit-learn
 estimators. These make it easy to use with any estimator that matches the
 scikit-learn standard interface. Here we'll wrap a &lt;code&gt;SGDClassifier&lt;/code&gt; with the
@@ -1651,7 +1639,7 @@ training data with potentially missing years.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;Finally we can call &lt;code&gt;fit&lt;/code&gt; and perform the grid search. As discussed in &lt;a href="/dask-sklearn-part-1.html"&gt;In part
+&lt;p&gt;Finally we can call &lt;code&gt;fit&lt;/code&gt; and perform the grid search. As discussed in &lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;In part
 1&lt;/a&gt;, &lt;code&gt;GridSearchCV&lt;/code&gt; isn't lazy due to some
 complications with the scikit-learn api, so this call to &lt;code&gt;fit&lt;/code&gt; runs
 immediately.&lt;/p&gt;
@@ -1826,13 +1814,13 @@ feel free to reach out in the comments below, or &lt;a href="https://github.com/
 github&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;This work is supported by &lt;a href="http://continuum.io/"&gt;Continuum Analytics&lt;/a&gt; and the
 &lt;a href="http://www.darpa.mil/program/XDATA"&gt;XDATA&lt;/a&gt; program as part of the &lt;a href="http://blaze.pydata.org/"&gt;Blaze
-Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Data Parallelism</title><link href="/dask-sklearn-part-2.html" rel="alternate"></link><published>2016-07-19T14:30:00-05:00</published><updated>2016-07-19T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2016-07-19:/dask-sklearn-part-2.html</id><summary type="html">&lt;p&gt;Parallelization patterns for scikit-learn estimators.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
-exists. Please see &lt;a href="/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
+Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Data Parallelism</title><link href="https://jcristharif.com/dask-sklearn-part-2.html" rel="alternate"></link><published>2016-07-19T14:30:00-05:00</published><updated>2016-07-19T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2016-07-19:/dask-sklearn-part-2.html</id><summary type="html">&lt;p&gt;Parallelization patterns for scikit-learn estimators.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
+exists. Please see &lt;a href="https://jcristharif.com/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
 and the &lt;a href="http://dask-searchcv.readthedocs.io/en/latest/"&gt;corresponding
 documentation&lt;/a&gt; for the current
 state of things.&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;This is part 2 of a series of posts discussing recent work with dask and
-scikit-learn. &lt;a href="/dask-sklearn-part-1.html"&gt;In the last post&lt;/a&gt; we discussed
+scikit-learn. &lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;In the last post&lt;/a&gt; we discussed
 model-parallelism &amp;mdash; fitting several models across the same data. In this
 post we'll look into simple patterns for data-parallelism, which will allow
 fitting a single model on larger datasets.&lt;/p&gt;
@@ -2141,7 +2129,7 @@ things:&lt;/p&gt;
 &lt;p&gt;These design decisions were made to make the code easier to reason about &amp;mdash;
 trying to determine the result of lazy-mutable operations proved to be quite
 tricky. A benefit of the laziness is that multiple estimators can be fit at the
-same time sharing intermediates (as show in &lt;a href="/dask-sklearn-part-1.html"&gt;the previous
+same time sharing intermediates (as show in &lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;the previous
 post&lt;/a&gt;).&lt;/p&gt;
 &lt;h3&gt;Fitting and scoring the estimators&lt;/h3&gt;
 &lt;p&gt;Here we'll fit and score both estimators. Remember this is all done lazily, so
@@ -2314,8 +2302,8 @@ feel free to reach out in the comments below, or &lt;a href="https://github.com/
 github&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;This work is supported by &lt;a href="http://continuum.io/"&gt;Continuum Analytics&lt;/a&gt; and the
 &lt;a href="http://www.darpa.mil/program/XDATA"&gt;XDATA&lt;/a&gt; program as part of the &lt;a href="http://blaze.pydata.org/"&gt;Blaze
-Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Model Parallelism</title><link href="/dask-sklearn-part-1.html" rel="alternate"></link><published>2016-07-11T20:00:00-05:00</published><updated>2016-07-11T20:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2016-07-11:/dask-sklearn-part-1.html</id><summary type="html">&lt;p&gt;Parallelizing Grid Search with Dask&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
-exists. Please see &lt;a href="/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
+Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Model Parallelism</title><link href="https://jcristharif.com/dask-sklearn-part-1.html" rel="alternate"></link><published>2016-07-11T20:00:00-05:00</published><updated>2016-07-11T20:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2016-07-11:/dask-sklearn-part-1.html</id><summary type="html">&lt;p&gt;Parallelizing Grid Search with Dask&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
+exists. Please see &lt;a href="https://jcristharif.com/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
 and the &lt;a href="http://dask-searchcv.readthedocs.io/en/latest/"&gt;corresponding
 documentation&lt;/a&gt; for the current
 state of things.&lt;/em&gt;&lt;/p&gt;
@@ -2734,7 +2722,7 @@ feel free to reach out in the comments below, or &lt;a href="https://github.com/
 github&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;This work is supported by &lt;a href="http://continuum.io/"&gt;Continuum Analytics&lt;/a&gt; and the
 &lt;a href="http://www.darpa.mil/program/XDATA"&gt;XDATA&lt;/a&gt; program as part of the &lt;a href="http://blaze.pydata.org/"&gt;Blaze
-Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category></entry><entry><title>Code Generation, and other things</title><link href="/codegen-and-things.html" rel="alternate"></link><published>2014-09-12T20:31:00-05:00</published><updated>2014-09-12T20:31:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-09-12:/codegen-and-things.html</id><summary type="html">&lt;p&gt;I gave a talk!&lt;/p&gt;</summary><content type="html">&lt;p&gt;Long time, no post, but now I have news to share!&lt;/p&gt;
+Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category><category term="dask"></category></entry><entry><title>Code Generation, and other things</title><link href="https://jcristharif.com/codegen-and-things.html" rel="alternate"></link><published>2014-09-12T20:31:00-05:00</published><updated>2014-09-12T20:31:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-09-12:/codegen-and-things.html</id><summary type="html">&lt;p&gt;I gave a talk!&lt;/p&gt;</summary><content type="html">&lt;p&gt;Long time, no post, but now I have news to share!&lt;/p&gt;
 &lt;h2&gt;&lt;code&gt;ufuncify&lt;/code&gt; stuff&lt;/h2&gt;
 &lt;p&gt;First, I just merged a PR to make SymPy's &lt;code&gt;ufuncify&lt;/code&gt; create actual instances of
 &lt;code&gt;numpy.ufunc&lt;/code&gt;. This function takes in a tuple of arguments, and an expression,
@@ -2805,7 +2793,7 @@ doing AIOs:&lt;/p&gt;
 to be open about my work, and update them every Friday. So far it seems to be a
 good idea - at the end of each week I get a chance to reflect on what I did
 that week, and what I plan to do over the next week. As a plus, my non-existant
-internet readers get to hold me accountable to my to-do list :).&lt;/p&gt;</content><category term="sympy"></category><category term="ramblings"></category></entry><entry><title>GSoC Week 12 &amp; 13: The End</title><link href="/gsoc-week-12-13.html" rel="alternate"></link><published>2014-08-20T14:43:00-05:00</published><updated>2014-08-20T14:43:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-08-20:/gsoc-week-12-13.html</id><summary type="html">&lt;p&gt;Autowrap and wrapping up&lt;/p&gt;</summary><content type="html">&lt;p&gt;The GSoC program officially ended this Monday, and so my work for SymPy has
+internet readers get to hold me accountable to my to-do list :).&lt;/p&gt;</content><category term="sympy"></category><category term="sympy"></category><category term="ramblings"></category></entry><entry><title>GSoC Week 12 &amp; 13: The End</title><link href="https://jcristharif.com/gsoc-week-12-13.html" rel="alternate"></link><published>2014-08-20T14:43:00-05:00</published><updated>2014-08-20T14:43:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-08-20:/gsoc-week-12-13.html</id><summary type="html">&lt;p&gt;Autowrap and wrapping up&lt;/p&gt;</summary><content type="html">&lt;p&gt;The GSoC program officially ended this Monday, and so my work for SymPy has
 concluded. I got &lt;em&gt;a lot&lt;/em&gt; done in these last two weeks though. Here's what's
 new. In order of completion:&lt;/p&gt;
 &lt;h3&gt;Complete overhaul of the codeprinting system&lt;/h3&gt;
@@ -3010,7 +2998,7 @@ really focus on research and finishing my degree, but I still hope to help out.&
 as a whole, so I won't touch on that here. Let me just say thank you to Jason,
 Luke, Oliver, Sachin, Tarun, Aaron, and all the other wonderful people that
 have offered me guidance and support throughout the summer. You guys are
-awesome.&lt;/p&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 10 &amp; 11: Bogged down in details</title><link href="/gsoc-week-10-11.html" rel="alternate"></link><published>2014-08-01T20:44:00-05:00</published><updated>2014-08-01T20:44:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-08-01:/gsoc-week-10-11.html</id><summary type="html">&lt;p&gt;Timelines are difficult, &amp;amp; code generation&lt;/p&gt;</summary><content type="html">&lt;p&gt;I missed my post last week due to my research for grad school all going to hell
+awesome.&lt;/p&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 10 &amp; 11: Bogged down in details</title><link href="https://jcristharif.com/gsoc-week-10-11.html" rel="alternate"></link><published>2014-08-01T20:44:00-05:00</published><updated>2014-08-01T20:44:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-08-01:/gsoc-week-10-11.html</id><summary type="html">&lt;p&gt;Timelines are difficult, &amp;amp; code generation&lt;/p&gt;</summary><content type="html">&lt;p&gt;I missed my post last week due to my research for grad school all going to hell
 at the worst possible time :(. There wasn't much to report on last week, so I'm
 not too perturbed. Turns out even with PRs done and tested, it still takes a
 long time to get them merged and have everyone agree on them. Fortunately I
@@ -3225,7 +3213,7 @@ the program, listen to some interesting talks, and see the GooglePlex. I also
 bought my tickets to get there a day early so I have some time to explore the
 bay area. Last time I was out there I was 14, and I didn't get to see much
 of the area. If you also got accepted/live out and would be interested in
-meeting up, let me know! I'll be in San Jose/San Francisco October 23-26.&lt;/p&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 9: Docs!</title><link href="/gsoc-week-9.html" rel="alternate"></link><published>2014-07-18T15:00:00-05:00</published><updated>2014-07-18T15:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-07-18:/gsoc-week-9.html</id><summary type="html">&lt;p&gt;Writing documentation is hard...&lt;/p&gt;</summary><content type="html">&lt;p&gt;This week I spent time on all sorts of little things:&lt;/p&gt;
+meeting up, let me know! I'll be in San Jose/San Francisco October 23-26.&lt;/p&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 9: Docs!</title><link href="https://jcristharif.com/gsoc-week-9.html" rel="alternate"></link><published>2014-07-18T15:00:00-05:00</published><updated>2014-07-18T15:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-07-18:/gsoc-week-9.html</id><summary type="html">&lt;p&gt;Writing documentation is hard...&lt;/p&gt;</summary><content type="html">&lt;p&gt;This week I spent time on all sorts of little things:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Finished up the refactoring of &lt;code&gt;KanesMethod&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;Little fixes to &lt;a href="https://github.com/sympy/sympy/pull/7681"&gt;my current PR&lt;/a&gt;. Just
@@ -3285,7 +3273,7 @@ on it.&lt;/p&gt;
   Losh is a really good read on this.&amp;#160;&lt;a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 8: Try, try, try again...</title><link href="/gsoc-week-8.html" rel="alternate"></link><published>2014-07-11T17:00:00-05:00</published><updated>2014-07-11T17:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-07-11:/gsoc-week-8.html</id><summary type="html">&lt;p&gt;Trying out several potential solutions to the &lt;code&gt;nan&lt;/code&gt; problem.&lt;/p&gt;</summary><content type="html">&lt;p&gt;I'm still struggling to solve the &lt;code&gt;nan&lt;/code&gt; and &lt;code&gt;oo&lt;/code&gt; issue I've discussed in my
+&lt;/div&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 8: Try, try, try again...</title><link href="https://jcristharif.com/gsoc-week-8.html" rel="alternate"></link><published>2014-07-11T17:00:00-05:00</published><updated>2014-07-11T17:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-07-11:/gsoc-week-8.html</id><summary type="html">&lt;p&gt;Trying out several potential solutions to the &lt;code&gt;nan&lt;/code&gt; problem.&lt;/p&gt;</summary><content type="html">&lt;p&gt;I'm still struggling to solve the &lt;code&gt;nan&lt;/code&gt; and &lt;code&gt;oo&lt;/code&gt; issue I've discussed in my
 post &lt;a href="http://jcrist.github.io/gsoc-week-6.html"&gt;a couple weeks ago&lt;/a&gt;.
 &lt;a href="http://jcrist.github.io/gsoc-week-7.html"&gt;Last week&lt;/a&gt; I showed off a custom
 written subs function for use inside &lt;code&gt;sympy.physics.mechanics&lt;/code&gt; that helped with
@@ -3372,7 +3360,7 @@ some magical place in the code that could be made more efficient. We'll see.&lt;
 done, as well as waiting on someone to finally review my
 &lt;a href="https://github.com/sympy/sympy/pull/7681"&gt;PR for LagrangesMethod support&lt;/a&gt;. I hope to
 get that merged soon so that I can get started on the code generation portion of this
-project.&lt;/p&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 7: Expression Trees and Substitution</title><link href="/gsoc-week-7.html" rel="alternate"></link><published>2014-07-06T17:25:00-05:00</published><updated>2014-07-06T17:25:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-07-06:/gsoc-week-7.html</id><summary type="html">&lt;p&gt;Writing a custom subs and selective simplification&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
+project.&lt;/p&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 7: Expression Trees and Substitution</title><link href="https://jcristharif.com/gsoc-week-7.html" rel="alternate"></link><published>2014-07-06T17:25:00-05:00</published><updated>2014-07-06T17:25:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-07-06:/gsoc-week-7.html</id><summary type="html">&lt;p&gt;Writing a custom subs and selective simplification&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
 *
 * IPython notebook
 *
@@ -6104,7 +6092,7 @@ Using trigsimp, then normal subs
         "}); ";
     (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
 }
-&lt;/script&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 6: Just the little things</title><link href="/gsoc-week-6.html" rel="alternate"></link><published>2014-06-27T21:21:00-05:00</published><updated>2014-06-27T21:21:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-06-27:/gsoc-week-6.html</id><summary type="html">&lt;p&gt;Little fixes, and a dillemma of sorts&lt;/p&gt;</summary><content type="html">&lt;p&gt;I was rather busy with my research this week, so no time for a long-winded
+&lt;/script&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 6: Just the little things</title><link href="https://jcristharif.com/gsoc-week-6.html" rel="alternate"></link><published>2014-06-27T21:21:00-05:00</published><updated>2014-06-27T21:21:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-06-27:/gsoc-week-6.html</id><summary type="html">&lt;p&gt;Little fixes, and a dillemma of sorts&lt;/p&gt;</summary><content type="html">&lt;p&gt;I was rather busy with my research this week, so no time for a long-winded
 post like &lt;a href="http://jcrist.github.io/gsoc-week-1.html"&gt;some of my&lt;/a&gt; 
 &lt;a href="http://jcrist.github.io/gsoc-week-4.html"&gt;previous&lt;/a&gt; 
 &lt;a href="http://jcrist.github.io/gsoc-week-5.html"&gt;updates&lt;/a&gt;. There's not
@@ -6206,7 +6194,7 @@ etc...). Now a user can go:&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;Hopefully in the next week I can get my PR merged, so the Lagrange stuff can
-finally be submitted.&lt;/p&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 5: Adventures in Profiling</title><link href="/gsoc-week-5.html" rel="alternate"></link><published>2014-06-20T14:00:00-05:00</published><updated>2014-06-20T14:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-06-20:/gsoc-week-5.html</id><summary type="html">&lt;p&gt;Profiling solution methods to A*x = B&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
+finally be submitted.&lt;/p&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 5: Adventures in Profiling</title><link href="https://jcristharif.com/gsoc-week-5.html" rel="alternate"></link><published>2014-06-20T14:00:00-05:00</published><updated>2014-06-20T14:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-06-20:/gsoc-week-5.html</id><summary type="html">&lt;p&gt;Profiling solution methods to A*x = B&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
 *
 * IPython notebook
 *
@@ -10143,7 +10131,7 @@ RVEURVEURVGUkef/w9jNjTLqw/MAAAAASUVORK5CYII=
         "}); ";
     (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
 }
-&lt;/script&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 4: Linearizing Lagranges Equations</title><link href="/gsoc-week-4.html" rel="alternate"></link><published>2014-06-13T18:00:00-05:00</published><updated>2014-06-13T18:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-06-13:/gsoc-week-4.html</id><summary type="html">&lt;p&gt;Making the general form even more general&lt;/p&gt;</summary><content type="html">&lt;p&gt;As of last week the &lt;code&gt;Linearizer&lt;/code&gt; class implementing the general form discussed
+&lt;/script&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 4: Linearizing Lagranges Equations</title><link href="https://jcristharif.com/gsoc-week-4.html" rel="alternate"></link><published>2014-06-13T18:00:00-05:00</published><updated>2014-06-13T18:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-06-13:/gsoc-week-4.html</id><summary type="html">&lt;p&gt;Making the general form even more general&lt;/p&gt;</summary><content type="html">&lt;p&gt;As of last week the &lt;code&gt;Linearizer&lt;/code&gt; class implementing the general form discussed
 in Luke and Gilbert's paper was completed. The methods contained for
 linearization work for any system that can be expressed by any combination of
 the following:&lt;/p&gt;
@@ -10325,7 +10313,7 @@ at rest operating point. You can try out the added functionality demonstrated
 above by cloning my &lt;code&gt;LinearizeLagrange&lt;/code&gt; branch of sympy
 &lt;a href="https://github.com/jcrist/sympy/tree/LinearizeLagrange"&gt;here&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;While functional, it still isn't finished. I still need to add documentation,
-more tests, and finalize the interface. I plan on working on this next week.&lt;/p&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 3: Generalized Linearizer Class</title><link href="/gsoc-week-3.html" rel="alternate"></link><published>2014-06-06T20:00:00-05:00</published><updated>2014-06-06T20:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-06-06:/gsoc-week-3.html</id><summary type="html">&lt;p&gt;Progress Report, Linearizing a General System of Equations&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
+more tests, and finalize the interface. I plan on working on this next week.&lt;/p&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 3: Generalized Linearizer Class</title><link href="https://jcristharif.com/gsoc-week-3.html" rel="alternate"></link><published>2014-06-06T20:00:00-05:00</published><updated>2014-06-06T20:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-06-06:/gsoc-week-3.html</id><summary type="html">&lt;p&gt;Progress Report, Linearizing a General System of Equations&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
 *
 * IPython notebook
 *
@@ -11677,7 +11665,7 @@ the results. I plan on implementing this functionality next week.&lt;/p&gt;
         "}); ";
     (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
 }
-&lt;/script&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 2: Started Work on Linearizer Class</title><link href="/gsoc-week-2.html" rel="alternate"></link><published>2014-05-30T18:00:00-05:00</published><updated>2014-05-30T18:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-05-30:/gsoc-week-2.html</id><summary type="html">&lt;p&gt;Progress update, demonstration of functionality&lt;/p&gt;</summary><content type="html">&lt;p&gt;This week I started work on implementing a general linearization method in 
+&lt;/script&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 2: Started Work on Linearizer Class</title><link href="https://jcristharif.com/gsoc-week-2.html" rel="alternate"></link><published>2014-05-30T18:00:00-05:00</published><updated>2014-05-30T18:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-05-30:/gsoc-week-2.html</id><summary type="html">&lt;p&gt;Progress update, demonstration of functionality&lt;/p&gt;</summary><content type="html">&lt;p&gt;This week I started work on implementing a general linearization method in 
 &lt;code&gt;Sympy&lt;/code&gt;. The current plan is to implement this in three parts:&lt;/p&gt;
 &lt;h3&gt;1. &lt;strong&gt;A &lt;code&gt;Linearizer&lt;/code&gt; class&lt;/strong&gt;&lt;/h3&gt;
 &lt;p&gt;This will hold the general form described by Luke and Gilbert's paper. The form
@@ -11757,7 +11745,7 @@ routines.&lt;/p&gt;
 &lt;p&gt;All of this work can be seen (and hopefully commented on, I need code review!) 
 in &lt;a href="https://github.com/jcrist/sympy/pull/1"&gt;this pull request&lt;/a&gt;. As it's still
 very much a work in progress, I made a pull request on my own master branch, 
-so that others can review it before I submit it to Sympy proper.&lt;/p&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 1: Project Overview</title><link href="/gsoc-week-1.html" rel="alternate"></link><published>2014-05-24T10:00:00-05:00</published><updated>2014-05-24T10:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-05-24:/gsoc-week-1.html</id><summary type="html">&lt;p&gt;Overview of my GSoC Project, Kanes Method, and Linearization&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
+so that others can review it before I submit it to Sympy proper.&lt;/p&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category></entry><entry><title>GSoC Week 1: Project Overview</title><link href="https://jcristharif.com/gsoc-week-1.html" rel="alternate"></link><published>2014-05-24T10:00:00-05:00</published><updated>2014-05-24T10:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-05-24:/gsoc-week-1.html</id><summary type="html">&lt;p&gt;Overview of my GSoC Project, Kanes Method, and Linearization&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
 *
 * IPython notebook
 *
@@ -16286,7 +16274,7 @@ oKAgOv8PY7rQ+KbdlUwAAAAASUVORK5CYII=
         "}); ";
     (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
 }
-&lt;/script&gt;</content><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category><category term="example"></category></entry><entry><title>Differential Drive Dynamics - Part 1</title><link href="/differential-drive-part-1.html" rel="alternate"></link><published>2014-03-16T10:50:00-05:00</published><updated>2014-03-16T10:50:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-03-16:/differential-drive-part-1.html</id><summary type="html">&lt;p&gt;Deriving the dynamics of a differential drive robot in sympy&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
+&lt;/script&gt;</content><category term="GSoC"></category><category term="GSoC"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category><category term="example"></category></entry><entry><title>Differential Drive Dynamics - Part 1</title><link href="https://jcristharif.com/differential-drive-part-1.html" rel="alternate"></link><published>2014-03-16T10:50:00-05:00</published><updated>2014-03-16T10:50:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-03-16:/differential-drive-part-1.html</id><summary type="html">&lt;p&gt;Deriving the dynamics of a differential drive robot in sympy&lt;/p&gt;</summary><content type="html">&lt;style type="text/css"&gt;/*!
 *
 * IPython notebook
 *
@@ -19194,19 +19182,4 @@ rhs = robot_rhs.load()
         "}); ";
     (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
 }
-&lt;/script&gt;</content><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category><category term="example"></category></entry><entry><title>Do the Thing</title><link href="/do-the-thing.html" rel="alternate"></link><published>2014-02-15T04:10:00-06:00</published><updated>2014-02-15T04:10:00-06:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-02-15:/do-the-thing.html</id><summary type="html">&lt;p&gt;A promise to myself: Do the thing&lt;/p&gt;</summary><content type="html">&lt;p&gt;This post serves as a resolution. Perhaps it is a new years resolution. "But it's halfway through February already" you might be saying. This is is true, which is why I'm writing this. The resolution is as follows:&lt;/p&gt;
-&lt;h2&gt;&lt;center&gt; "Do the thing" &lt;/center&gt;&lt;/h2&gt;
-&lt;p&gt;Short, simple, to the point. I need to do the thing. This blog was started in November of last year, and has yet to have a single post. I have 3 open source projects I'm in various stages of developement of, and yet can't seem to finish. I'm a student in grad school who desperately needs to finish his research. And yet I can't seem to find the time to accomplish any of this. Why? Because I'm failing to do the thing.&lt;/p&gt;
-&lt;p&gt;There are numerous &lt;a href="http://www.amazon.com/The-Top-Productivity-Books/lm/R2VY1USRYM17P9"&gt;books on the subject&lt;/a&gt;, but in the end it all comes down to doing the thing. Just do the thing. That's really all there is.&lt;/p&gt;
-&lt;p&gt;And so, to you the internet, I promise to do the thing. All the things. By putting this up here, I expect to be held accountable. Currently the list of things includes (in no particular order):&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;a href="https://github.com/jcrist/Control.jl"&gt;Control.jl&lt;/a&gt; &lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/jcrist/Slicot.jl"&gt;Slicot.jl&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;This blog (I really want to start writing)&lt;/li&gt;
-&lt;li&gt;School&lt;/li&gt;
-&lt;li&gt;Teaching&lt;/li&gt;
-&lt;li&gt;Research&lt;/li&gt;
-&lt;/ol&gt;
-&lt;p&gt;That's only 6 things. 5 really, because Control.jl and Slicot.jl are very intertwined. I think I can do it. So here we go. I've blocked Reddit, canceled Netflix. It's time to dive in. Time to do the thing.&lt;/p&gt;
-&lt;hr&gt;
-&lt;p&gt;P.S. I'm a big fan of Bre Pettis's &lt;a href="http://www.brepettis.com/blog/2009/3/3/the-cult-of-done-manifesto.html"&gt;"Cult of Done Manifesto"&lt;/a&gt;. It's definitely tongue in cheek, but some of the items are pretty good. Especially "Accept that everything is a draft. It helps to get it done".&lt;/p&gt;</content><category term="ramblings"></category></entry></feed>
+&lt;/script&gt;</content><category term="Python"></category><category term="sympy"></category><category term="pydy"></category><category term="dynamics"></category><category term="example"></category></entry></feed>

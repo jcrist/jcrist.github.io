@@ -4,49 +4,37 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <meta id="viewport" name="viewport" content="width=500" />
     <!--RSS FEEDS-->
-        <link rel="alternate"  href="/feeds/all.atom.xml" type="application/atom+xml" title="Marginally Stable Full Atom Feed"/>
+        <link rel="alternate"  href="https://jcristharif.com/feeds/all.atom.xml" type="application/atom+xml" title="Jim Crist-Harif Full Atom Feed"/>
 
-    <title>Dask and Scikit-Learn -- Putting it all together // Marginally Stable</title>
-    <link rel="stylesheet" href="/theme/css/normalize.css" type="text/css" />
-    <link rel="stylesheet" href="/theme/css/base.css" type="text/css" />
-    <link rel="stylesheet" href="/theme/css/code.css" type="text/css" />
-<link rel="stylesheet" href="/theme/css/article.css" type="text/css" />
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
-            TeX: { equationNumbers: { autoNumber: "all" } }
-        });
-    </script>
-    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <title>Dask and Scikit-Learn -- Putting it all together // Jim Crist-Harif</title>
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/code.css" type="text/css" />
+<link rel="stylesheet" href="https://jcristharif.com/theme/css/article.css" type="text/css" />
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        TeX: { equationNumbers: { autoNumber: "all" } }
+    });
+</script>
+<script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </head>
 <body>
-    <!--Top image-->
-    <div class="container">
-        <div class="topimage">
-            <img src="/theme/images/logo.png">
-        </div>
-    </div>
+    <header>
+      <h1><a href="https://jcristharif.com/">Jim Crist-Harif</a></h1>
+      <ul>
+              <li><a href="https://jcristharif.com/blog.html">Blog</a></li>
+              <li><a href="https://jcristharif.com/pages/about.html">About</a></li>
+              <li><a href="https://jcristharif.com/pages/talks.html">Talks</a></li>
+      </ul>
+    </header>
 
-    <!--Links and site title-->
-    <div class="topbar">
-        <span><a href="/">Marginally Stable</a></span>
-        <ul>
-                <li><a href="/blog.html">Blog</a></li>
-                <li><a href="/pages/about.html">About</a></li>
-                <li><a href="/pages/talks.html">Talks</a></li>
-                <li><a href="https://github.com/jcrist/AIOs">AIOS</a></li>
-        </ul>
-    </div>
-    <!--Content, footer, and scripts-->
-    <div class="container">
-    <div class="page-title">
-        <h1>Dask and Scikit-Learn -- Putting it all together</h1>
-        <p>Tue 26 July 2016 &mdash; under
-            <a class="post-category" href="/tag/dask.html">dask</a>
-        </p>
-    </div>
+    <section>
+    <h1>Dask and Scikit-Learn -- Putting it all together</h1>
+    <p class="article-date">Posted on July 26, 2016</p>
     <p><em>Note: This post is old, and discusses an experimental library that no longer
-exists. Please see <a href="/introducing-dask-searchcv.html">this post on <code>dask-searchcv</code></a>,
+exists. Please see <a href="https://jcristharif.com/introducing-dask-searchcv.html">this post on <code>dask-searchcv</code></a>,
 and the <a href="http://dask-searchcv.readthedocs.io/en/latest/">corresponding
 documentation</a> for the current
 state of things.</em></p>
@@ -54,13 +42,13 @@ state of things.</em></p>
 work</a> with dask and scikit-learn.</p>
 <ul>
 <li>
-<p><a href="/dask-sklearn-part-1.html">In part 1</a> we discussed model-parallelism
+<p><a href="https://jcristharif.com/dask-sklearn-part-1.html">In part 1</a> we discussed model-parallelism
   &mdash; fitting several models across the same data. We found that in some
   cases we could eliminate repeated work, resulting in improved performance of
   <code>GridSearchCV</code> and <code>RandomizedSearchCV</code>.</p>
 </li>
 <li>
-<p><a href="/dask-sklearn-part-2.html">In part 2</a> we discussed patterns for
+<p><a href="https://jcristharif.com/dask-sklearn-part-2.html">In part 2</a> we discussed patterns for
   data-parallelism &mdash; fitting a single model on partitioned data. We found
   that by implementing simple parallel patterns with a scikit-learn compatible
   interface we could fit models on larger datasets in a clean and standard way.</p>
@@ -294,18 +282,6 @@ the relationship between certain features and our target variable.</p>
 Bokeh.set_log_level("info");
 </script>
 
-<style>
-    html {
-    width: 100%;
-    height: 100%;
-    }
-    body {
-    width: 90%;
-    height: 100%;
-    margin: auto;
-    }
-</style>
-
 <p></head>
 <body></p>
 <div class="bk-root">
@@ -441,7 +417,7 @@ We'll hold back <code>20%</code> of the rows:</p>
 
 
 <h2>Create an estimator</h2>
-<p>As discussed in <a href="/dask-sklearn-part-2.html">the previous post</a>,
+<p>As discussed in <a href="https://jcristharif.com/dask-sklearn-part-2.html">the previous post</a>,
 dask-learn contains several parallelization patterns for wrapping scikit-learn
 estimators. These make it easy to use with any estimator that matches the
 scikit-learn standard interface. Here we'll wrap a <code>SGDClassifier</code> with the
@@ -473,7 +449,7 @@ training data with potentially missing years.</p>
 </pre></div>
 
 
-<p>Finally we can call <code>fit</code> and perform the grid search. As discussed in <a href="/dask-sklearn-part-1.html">In part
+<p>Finally we can call <code>fit</code> and perform the grid search. As discussed in <a href="https://jcristharif.com/dask-sklearn-part-1.html">In part
 1</a>, <code>GridSearchCV</code> isn't lazy due to some
 complications with the scikit-learn api, so this call to <code>fit</code> runs
 immediately.</p>
@@ -649,46 +625,19 @@ github</a>.</p>
 <p><em>This work is supported by <a href="http://continuum.io/">Continuum Analytics</a> and the
 <a href="http://www.darpa.mil/program/XDATA">XDATA</a> program as part of the <a href="http://blaze.pydata.org/">Blaze
 Project</a>.</em></p>
+    </section>
 
-    <div class="comments">
-        <div id="disqus_thread"></div>
-        <script type="text/javascript">
-            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
-            var disqus_shortname = "marginallystable"; // required: replace example with your forum shortname
-
-            /* * * DON'T EDIT BELOW THIS LINE * * */
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-    </div>
-
-<div class="container bottom">
-    <hr>
-    <p>
-        All content copyright 2014-2018 Jim Crist unless otherwise noted.
-        Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
-    </p>
-    <p>
-    Find me on <a href="https://twitter.com/jiminy_crist">Twitter</a>, <a 
-        href="https://github.com/jcrist">GitHub</a>, <a
-        href="https://speakerdeck.com/jcrist">Speaker Deck</a>, or shoot me an <a
-    href="mailto:jiminy.crist@gmail.com">email</a>.
-    </p>
-</div>    <script type="text/javascript">
-        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-        try {
-            var pageTracker = _gat._getTracker("UA-40063290-1");
-            pageTracker._trackPageview();
-            } catch(err) {}
-    </script>
-    </div>
+    <footer>
+        <p>
+            All content copyright 2014-2020 Jim Crist-Harif unless otherwise noted.
+            Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+        </p>
+        <p>
+        Find me on
+        <a href="https://twitter.com/jcristharif">Twitter</a>,
+        <a href="https://github.com/jcrist">GitHub</a>, or shoot me an
+        <a href="mailto:jcristharif@gmail.com">email</a>.
+        </p>
+    </footer>
 </body>
 </html>

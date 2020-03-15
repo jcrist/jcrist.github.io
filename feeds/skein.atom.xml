@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable - skein</title><link href="/" rel="alternate"></link><link href="/feeds/skein.atom.xml" rel="self"></link><id>/</id><updated>2018-08-14T12:00:00-05:00</updated><entry><title>Introducing Skein: Deploy Python on Apache YARN the Easy Way</title><link href="/introducing-skein.html" rel="alternate"></link><published>2018-08-14T12:00:00-05:00</published><updated>2018-08-14T12:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2018-08-14:/introducing-skein.html</id><summary type="html">&lt;p class="first last"&gt;New tools to simplify deploying Python applications on Apache YARN.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif - skein</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/skein.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2018-08-14T12:00:00-05:00</updated><entry><title>Introducing Skein: Deploy Python on Apache YARN the Easy Way</title><link href="https://jcristharif.com/introducing-skein.html" rel="alternate"></link><published>2018-08-14T12:00:00-05:00</published><updated>2018-08-14T12:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2018-08-14:/introducing-skein.html</id><summary type="html">&lt;p class="first last"&gt;New tools to simplify deploying Python applications on Apache YARN.&lt;/p&gt;
 </summary><content type="html">&lt;div class="section" id="summary"&gt;
 &lt;h2&gt;Summary&lt;/h2&gt;
 &lt;p&gt;We introduce &lt;a class="reference external" href="https://jcrist.github.io/skein/"&gt;a new tool and library&lt;/a&gt; for
@@ -356,4 +356,4 @@ are welcome!&lt;/p&gt;
 contributions and feedback from the larger Python community&lt;/em&gt;&lt;/p&gt;
 &lt;!-- - - Links - - --&gt;
 &lt;/div&gt;
-</content><category term="skein"></category></entry></feed>
+</content><category term="skein"></category><category term="skein"></category></entry></feed>

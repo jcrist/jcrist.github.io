@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable - sympy</title><link href="/" rel="alternate"></link><link href="/feeds/sympy.atom.xml" rel="self"></link><id>/</id><updated>2014-09-12T20:31:00-05:00</updated><entry><title>Code Generation, and other things</title><link href="/codegen-and-things.html" rel="alternate"></link><published>2014-09-12T20:31:00-05:00</published><updated>2014-09-12T20:31:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2014-09-12:/codegen-and-things.html</id><summary type="html">&lt;p&gt;I gave a talk!&lt;/p&gt;</summary><content type="html">&lt;p&gt;Long time, no post, but now I have news to share!&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif - sympy</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/sympy.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2014-09-12T20:31:00-05:00</updated><entry><title>Code Generation, and other things</title><link href="https://jcristharif.com/codegen-and-things.html" rel="alternate"></link><published>2014-09-12T20:31:00-05:00</published><updated>2014-09-12T20:31:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2014-09-12:/codegen-and-things.html</id><summary type="html">&lt;p&gt;I gave a talk!&lt;/p&gt;</summary><content type="html">&lt;p&gt;Long time, no post, but now I have news to share!&lt;/p&gt;
 &lt;h2&gt;&lt;code&gt;ufuncify&lt;/code&gt; stuff&lt;/h2&gt;
 &lt;p&gt;First, I just merged a PR to make SymPy's &lt;code&gt;ufuncify&lt;/code&gt; create actual instances of
 &lt;code&gt;numpy.ufunc&lt;/code&gt;. This function takes in a tuple of arguments, and an expression,
@@ -70,4 +70,4 @@ doing AIOs:&lt;/p&gt;
 to be open about my work, and update them every Friday. So far it seems to be a
 good idea - at the end of each week I get a chance to reflect on what I did
 that week, and what I plan to do over the next week. As a plus, my non-existant
-internet readers get to hold me accountable to my to-do list :).&lt;/p&gt;</content><category term="sympy"></category><category term="ramblings"></category></entry></feed>
+internet readers get to hold me accountable to my to-do list :).&lt;/p&gt;</content><category term="sympy"></category><category term="sympy"></category><category term="ramblings"></category></entry></feed>

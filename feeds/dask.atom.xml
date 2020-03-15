@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Marginally Stable - dask</title><link href="/" rel="alternate"></link><link href="/feeds/dask.atom.xml" rel="self"></link><id>/</id><updated>2018-08-15T16:00:00-05:00</updated><entry><title>Deploying Dask on YARN</title><link href="/dask-on-yarn.html" rel="alternate"></link><published>2018-08-15T16:00:00-05:00</published><updated>2018-08-15T16:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2018-08-15:/dask-on-yarn.html</id><summary type="html">&lt;p class="first last"&gt;Development status of deploying Dask on YARN&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif - dask</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/dask.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2018-08-15T16:00:00-05:00</updated><entry><title>Deploying Dask on YARN</title><link href="https://jcristharif.com/dask-on-yarn.html" rel="alternate"></link><published>2018-08-15T16:00:00-05:00</published><updated>2018-08-15T16:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2018-08-15:/dask-on-yarn.html</id><summary type="html">&lt;p class="first last"&gt;Development status of deploying Dask on YARN&lt;/p&gt;
 </summary><content type="html">&lt;div class="section" id="summary"&gt;
 &lt;h2&gt;Summary&lt;/h2&gt;
 &lt;p&gt;We present &lt;a class="reference external" href="http://dask-yarn.readthedocs.io/"&gt;dask-yarn&lt;/a&gt;, a library for deploying &lt;a class="reference external" href="http://dask.pydata.org/"&gt;Dask&lt;/a&gt; on &lt;a class="reference external" href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-site/YARN.html"&gt;Apache YARN&lt;/a&gt;. We
@@ -144,7 +144,7 @@ well as a &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;dask-yarn&l
 &lt;p&gt;&lt;em&gt;This work was made possible by my employer Anaconda Inc., as well as
 contributions and feedback from the larger Python community&lt;/em&gt;&lt;/p&gt;
 &lt;/div&gt;
-</content><category term="dask"></category><category term="skein"></category></entry><entry><title>Introducing Dask-SearchCV</title><link href="/introducing-dask-searchcv.html" rel="alternate"></link><published>2017-04-04T15:00:00-05:00</published><updated>2017-04-04T15:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2017-04-04:/introducing-dask-searchcv.html</id><summary type="html">&lt;p&gt;A new library for distributed hyperparameter optimization&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Summary&lt;/h2&gt;
+</content><category term="dask"></category><category term="dask"></category><category term="skein"></category></entry><entry><title>Introducing Dask-SearchCV</title><link href="https://jcristharif.com/introducing-dask-searchcv.html" rel="alternate"></link><published>2017-04-04T15:00:00-05:00</published><updated>2017-04-04T15:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2017-04-04:/introducing-dask-searchcv.html</id><summary type="html">&lt;p&gt;A new library for distributed hyperparameter optimization&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Summary&lt;/h2&gt;
 &lt;p&gt;We introduce &lt;a href="http://dask-searchcv.readthedocs.io"&gt;a new library&lt;/a&gt; for doing
 distributed hyperparameter optimization with Scikit-Learn estimators. We
 compare it to the existing Scikit-Learn implementations, and discuss when it
@@ -153,9 +153,9 @@ may be useful compared to other approaches.&lt;/p&gt;
 &lt;p&gt;Last summer I spent some time experimenting with combining
 &lt;a href="http://dask.pydata.org/en/latest/"&gt;dask&lt;/a&gt; and
 &lt;a href="http://scikit-learn.org/stable/"&gt;scikit-learn&lt;/a&gt; (chronicled in this
-&lt;a href="/dask-sklearn-part-1.html"&gt;series&lt;/a&gt; &lt;a href="/dask-sklearn-part-2.html"&gt;of
+&lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;series&lt;/a&gt; &lt;a href="https://jcristharif.com/dask-sklearn-part-2.html"&gt;of
 blog&lt;/a&gt;
-&lt;a href="/dask-sklearn-part-3.html"&gt;posts&lt;/a&gt;). The library that work produced was
+&lt;a href="https://jcristharif.com/dask-sklearn-part-3.html"&gt;posts&lt;/a&gt;). The library that work produced was
 extremely alpha, and nothing really came out of it. Recently I picked this work
 up again, and am happy to say that we now have something I can be happy with.
 This involved a few major changes:&lt;/p&gt;
@@ -535,8 +535,8 @@ to work on. If you have knowledge in this domain, please weigh in on the
 XDATA program&lt;/a&gt;, and the Data Driven
 Discovery Initiative from the &lt;a href="https://www.moore.org/"&gt;Moore Foundation&lt;/a&gt;.
 Thanks also to &lt;a href="http://matthewrocklin.com/blog/"&gt;Matthew Rocklin&lt;/a&gt; and &lt;a href="https://github.com/electronwill"&gt;Will
-Warner&lt;/a&gt; for feedback on drafts of this post.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Putting it all together</title><link href="/dask-sklearn-part-3.html" rel="alternate"></link><published>2016-07-26T16:30:00-05:00</published><updated>2016-07-26T16:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2016-07-26:/dask-sklearn-part-3.html</id><summary type="html">&lt;p&gt;Combining model-parallelism and data-parallelism&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
-exists. Please see &lt;a href="/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
+Warner&lt;/a&gt; for feedback on drafts of this post.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Putting it all together</title><link href="https://jcristharif.com/dask-sklearn-part-3.html" rel="alternate"></link><published>2016-07-26T16:30:00-05:00</published><updated>2016-07-26T16:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2016-07-26:/dask-sklearn-part-3.html</id><summary type="html">&lt;p&gt;Combining model-parallelism and data-parallelism&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
+exists. Please see &lt;a href="https://jcristharif.com/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
 and the &lt;a href="http://dask-searchcv.readthedocs.io/en/latest/"&gt;corresponding
 documentation&lt;/a&gt; for the current
 state of things.&lt;/em&gt;&lt;/p&gt;
@@ -544,13 +544,13 @@ state of things.&lt;/em&gt;&lt;/p&gt;
 work&lt;/a&gt; with dask and scikit-learn.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;a href="/dask-sklearn-part-1.html"&gt;In part 1&lt;/a&gt; we discussed model-parallelism
+&lt;p&gt;&lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;In part 1&lt;/a&gt; we discussed model-parallelism
   &amp;mdash; fitting several models across the same data. We found that in some
   cases we could eliminate repeated work, resulting in improved performance of
   &lt;code&gt;GridSearchCV&lt;/code&gt; and &lt;code&gt;RandomizedSearchCV&lt;/code&gt;.&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;a href="/dask-sklearn-part-2.html"&gt;In part 2&lt;/a&gt; we discussed patterns for
+&lt;p&gt;&lt;a href="https://jcristharif.com/dask-sklearn-part-2.html"&gt;In part 2&lt;/a&gt; we discussed patterns for
   data-parallelism &amp;mdash; fitting a single model on partitioned data. We found
   that by implementing simple parallel patterns with a scikit-learn compatible
   interface we could fit models on larger datasets in a clean and standard way.&lt;/p&gt;
@@ -784,18 +784,6 @@ the relationship between certain features and our target variable.&lt;/p&gt;
 Bokeh.set_log_level("info");
 &lt;/script&gt;
 
-&lt;style&gt;
-    html {
-    width: 100%;
-    height: 100%;
-    }
-    body {
-    width: 90%;
-    height: 100%;
-    margin: auto;
-    }
-&lt;/style&gt;
-
 &lt;p&gt;&lt;/head&gt;
 &lt;body&gt;&lt;/p&gt;
 &lt;div class="bk-root"&gt;
@@ -931,7 +919,7 @@ We'll hold back &lt;code&gt;20%&lt;/code&gt; of the rows:&lt;/p&gt;
 
 
 &lt;h2&gt;Create an estimator&lt;/h2&gt;
-&lt;p&gt;As discussed in &lt;a href="/dask-sklearn-part-2.html"&gt;the previous post&lt;/a&gt;,
+&lt;p&gt;As discussed in &lt;a href="https://jcristharif.com/dask-sklearn-part-2.html"&gt;the previous post&lt;/a&gt;,
 dask-learn contains several parallelization patterns for wrapping scikit-learn
 estimators. These make it easy to use with any estimator that matches the
 scikit-learn standard interface. Here we'll wrap a &lt;code&gt;SGDClassifier&lt;/code&gt; with the
@@ -963,7 +951,7 @@ training data with potentially missing years.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;Finally we can call &lt;code&gt;fit&lt;/code&gt; and perform the grid search. As discussed in &lt;a href="/dask-sklearn-part-1.html"&gt;In part
+&lt;p&gt;Finally we can call &lt;code&gt;fit&lt;/code&gt; and perform the grid search. As discussed in &lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;In part
 1&lt;/a&gt;, &lt;code&gt;GridSearchCV&lt;/code&gt; isn't lazy due to some
 complications with the scikit-learn api, so this call to &lt;code&gt;fit&lt;/code&gt; runs
 immediately.&lt;/p&gt;
@@ -1138,13 +1126,13 @@ feel free to reach out in the comments below, or &lt;a href="https://github.com/
 github&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;This work is supported by &lt;a href="http://continuum.io/"&gt;Continuum Analytics&lt;/a&gt; and the
 &lt;a href="http://www.darpa.mil/program/XDATA"&gt;XDATA&lt;/a&gt; program as part of the &lt;a href="http://blaze.pydata.org/"&gt;Blaze
-Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Data Parallelism</title><link href="/dask-sklearn-part-2.html" rel="alternate"></link><published>2016-07-19T14:30:00-05:00</published><updated>2016-07-19T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2016-07-19:/dask-sklearn-part-2.html</id><summary type="html">&lt;p&gt;Parallelization patterns for scikit-learn estimators.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
-exists. Please see &lt;a href="/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
+Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Data Parallelism</title><link href="https://jcristharif.com/dask-sklearn-part-2.html" rel="alternate"></link><published>2016-07-19T14:30:00-05:00</published><updated>2016-07-19T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2016-07-19:/dask-sklearn-part-2.html</id><summary type="html">&lt;p&gt;Parallelization patterns for scikit-learn estimators.&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
+exists. Please see &lt;a href="https://jcristharif.com/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
 and the &lt;a href="http://dask-searchcv.readthedocs.io/en/latest/"&gt;corresponding
 documentation&lt;/a&gt; for the current
 state of things.&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;This is part 2 of a series of posts discussing recent work with dask and
-scikit-learn. &lt;a href="/dask-sklearn-part-1.html"&gt;In the last post&lt;/a&gt; we discussed
+scikit-learn. &lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;In the last post&lt;/a&gt; we discussed
 model-parallelism &amp;mdash; fitting several models across the same data. In this
 post we'll look into simple patterns for data-parallelism, which will allow
 fitting a single model on larger datasets.&lt;/p&gt;
@@ -1453,7 +1441,7 @@ things:&lt;/p&gt;
 &lt;p&gt;These design decisions were made to make the code easier to reason about &amp;mdash;
 trying to determine the result of lazy-mutable operations proved to be quite
 tricky. A benefit of the laziness is that multiple estimators can be fit at the
-same time sharing intermediates (as show in &lt;a href="/dask-sklearn-part-1.html"&gt;the previous
+same time sharing intermediates (as show in &lt;a href="https://jcristharif.com/dask-sklearn-part-1.html"&gt;the previous
 post&lt;/a&gt;).&lt;/p&gt;
 &lt;h3&gt;Fitting and scoring the estimators&lt;/h3&gt;
 &lt;p&gt;Here we'll fit and score both estimators. Remember this is all done lazily, so
@@ -1626,8 +1614,8 @@ feel free to reach out in the comments below, or &lt;a href="https://github.com/
 github&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;This work is supported by &lt;a href="http://continuum.io/"&gt;Continuum Analytics&lt;/a&gt; and the
 &lt;a href="http://www.darpa.mil/program/XDATA"&gt;XDATA&lt;/a&gt; program as part of the &lt;a href="http://blaze.pydata.org/"&gt;Blaze
-Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Model Parallelism</title><link href="/dask-sklearn-part-1.html" rel="alternate"></link><published>2016-07-11T20:00:00-05:00</published><updated>2016-07-11T20:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:None,2016-07-11:/dask-sklearn-part-1.html</id><summary type="html">&lt;p&gt;Parallelizing Grid Search with Dask&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
-exists. Please see &lt;a href="/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
+Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category><category term="dask"></category></entry><entry><title>Dask and Scikit-Learn -- Model Parallelism</title><link href="https://jcristharif.com/dask-sklearn-part-1.html" rel="alternate"></link><published>2016-07-11T20:00:00-05:00</published><updated>2016-07-11T20:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2016-07-11:/dask-sklearn-part-1.html</id><summary type="html">&lt;p&gt;Parallelizing Grid Search with Dask&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;em&gt;Note: This post is old, and discusses an experimental library that no longer
+exists. Please see &lt;a href="https://jcristharif.com/introducing-dask-searchcv.html"&gt;this post on &lt;code&gt;dask-searchcv&lt;/code&gt;&lt;/a&gt;,
 and the &lt;a href="http://dask-searchcv.readthedocs.io/en/latest/"&gt;corresponding
 documentation&lt;/a&gt; for the current
 state of things.&lt;/em&gt;&lt;/p&gt;
@@ -2046,4 +2034,4 @@ feel free to reach out in the comments below, or &lt;a href="https://github.com/
 github&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;This work is supported by &lt;a href="http://continuum.io/"&gt;Continuum Analytics&lt;/a&gt; and the
 &lt;a href="http://www.darpa.mil/program/XDATA"&gt;XDATA&lt;/a&gt; program as part of the &lt;a href="http://blaze.pydata.org/"&gt;Blaze
-Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category></entry></feed>
+Project&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;</content><category term="dask"></category><category term="dask"></category></entry></feed>

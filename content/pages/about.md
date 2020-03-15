@@ -1,9 +1,9 @@
 Title: About
 
-<img class="avatar" src="http://avatars3.githubusercontent.com/u/2783717?s=200" />
+<img class="avatar" src="https://avatars3.githubusercontent.com/u/2783717?s=200"/>
 
 I'm **Jim**. Born and raised in Minneapolis, MN, currently working for
-[Continuum Analytics](https://www.continuum.io/) in Austin, TX.
+[Anaconda](https://www.anaconda.com/) in Austin, TX.
 
 ## Background
 
@@ -33,16 +33,6 @@ have spent a significant time on in the past include:
 
 ## Other Interests
 
-I spend my free time on my hobbies. I started rock climbing around 8 years ago,
-and that has easily become the most addicting thing in my life.  I also dance
-West Coast Swing on a fairly regular basis (although not as often as I'd like).
-
-## About the Name
-
-The name of this site comes from a term in dynamics/control theory referring to
-a system that once hit with an impulse will oscillate forever, never growing or
-shrinking in magnitude. While most of my academic research and focus was in the
-field of control theory, I have *lots* of other interests too that I oscillate
-between. I believe that this shift of interests isn't harmful, but actually
-leads me to lead a fuller life, and (hopefully) become a better engineer in the
-process.
+I spend my free time on my hobbies. I started rock climbing around 10 years
+ago, and that has easily become the most addicting thing in my life. I also
+dabble in woodworking, crocheting, gardening, baking, and homebrewing.

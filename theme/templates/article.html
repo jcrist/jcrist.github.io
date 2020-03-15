@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ article.title|striptags }} // {{ SITENAME }}{% endblock title %}
+
+{% block head_css %}
+<link rel="stylesheet" href="{{ SITEURL}}/theme/css/article.css" type="text/css" />
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        TeX: { equationNumbers: { autoNumber: "all" } }
+    });
+</script>
+<script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+{% endblock head_css %}
+
+{% block content %}
+    <h1>{{ article.title }}</h1>
+    <p class="article-date">Posted on {{ article.locale_date }}</p>
+    {{ article.content }}
+{% endblock %}

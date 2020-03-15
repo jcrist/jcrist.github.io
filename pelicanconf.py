@@ -38,3 +38,6 @@ PLUGIN_PATHS = ['./plugins', '../pelican-plugins']
 PLUGINS = ['ipynb.liquid']
 NOTEBOOK_DIR = 'notebooks'
 MARKUP = ['md', 'rst']
+
+STATIC_PATHS = ['images', 'extra/CNAME']
+EXTRA_PATH_METADATA = {'extra/CNAME': {'path': 'CNAME'},}

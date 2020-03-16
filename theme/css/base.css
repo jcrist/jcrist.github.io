@@ -7,7 +7,8 @@ html {
 body {
     text-rendering: optimizeLegibility;
     margin: 10px auto;
-    width: 700px;
+    padding: 0px 15px 0px 15px;
+    max-width: 700px;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 18px;
     line-height: 1.5;
@@ -58,14 +59,16 @@ section:after {
 
 
 footer {
+    width: 100%;
     font-style: italic;
     font-size: 14px;
-    line-height: 0.5;
     text-align: center;
 }
 
-main {
-    margin: 36px 0px;
+footer p {
+    max-width: 75%;
+    display: inline-block;
+    margin: 5px auto;
 }
 
 p, ul, ol {

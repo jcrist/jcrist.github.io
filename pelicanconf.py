@@ -1,3 +1,5 @@
+import os
+
 AUTHOR = "Jim Crist-Harif"
 SITENAME = "Jim Crist-Harif"
 SITEURL = ""
@@ -44,11 +46,13 @@ PLUGINS = ["ipynb.liquid"]
 NOTEBOOK_DIR = "notebooks"
 MARKUP = ["md", "rst"]
 
-STATIC_PATHS = ["images", "extra/CNAME"]
+extra_dir = os.path.join(os.path.dirname(__file__), "content", "extra")
 EXTRA_PATH_METADATA = {
-    "extra/CNAME": {"path": "CNAME"},
+    os.path.join("extra", f): {"path": f}
+    for f in os.listdir(extra_dir)
 }
-
+STATIC_PATHS = ["images"]
+STATIC_PATHS.extend(EXTRA_PATH_METADATA)
 
 def talk(title, date, video=None, slides=None, materials=None):
     links = []

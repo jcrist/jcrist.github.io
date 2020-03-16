@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}talks // {{ SITENAME }}{% endblock title %}
+
+{% block content %}
+    <h1>Talks</h1>
+
+    <p>Some talks I've given.</p>
+
+    {% for category, talks in TALKS %}
+      <h2>{{ category }}</h2>
+      <ul class="talks">
+      {% for talk in talks %}
+        <li class="talk">
+        <span class="talk-title">{{ talk.title }}</span>
+        <p class="talk-date">{{ talk.date }}</p>
+        <ul class="talk-links">
+          {% for link_name, link in talk.links %}
+          <li>
+            <a href="{{ link }}" >{{ link_name }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+        </li>
+      {% endfor %}
+      </ul>
+    {% endfor %}
+{% endblock %}

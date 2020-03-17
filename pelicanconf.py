@@ -119,7 +119,7 @@ dask_talks = [
     talk(
         "Make it Work, Make it Right, Make it Fast - Debugging and Profiling in Dask",
         "PyData Seattle 2017",
-        slides="https://jcristharif.com/talks/profile_and_debug_dask/slides.html/",
+        slides="https://jcristharif.com/talks/profile_and_debug_dask/slides.html",
         materials="https://github.com/jcrist/talks/tree/master/profile_and_debug_dask",
         video="https://www.youtube.com/watch?v=JoK8V2eWFPE",
     ),
@@ -132,7 +132,7 @@ dask_talks = [
     talk(
         "Make it Work, Make it Right, Make it Fast - Debugging and Profiling in Dask",
         "SciPy 2017",
-        slides="https://jcristharif.com/talks/profile_and_debug_dask/slides.html/",
+        slides="https://jcristharif.com/talks/profile_and_debug_dask/slides.html",
         materials="https://github.com/jcrist/talks/tree/master/profile_and_debug_dask",
         video="https://www.youtube.com/watch?v=4WUgRpl-j7Y",
     ),
@@ -189,7 +189,7 @@ skein_talks = [
     talk(
         "Running Python on Apache YARN",
         "SciPy 2018 Lightning Talk",
-        slides="https://jcristharif.com/talks/scipy_2018_lightning_talk/slides.html/",
+        slides="https://jcristharif.com/talks/scipy_2018_lightning_talk/slides.html",
         video="https://youtu.be/Atc3yw9OdxY?t=54m23s",
     ),
     talk(

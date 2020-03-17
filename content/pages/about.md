@@ -1,4 +1,5 @@
 Title: About
+save_as: about.html
 
 <img class="avatar" src="https://avatars3.githubusercontent.com/u/2783717?s=200"/>
 
@@ -36,6 +37,7 @@ include:
 - [Yarnspawner](https://jupyterhub-yarnspawner.readthedocs.io) &mdash; a spawner for running JupyterHub on Hadoop
 - [Kerberosauthenticator](https://jupyterhub-kerberosauthenticator.readthedocs.io) &mdash; an authenticator for JupyterHub using Kerberos
 - [hdfscm](https://jcristharif.com/hdfscm/) &mdash; a Contents-Manager for storing Jupyter notebooks in HDFS
+- [hadoop-test-cluster](https://jcristharif.com/hadoop-test-cluster/) &mdash; tools for testing on realistic Hadoop Clusters
 - [Crick](https://github.com/jcrist/crick/) &mdash; streaming and approximate algorithms
 - [Datashader](https://datashader.org) &mdash; a bin-based rendering toolchain
 - [SymPy](http://sympy.org) &mdash; a computer algebra system written in Python

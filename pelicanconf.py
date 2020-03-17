@@ -36,10 +36,10 @@ PROFILE_IMAGE_URL = (
 
 MENUITEMS = [
     ("Blog", "/blog.html"),
-    ("About", "/pages/about.html"),
-    ("Talks", "/pages/talks.html"),
+    ("About", "/about.html"),
+    ("Talks", "/talks.html"),
 ]
-TEMPLATE_PAGES = {"talks.html": "pages/talks.html"}
+TEMPLATE_PAGES = {"talks.html": "talks.html"}
 
 PLUGIN_PATHS = ["./plugins", "../pelican-plugins"]
 PLUGINS = ["ipynb.liquid"]

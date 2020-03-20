@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="https://jcristharif.com/feeds/all.atom.xml" type="application/atom+xml" title="Jim Crist-Harif Full Atom Feed"/>
+
+    <title>A Farewell to Anaconda // Jim Crist-Harif</title>
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/code.css" type="text/css" />
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        TeX: { equationNumbers: { autoNumber: "all" } }
+    });
+</script>
+<script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <header>
+      <h1><a href="https://jcristharif.com/">Jim Crist-Harif</a></h1>
+      <ul>
+              <li><a href="https://jcristharif.com/blog.html">Blog</a></li>
+              <li><a href="https://jcristharif.com/about.html">About</a></li>
+              <li><a href="https://jcristharif.com/talks.html">Talks</a></li>
+      </ul>
+    </header>
+
+    <section>
+    <h1>A Farewell to Anaconda</h1>
+    <p class="article-date">Posted on May 20, 2020</p>
+    <p>In the spring of 2015 I quit my graduate program and moved to TX to work for
+<a class="reference external" href="https://www.anaconda.com/">Anaconda</a> (then Continuum Analytics). Graduate
+school hadn't been great for my mental health, and increasingly I was finding
+the thing I liked most about my research was the software development aspects
+of it. I was thrilled to be hired to help maintain the Python scientific
+ecosystem full time. It was my dream job, which is why it feels so hard to say
+that it's time to move on.</p>
+<p>Today is my last day at Anaconda. I'm not leaving for any particular reason, it
+just feels like it's time. I've never quit a job before, every job I've had has
+had a set end time (e.g. &quot;I'm going back to grad school&quot; or &quot;we can't dig holes
+anymore because the ground is frozen&quot;). It feels weird, but I'm excited for
+what's next.</p>
+<p>I'm proud of the work I helped accomplish at Anaconda. We helped create (and
+maintain) open source software that is used by thousands. Here I thought I'd
+recap a few of my highlights.</p>
+<div class="section" id="dask">
+<h2>Dask</h2>
+<img title="Dask is not an acronym, our logo is just shouting its name" class="align-center" src="/images/dask-logo-horizontal.svg" style="width: 80%;" /><p>Most of my work for the last 5 years has been related (in one way or another)
+to <a class="reference external" href="https.dask.org">Dask</a>. I first started contributing while in graduate
+school (~5 years ago today!). I had met Matt Rocklin the previous fall at the <a class="reference external" href="https://lwn.net/Articles/618282/">Google Summer of Code
+reunion</a>, where he <a class="reference external" href="https://xkcd.com/356/">nerd-sniped</a> me into what ended up being a multi-month obsession
+with term-rewriting systems (I was interested in adding one to <a class="reference external" href="https://www.sympy.org">SymPy</a> at the time). So the following spring, when Dask
+needed some rewrite-rules for it's optimizer <a class="reference external" href="https://github.com/dask/dask/issues/79">I was happy to help</a>). Thus began a career of hopelessly
+understimating how long it takes to do things.</p>
+<img title="So young, so naive." class="align-center" src="/images/first-dask-issue-comment.png" style="width: 90%;" /><p>The code for this still lives in <tt class="docutils literal">dask.rewrite</tt> (docs <a class="reference external" href="https://docs.dask.org/en/latest/optimize.html#rewrite-rules">here</a>), although
+it's no longer used internally. Dask has grown up a lot since then. It's now a
+whole ecosystem, with
+<a class="reference external" href="https://anaconda.com">multiple</a>
+<a class="reference external" href="https://coiled.io/">companies</a>
+<a class="reference external" href="https://www.quansight.com/">invested in</a>
+<a class="reference external" href="https://rapids.ai/">its development</a>
+<a class="reference external" href="https://www.saturncloud.io/">and maintenance</a>.</p>
+<p>I'm still planning on continuuing work on Dask outside of Anaconda, and am
+excited to see how the project evolves over the next 5 years.</p>
+</div>
+<div class="section" id="datashader">
+<h2>Datashader</h2>
+<p>The ideas behind what would become <a class="reference external" href="https://datashader.org/">Datashader</a>
+(then called &quot;abstract rendering&quot;) were first described to me at a conference
+happy hour by <a class="reference external" href="https://twitter.com/pwang">Peter Wang</a>. It sounded
+interesting - a mix of <a class="reference external" href="https://dask.org/">dask</a>, <a class="reference external" href="https://numba.org">numba</a> and <a class="reference external" href="https://bokeh.org/">bokeh</a> - the perfect
+demonstration of all the neat libraries Continuum was helping develop at the
+time. I took a few weeks off from Dask development and helped write the first
+version (hopefully most of my code has been rewritten at this point). It made
+some pretty plots (here's an example with NYC Census data):</p>
+<img title="NYC Census, categorized by race" class="align-center" src="/images/datashader-nyc-census.png" style="width: 90%;" /><p>Datashader was my first real experience developing a production library from
+scratch. It worked, it was speedy, but I spent too long waffling about how the
+API should be written (I think I rewrote the user-facing API 3-4 times). This
+whole experience helped me learn that sometimes it's best to get things in
+front of users and iterate, rather than developing &quot;the perfect API&quot; from the
+get-go.</p>
+</div>
+<div class="section" id="python-hadoop">
+<h2>Python &amp; Hadoop</h2>
+<p>During my time at Anaconda I did a few consulting projects deploying and using
+Dask, mostly at large institutions. This was a useful exercise, as it revealed
+many pain points when integrating with enterprise-y systems (read Hadoop). I
+think it's easy for open-source devs to miss key issues if they're not also
+direct users of their software. Things you might not expect to cause issues
+often do.</p>
+<p>One issue that kept cropping up was Hadoop integration. Many of our customers
+had purchased large Hadoop/YARN clusters, and we had no way to run our software
+on them.</p>
+<img title="sometimes things are difficult" class="align-center" src="/images/one-does-not-simply-deploy-on-yarn.jpg" style="width: 60%;" /><p>While we primarily wanted to be able to run Dask on
+these clusters, we also wanted a general solution. This led to <a class="reference external" href="https://jcristharif.com/skein/">Skein</a>, a (hopefully) user-friendly tool for
+deploying and managing applications on Hadoop/YARN (<a class="reference external" href="https://jcristharif.com/introducing-skein.html">blogpost here</a>). While Skein was developed primarily for use in <a class="reference external" href="https://yarn.dask.org">dask-yarn</a>, it's also used by several other projects:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://ray.readthedocs.io/en/latest/deploy-on-yarn.html">Ray</a> - another distributed computing project</li>
+<li><a class="reference external" href="https://github.com/criteo/tf-yarn">tf-yarn</a> - deploys tensorflow on YARN</li>
+<li><a class="reference external" href="https://jupyterhub-yarnspawner.readthedocs.io">jupyterhub-yarnspawner</a> - deploys JupyterHub on YARN</li>
+<li><a class="reference external" href="https://gateway.dask.org/">dask-gateway</a> - a managed deployment solution for Dask</li>
+</ul>
+<p>Skein is a Python wrapper around a Java application, which meant I had to learn
+Java. YARN is also mostly undocumented, which meant I had to read its source to
+understand the internals (and the <a class="reference external" href="https://steveloughran.gitbooks.io/kerberos_and_hadoop/">madness beyond the gate</a>). As a result of
+this I am now:</p>
+<ul class="simple">
+<li>A pretty mediocre Java developer (all of Skein looks like a Python developer
+writing Java, which is accurate).</li>
+<li>Fairly knowledgable about the internals of a mostly legacy system.</li>
+</ul>
+<p>Future employers be warned.</p>
+</div>
+<div class="section" id="jupyterhub-on-hadoop">
+<h2>JupyterHub on Hadoop</h2>
+<p>Continuuing my rage against enterprise systems, I grew frustrated with
+Cloudera's datascience workbench and developed a way to natively run
+<a class="reference external" href="https://jupyterhub.readthedocs.io">JupyterHub</a> on Hadoop. It works, there's
+<a class="reference external" href="https://jupyterhub-on-hadoop.readthedocs.io/en/latest/">docs and everything</a>. I even made a
+walkthrough video:</p>
+<div style="text-align:center">
+  <iframe
+    width="640"
+    height="385"
+    src="https://www.youtube.com/embed/M7T8Xnj9M6c"
+    frameborder="0"
+    allow="autoplay; encrypted-media;"
+    allowfullscreen>
+  </iframe>
+</div><p>This mostly involved:</p>
+<ul class="simple">
+<li>Writing an spawner: <a class="reference external" href="https://jupyterhub-yarnspawner.readthedocs.io">yarnspawner</a></li>
+<li>Writing an authenticator: <a class="reference external" href="https://jupyterhub-kerberosauthenticator.readthedocs.io">kerberosauthenticator</a></li>
+<li>Writing a contents-manager: <a class="reference external" href="https://jcristharif.com/hdfscm/">hdfscm</a></li>
+<li>Documenting everything and hoping it's useful</li>
+</ul>
+<p>JupyterHub is a wonderfully designed project and is a pleasure to work on. The
+Jupyter community is also a model of what community-driven development can
+accomplish. May Dask's community one day be equally be as open and supportive.</p>
+</div>
+<div class="section" id="dask-gateway">
+<h2>Dask-Gateway</h2>
+<p>Dask's existing deployment solutions work well, but are inherently
+decentralized. They require users to have direct access to the underlying
+cluster system (e.g. Kubernetes RBAC permissions), as well as network access to
+all nodes in the cluster (firewalls be damned). Likewise, users are expected to
+have some knowledge of the underlying systems (e.g. K8s pod specs), which makes
+onboarding trickier.</p>
+<p><a class="reference external" href="https://gateway.dask.org">Dask-Gateway</a> is our attempt at providing a
+managed solution. It allows users to launch and use Dask clusters in a shared,
+centrally managed cluster environment, without requiring users to have
+knowledge of or direct access to the underlying cluster backend (e.g.
+Kubernetes, Hadoop/YARN, HPC Job queues, etc…). In short, &quot;Dask clusters as a
+service&quot;.</p>
+<p>It looks like this:</p>
+<img title="dask-gateway's architecture" class="align-center" src="/images/dask-gateway-architecture.svg" style="width: 80%;" /><p>Dask-Gateway feels like a culmination of the previous work I've done:</p>
+<ul class="simple">
+<li>It's a solution for deploying <em>Dask</em></li>
+<li>It works on multiple backends, including <em>Hadoop/YARN</em></li>
+<li>It looks a lot like <em>JupyterHub</em> (it's basically JupyterHub, but for Dask)</li>
+</ul>
+<p>This project (like any project) has been a great opportunity to learn. Before
+this I had never written a serious web application, now I have <em>opinions</em> about
+Python asyncio server frameworks. I also got a lot of experience working with
+Enterprise Users™ whose needs and security restrictions often differ from the
+usual users I encounter.</p>
+<p>Dask-Gateway is currently deployed at a handful of companies, as well as
+actively used as part of the <a class="reference external" href="https://pangeo.io">Pangeo Project</a>. I just
+finished a major rewrite of the server internals, and plan to keep developing
+it in the coming months.</p>
+</div>
+<div class="section" id="retrospective">
+<h2>Retrospective</h2>
+<p>The projects discussed above don't encompass everything I've done while working
+at Anaconda, but they're a sampling of my favorites. My job for the past 5
+years has been to maintain and better the Python ecosystem, and in that I hope
+I've been successful.</p>
+<p>But Anaconda is more than just the software we made along the way. It's a
+company full of brilliant and kind people who care about their work and the
+community they're supporting. I will miss the people most.</p>
+<p>Thanks Anaconda for a great 5 years, I truly wish you all the best.</p>
+</div>
+<div class="section" id="what-s-next">
+<h2>What's Next</h2>
+<p>I'm excited to say I'm going to work at <a class="reference external" href="https://www.prefect.io/">Prefect</a>.
+There (among a myriad of other things), I hope to improve Prefect's integration
+with Dask. I'll also be given time to continue maintenance and development of
+the Dask ecosystem (bringing Prefect into the fold of companies maintaining
+Dask :) ).</p>
+<p>Before then I'm taking a few weeks off to relax. I'm returning my work laptop
+to Anaconda today, and will only have access to my old college laptop (2 GiB of
+RAM!) until my new job starts. Call it a forced detox from OSS development. I
+have a few woodworking projects and books to keep me busy, and am looking
+forward to the break.</p>
+</div>
+
+    </section>
+
+    <footer>
+        <p>
+            All content copyright 2014-2020 Jim Crist-Harif unless otherwise noted.
+            Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+        </p>
+        <p>
+        Find me on
+        <a href="https://twitter.com/jcristharif">Twitter</a>,
+        <a href="https://github.com/jcrist">GitHub</a>, or shoot me an
+        <a href="mailto:jcristharif@gmail.com">email</a>.
+        </p>
+    </footer>
+</body>
+</html>

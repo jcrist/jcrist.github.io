@@ -1,5 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/all.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2019-06-03T14:30:00-05:00</updated><entry><title>Smaller Docker images with Conda</title><link href="https://jcristharif.com/conda-docker-tips.html" rel="alternate"></link><published>2019-06-03T14:30:00-05:00</published><updated>2019-06-03T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2019-06-03:/conda-docker-tips.html</id><summary type="html">&lt;p class="first last"&gt;Tips for reducing the size of docker images that use Conda&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/all.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2020-05-20T14:30:00-05:00</updated><entry><title>A Farewell to Anaconda</title><link href="https://jcristharif.com/farewell-to-anaconda.html" rel="alternate"></link><published>2020-05-20T14:30:00-05:00</published><updated>2020-05-20T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2020-05-20:/farewell-to-anaconda.html</id><summary type="html">&lt;p class="first last"&gt;A recap on my last 5 years at Anaconda&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;In the spring of 2015 I quit my graduate program and moved to TX to work for
+&lt;a class="reference external" href="https://www.anaconda.com/"&gt;Anaconda&lt;/a&gt; (then Continuum Analytics). Graduate
+school hadn't been great for my mental health, and increasingly I was finding
+the thing I liked most about my research was the software development aspects
+of it. I was thrilled to be hired to help maintain the Python scientific
+ecosystem full time. It was my dream job, which is why it feels so hard to say
+that it's time to move on.&lt;/p&gt;
+&lt;p&gt;Today is my last day at Anaconda. I'm not leaving for any particular reason, it
+just feels like it's time. I've never quit a job before, every job I've had has
+had a set end time (e.g. &amp;quot;I'm going back to grad school&amp;quot; or &amp;quot;we can't dig holes
+anymore because the ground is frozen&amp;quot;). It feels weird, but I'm excited for
+what's next.&lt;/p&gt;
+&lt;p&gt;I'm proud of the work I helped accomplish at Anaconda. We helped create (and
+maintain) open source software that is used by thousands. Here I thought I'd
+recap a few of my highlights.&lt;/p&gt;
+&lt;div class="section" id="dask"&gt;
+&lt;h2&gt;Dask&lt;/h2&gt;
+&lt;img title="Dask is not an acronym, our logo is just shouting its name" class="align-center" src="/images/dask-logo-horizontal.svg" style="width: 80%;" /&gt;&lt;p&gt;Most of my work for the last 5 years has been related (in one way or another)
+to &lt;a class="reference external" href="https.dask.org"&gt;Dask&lt;/a&gt;. I first started contributing while in graduate
+school (~5 years ago today!). I had met Matt Rocklin the previous fall at the &lt;a class="reference external" href="https://lwn.net/Articles/618282/"&gt;Google Summer of Code
+reunion&lt;/a&gt;, where he &lt;a class="reference external" href="https://xkcd.com/356/"&gt;nerd-sniped&lt;/a&gt; me into what ended up being a multi-month obsession
+with term-rewriting systems (I was interested in adding one to &lt;a class="reference external" href="https://www.sympy.org"&gt;SymPy&lt;/a&gt; at the time). So the following spring, when Dask
+needed some rewrite-rules for it's optimizer &lt;a class="reference external" href="https://github.com/dask/dask/issues/79"&gt;I was happy to help&lt;/a&gt;). Thus began a career of hopelessly
+understimating how long it takes to do things.&lt;/p&gt;
+&lt;img title="So young, so naive." class="align-center" src="/images/first-dask-issue-comment.png" style="width: 90%;" /&gt;&lt;p&gt;The code for this still lives in &lt;tt class="docutils literal"&gt;dask.rewrite&lt;/tt&gt; (docs &lt;a class="reference external" href="https://docs.dask.org/en/latest/optimize.html#rewrite-rules"&gt;here&lt;/a&gt;), although
+it's no longer used internally. Dask has grown up a lot since then. It's now a
+whole ecosystem, with
+&lt;a class="reference external" href="https://anaconda.com"&gt;multiple&lt;/a&gt;
+&lt;a class="reference external" href="https://coiled.io/"&gt;companies&lt;/a&gt;
+&lt;a class="reference external" href="https://www.quansight.com/"&gt;invested in&lt;/a&gt;
+&lt;a class="reference external" href="https://rapids.ai/"&gt;its development&lt;/a&gt;
+&lt;a class="reference external" href="https://www.saturncloud.io/"&gt;and maintenance&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I'm still planning on continuuing work on Dask outside of Anaconda, and am
+excited to see how the project evolves over the next 5 years.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="datashader"&gt;
+&lt;h2&gt;Datashader&lt;/h2&gt;
+&lt;p&gt;The ideas behind what would become &lt;a class="reference external" href="https://datashader.org/"&gt;Datashader&lt;/a&gt;
+(then called &amp;quot;abstract rendering&amp;quot;) were first described to me at a conference
+happy hour by &lt;a class="reference external" href="https://twitter.com/pwang"&gt;Peter Wang&lt;/a&gt;. It sounded
+interesting - a mix of &lt;a class="reference external" href="https://dask.org/"&gt;dask&lt;/a&gt;, &lt;a class="reference external" href="https://numba.org"&gt;numba&lt;/a&gt; and &lt;a class="reference external" href="https://bokeh.org/"&gt;bokeh&lt;/a&gt; - the perfect
+demonstration of all the neat libraries Continuum was helping develop at the
+time. I took a few weeks off from Dask development and helped write the first
+version (hopefully most of my code has been rewritten at this point). It made
+some pretty plots (here's an example with NYC Census data):&lt;/p&gt;
+&lt;img title="NYC Census, categorized by race" class="align-center" src="/images/datashader-nyc-census.png" style="width: 90%;" /&gt;&lt;p&gt;Datashader was my first real experience developing a production library from
+scratch. It worked, it was speedy, but I spent too long waffling about how the
+API should be written (I think I rewrote the user-facing API 3-4 times). This
+whole experience helped me learn that sometimes it's best to get things in
+front of users and iterate, rather than developing &amp;quot;the perfect API&amp;quot; from the
+get-go.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="python-hadoop"&gt;
+&lt;h2&gt;Python &amp;amp; Hadoop&lt;/h2&gt;
+&lt;p&gt;During my time at Anaconda I did a few consulting projects deploying and using
+Dask, mostly at large institutions. This was a useful exercise, as it revealed
+many pain points when integrating with enterprise-y systems (read Hadoop). I
+think it's easy for open-source devs to miss key issues if they're not also
+direct users of their software. Things you might not expect to cause issues
+often do.&lt;/p&gt;
+&lt;p&gt;One issue that kept cropping up was Hadoop integration. Many of our customers
+had purchased large Hadoop/YARN clusters, and we had no way to run our software
+on them.&lt;/p&gt;
+&lt;img title="sometimes things are difficult" class="align-center" src="/images/one-does-not-simply-deploy-on-yarn.jpg" style="width: 60%;" /&gt;&lt;p&gt;While we primarily wanted to be able to run Dask on
+these clusters, we also wanted a general solution. This led to &lt;a class="reference external" href="https://jcristharif.com/skein/"&gt;Skein&lt;/a&gt;, a (hopefully) user-friendly tool for
+deploying and managing applications on Hadoop/YARN (&lt;a class="reference external" href="https://jcristharif.com/introducing-skein.html"&gt;blogpost here&lt;/a&gt;). While Skein was developed primarily for use in &lt;a class="reference external" href="https://yarn.dask.org"&gt;dask-yarn&lt;/a&gt;, it's also used by several other projects:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://ray.readthedocs.io/en/latest/deploy-on-yarn.html"&gt;Ray&lt;/a&gt; - another distributed computing project&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/criteo/tf-yarn"&gt;tf-yarn&lt;/a&gt; - deploys tensorflow on YARN&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://jupyterhub-yarnspawner.readthedocs.io"&gt;jupyterhub-yarnspawner&lt;/a&gt; - deploys JupyterHub on YARN&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://gateway.dask.org/"&gt;dask-gateway&lt;/a&gt; - a managed deployment solution for Dask&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Skein is a Python wrapper around a Java application, which meant I had to learn
+Java. YARN is also mostly undocumented, which meant I had to read its source to
+understand the internals (and the &lt;a class="reference external" href="https://steveloughran.gitbooks.io/kerberos_and_hadoop/"&gt;madness beyond the gate&lt;/a&gt;). As a result of
+this I am now:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;A pretty mediocre Java developer (all of Skein looks like a Python developer
+writing Java, which is accurate).&lt;/li&gt;
+&lt;li&gt;Fairly knowledgable about the internals of a mostly legacy system.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Future employers be warned.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="jupyterhub-on-hadoop"&gt;
+&lt;h2&gt;JupyterHub on Hadoop&lt;/h2&gt;
+&lt;p&gt;Continuuing my rage against enterprise systems, I grew frustrated with
+Cloudera's datascience workbench and developed a way to natively run
+&lt;a class="reference external" href="https://jupyterhub.readthedocs.io"&gt;JupyterHub&lt;/a&gt; on Hadoop. It works, there's
+&lt;a class="reference external" href="https://jupyterhub-on-hadoop.readthedocs.io/en/latest/"&gt;docs and everything&lt;/a&gt;. I even made a
+walkthrough video:&lt;/p&gt;
+&lt;div style="text-align:center"&gt;
+  &lt;iframe
+    width="640"
+    height="385"
+    src="https://www.youtube.com/embed/M7T8Xnj9M6c"
+    frameborder="0"
+    allow="autoplay; encrypted-media;"
+    allowfullscreen&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;&lt;p&gt;This mostly involved:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Writing an spawner: &lt;a class="reference external" href="https://jupyterhub-yarnspawner.readthedocs.io"&gt;yarnspawner&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Writing an authenticator: &lt;a class="reference external" href="https://jupyterhub-kerberosauthenticator.readthedocs.io"&gt;kerberosauthenticator&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Writing a contents-manager: &lt;a class="reference external" href="https://jcristharif.com/hdfscm/"&gt;hdfscm&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Documenting everything and hoping it's useful&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;JupyterHub is a wonderfully designed project and is a pleasure to work on. The
+Jupyter community is also a model of what community-driven development can
+accomplish. May Dask's community one day be equally be as open and supportive.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="dask-gateway"&gt;
+&lt;h2&gt;Dask-Gateway&lt;/h2&gt;
+&lt;p&gt;Dask's existing deployment solutions work well, but are inherently
+decentralized. They require users to have direct access to the underlying
+cluster system (e.g. Kubernetes RBAC permissions), as well as network access to
+all nodes in the cluster (firewalls be damned). Likewise, users are expected to
+have some knowledge of the underlying systems (e.g. K8s pod specs), which makes
+onboarding trickier.&lt;/p&gt;
+&lt;p&gt;&lt;a class="reference external" href="https://gateway.dask.org"&gt;Dask-Gateway&lt;/a&gt; is our attempt at providing a
+managed solution. It allows users to launch and use Dask clusters in a shared,
+centrally managed cluster environment, without requiring users to have
+knowledge of or direct access to the underlying cluster backend (e.g.
+Kubernetes, Hadoop/YARN, HPC Job queues, etc…). In short, &amp;quot;Dask clusters as a
+service&amp;quot;.&lt;/p&gt;
+&lt;p&gt;It looks like this:&lt;/p&gt;
+&lt;img title="dask-gateway's architecture" class="align-center" src="/images/dask-gateway-architecture.svg" style="width: 80%;" /&gt;&lt;p&gt;Dask-Gateway feels like a culmination of the previous work I've done:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;It's a solution for deploying &lt;em&gt;Dask&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;It works on multiple backends, including &lt;em&gt;Hadoop/YARN&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;It looks a lot like &lt;em&gt;JupyterHub&lt;/em&gt; (it's basically JupyterHub, but for Dask)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This project (like any project) has been a great opportunity to learn. Before
+this I had never written a serious web application, now I have &lt;em&gt;opinions&lt;/em&gt; about
+Python asyncio server frameworks. I also got a lot of experience working with
+Enterprise Users™ whose needs and security restrictions often differ from the
+usual users I encounter.&lt;/p&gt;
+&lt;p&gt;Dask-Gateway is currently deployed at a handful of companies, as well as
+actively used as part of the &lt;a class="reference external" href="https://pangeo.io"&gt;Pangeo Project&lt;/a&gt;. I just
+finished a major rewrite of the server internals, and plan to keep developing
+it in the coming months.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="retrospective"&gt;
+&lt;h2&gt;Retrospective&lt;/h2&gt;
+&lt;p&gt;The projects discussed above don't encompass everything I've done while working
+at Anaconda, but they're a sampling of my favorites. My job for the past 5
+years has been to maintain and better the Python ecosystem, and in that I hope
+I've been successful.&lt;/p&gt;
+&lt;p&gt;But Anaconda is more than just the software we made along the way. It's a
+company full of brilliant and kind people who care about their work and the
+community they're supporting. I will miss the people most.&lt;/p&gt;
+&lt;p&gt;Thanks Anaconda for a great 5 years, I truly wish you all the best.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="what-s-next"&gt;
+&lt;h2&gt;What's Next&lt;/h2&gt;
+&lt;p&gt;I'm excited to say I'm going to work at &lt;a class="reference external" href="https://www.prefect.io/"&gt;Prefect&lt;/a&gt;.
+There (among a myriad of other things), I hope to improve Prefect's integration
+with Dask. I'll also be given time to continue maintenance and development of
+the Dask ecosystem (bringing Prefect into the fold of companies maintaining
+Dask :) ).&lt;/p&gt;
+&lt;p&gt;Before then I'm taking a few weeks off to relax. I'm returning my work laptop
+to Anaconda today, and will only have access to my old college laptop (2 GiB of
+RAM!) until my new job starts. Call it a forced detox from OSS development. I
+have a few woodworking projects and books to keep me busy, and am looking
+forward to the break.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="ramblings"></category></entry><entry><title>Smaller Docker images with Conda</title><link href="https://jcristharif.com/conda-docker-tips.html" rel="alternate"></link><published>2019-06-03T14:30:00-05:00</published><updated>2019-06-03T14:30:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2019-06-03:/conda-docker-tips.html</id><summary type="html">&lt;p class="first last"&gt;Tips for reducing the size of docker images that use Conda&lt;/p&gt;
 </summary><content type="html">&lt;div class="section" id="summary"&gt;
 &lt;h2&gt;Summary&lt;/h2&gt;
 &lt;p&gt;We provide a few tips for reducing the size of docker images that use Conda,

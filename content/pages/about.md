@@ -4,7 +4,7 @@ save_as: about.html
 <img class="avatar" src="https://avatars3.githubusercontent.com/u/2783717?s=200"/>
 
 I'm **Jim**. Born and raised in Minneapolis, MN, currently working for
-[Anaconda](https://www.anaconda.com/) in Austin, TX.
+[Prefect](https://www.prefect.io/) in Austin, TX.
 
 ## Background
 
@@ -16,10 +16,6 @@ systems. I was drawn to this field due to its inherent multidisciplinary nature
 final project was in the application of novel estimator designs to reduce the
 hardware requirements for actuators. Sometimes you don't need more or better
 sensors, just a fancier algorithm.
-
-During graduate school I became involved in several open-source projects,
-mostly in the scientific python community, which is how I ended up working at
-Anaconda (then Continuum Analytics).
 
 ## Projects
 

@@ -1,7 +1,7 @@
 A Farewell to Anaconda
 ######################
 
-:date: 2020-05-20 14:30
+:date: 2020-03-20 14:30
 :category: ramblings
 :slug: farewell-to-anaconda
 :author: Jim Crist

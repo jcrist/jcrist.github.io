@@ -24,7 +24,7 @@ size.&lt;/p&gt;
 &lt;p&gt;We'll be working through reducing the size of an image for running the Dask
 Scheduler/Workers (a simplified version of those found in the official
 &lt;a class="reference external" href="https://github.com/dask/dask-docker"&gt;dask-docker images&lt;/a&gt;. The &lt;tt class="docutils literal"&gt;Dockerfile&lt;/tt&gt; is as follows:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="s"&gt;continuumio/miniconda3:4.6.14&lt;/span&gt;
 
 &lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes &lt;span class="se"&gt;\&lt;/span&gt;
     &lt;span class="nv"&gt;dask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.2.2 &lt;span class="se"&gt;\&lt;/span&gt;
@@ -69,7 +69,7 @@ library. While fast, the binaries included are rather large:&lt;/p&gt;
 be done by adding &lt;tt class="docutils literal"&gt;nomkl&lt;/tt&gt; as a dependency. Users using the &lt;a class="reference external" href="https://conda-forge.org/"&gt;Conda-Forge&lt;/a&gt;
 channel will get &lt;tt class="docutils literal"&gt;openblas&lt;/tt&gt; by default and won't need the &lt;tt class="docutils literal"&gt;nomkl&lt;/tt&gt;
 dependency.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="s"&gt;continuumio/miniconda3:4.6.14&lt;/span&gt;
 
 &lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes &lt;span class="se"&gt;\&lt;/span&gt;
     nomkl &lt;span class="se"&gt;\&lt;/span&gt;
@@ -96,7 +96,7 @@ files after the install.&lt;/p&gt;
 removes cache files, package tarballs, and the entire package cache. To ensure
 only necessary files are saved in each layer, you'll want to add this to the
 end of any &lt;tt class="docutils literal"&gt;RUN&lt;/tt&gt; command that installs packages with &lt;tt class="docutils literal"&gt;conda&lt;/tt&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="s"&gt;continuumio/miniconda3:4.6.14&lt;/span&gt;
 
 &lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes &lt;span class="se"&gt;\&lt;/span&gt;
     nomkl &lt;span class="se"&gt;\&lt;/span&gt;
@@ -123,7 +123,7 @@ version being stored in layers in the image, increasing image size. The
 packages, and should be added to any &lt;tt class="docutils literal"&gt;install&lt;/tt&gt; command. This isn't super
 important for this image, but becomes more important if multiple rounds of
 &lt;tt class="docutils literal"&gt;conda install&lt;/tt&gt; commands are used.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="s"&gt;continuumio/miniconda3:4.6.14&lt;/span&gt;
 
 &lt;span class="k"&gt;RUN&lt;/span&gt; conda install --yes --freeze-installed &lt;span class="se"&gt;\&lt;/span&gt;
     nomkl &lt;span class="se"&gt;\&lt;/span&gt;
@@ -173,7 +173,7 @@ use the minified version in Dask, so we can remove the unminified files.&lt;/p&g
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Applying these changes to our Dockerfile:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; continuumio/miniconda3:4.6.14&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="s"&gt;continuumio/miniconda3:4.6.14&lt;/span&gt;
 
 &lt;span class="k"&gt;ENV&lt;/span&gt; &lt;span class="nv"&gt;PYTHONDONTWRITEBYTECODE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nb"&gt;true&lt;/span&gt;
 
@@ -208,7 +208,7 @@ patches have been applied, and a new miniconda base image is available at
 already has &lt;tt class="docutils literal"&gt;tini&lt;/tt&gt; installed and sets &lt;tt class="docutils literal"&gt;PYTHONDONTWRITEBYTECODE&lt;/tt&gt;, so we can
 drop those from our dockerfile.&lt;/p&gt;
 &lt;p&gt;Updating our Dockerfile:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="s"&gt; jcrist/alpine-conda:4.6.8&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt; &lt;span class="s"&gt;jcrist/alpine-conda:4.6.8&lt;/span&gt;
 
 &lt;span class="k"&gt;RUN&lt;/span&gt; /opt/conda/bin/conda install --yes --freeze-installed &lt;span class="se"&gt;\&lt;/span&gt;
         &lt;span class="nv"&gt;dask&lt;/span&gt;&lt;span class="o"&gt;==&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;.2.2 &lt;span class="se"&gt;\&lt;/span&gt;

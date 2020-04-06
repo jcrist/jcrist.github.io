@@ -66,14 +66,14 @@ we'll use it here for illustration purposes only.</p>
 <p>I'm running this on a 4 node cluster of <code>m3.2xlarge</code> instances (8 cores, 30 GB
 RAM each), with one worker sharing a node with the scheduler.</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">distributed</span> <span class="kn">import</span> <span class="n">Executor</span><span class="p">,</span> <span class="n">progress</span>
-<span class="n">exc</span> <span class="o">=</span> <span class="n">Executor</span><span class="p">(</span><span class="s1">&#39;172.31.11.71:8786&#39;</span><span class="p">,</span> <span class="n">set_as_default</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">exc</span> <span class="o">=</span> <span class="n">Executor</span><span class="p">(</span><span class="s1">&#39;172.31.11.71:8786&#39;</span><span class="p">,</span> <span class="n">set_as_default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">exc</span>
 </pre></div>
 
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Executor</span><span class="p">:</span> <span class="n">scheduler</span><span class="o">=</span><span class="ss">&quot;172.31.11.71:8786&quot;</span> <span class="n">processes</span><span class="o">=</span><span class="mi">4</span> <span class="n">cores</span><span class="o">=</span><span class="mi">32</span><span class="o">&gt;</span>
+<div class="highlight"><pre><span></span><span class="err">&lt;Executor: scheduler=&quot;172.31.11.71:8786&quot; processes=4 cores=32&gt;</span>
 </pre></div>
 
 
@@ -84,7 +84,7 @@ RAM each), with one worker sharing a node with the scheduler.</p>
 read them into a dask dataframe using <code>read_csv</code>. The <code>usecols</code> keyword
 specifies the subset of columns we want to use. We also pass in <code>blocksize</code> to
 tell dask to partition the data into larger partitions than the default.</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dask.dataframe</span> <span class="kn">as</span> <span class="nn">dd</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dask.dataframe</span> <span class="k">as</span> <span class="nn">dd</span>
 
 <span class="c1"># Subset of the columns to use</span>
 <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Year&#39;</span><span class="p">,</span> <span class="s1">&#39;Month&#39;</span><span class="p">,</span> <span class="s1">&#39;DayOfWeek&#39;</span><span class="p">,</span> <span class="s1">&#39;DepDelay&#39;</span><span class="p">,</span>
@@ -94,14 +94,14 @@ tell dask to partition the data into larger partitions than the default.</p>
 <span class="n">df</span> <span class="o">=</span> <span class="n">dd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;s3://dask-data/airline-data/*.csv&#39;</span><span class="p">,</span>
                  <span class="n">usecols</span><span class="o">=</span><span class="n">cols</span><span class="p">,</span>
                  <span class="n">blocksize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">128e6</span><span class="p">),</span>
-                 <span class="n">storage_options</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">anon</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+                 <span class="n">storage_options</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">anon</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="n">df</span>
 </pre></div>
 
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">dd</span><span class="p">.</span><span class="n">DataFrame</span><span class="o">&lt;</span><span class="k">from</span><span class="o">-</span><span class="n">de</span><span class="p">...,</span> <span class="n">npartitions</span><span class="o">=</span><span class="mi">104</span><span class="o">&gt;</span>
+<div class="highlight"><pre><span></span><span class="err">&lt;dd.DataFrame&lt;from-de..., npartitions=104&gt;</span>
 </pre></div>
 
 
@@ -138,13 +138,13 @@ because it can easily fit in distributed memory, and will speed up all of the
 remaining steps (I/O can be expensive).</p>
 <div class="highlight"><pre><span></span><span class="n">exc</span><span class="o">.</span><span class="n">persist</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
-<span class="n">progress</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">notebook</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">progress</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">notebook</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="p">[</span><span class="o">########################################</span><span class="p">]</span> <span class="o">|</span> <span class="mi">100</span><span class="o">%</span> <span class="n">Completed</span> <span class="o">|</span>  <span class="mi">1</span><span class="k">min</span> <span class="mi">17</span><span class="p">.</span><span class="mi">7</span><span class="n">s</span>
+<div class="highlight"><pre><span></span><span class="err">[########################################] | 100% Completed |  1min 17.7s</span>
 </pre></div>
 
 
@@ -156,7 +156,7 @@ remaining steps (I/O can be expensive).</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">dd</span><span class="p">.</span><span class="n">DataFrame</span><span class="o">&lt;</span><span class="n">_assign</span><span class="p">...,</span> <span class="n">npartitions</span><span class="o">=</span><span class="mi">104</span><span class="o">&gt;</span>
+<div class="highlight"><pre><span></span><span class="err">dd.DataFrame&lt;_assign..., npartitions=104&gt;</span>
 </pre></div>
 
 
@@ -168,7 +168,7 @@ remaining steps (I/O can be expensive).</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="mi">121</span><span class="p">.</span><span class="mi">232833</span>
+<div class="highlight"><pre><span></span><span class="err">121.232833</span>
 </pre></div>
 
 
@@ -318,8 +318,8 @@ interface.</p>
 <code>pandas.DataFrame</code> into a sparse matrix, given a mapping of categories for each
 column. We've decorated the function with <code>dask.delayed</code>, which makes the
 function return a lazy object instead of computing immediately.</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">dask</span> <span class="kn">import</span> <span class="n">delayed</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
 
@@ -342,7 +342,7 @@ function return a lazy object instead of computing immediately.</p>
                             <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
 
 
-<span class="nd">@delayed</span><span class="p">(</span><span class="n">pure</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="nd">@delayed</span><span class="p">(</span><span class="n">pure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">one_hot_encode</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">categories</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f8&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;One-hot-encode a pandas.DataFrame.</span>
 
@@ -380,7 +380,7 @@ fairly quick to do:</p>
 
 <p>Finally, we can build up our feature and target matrices, as two
 <code>dklearn.matrix.Matrix</code> objects.</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dklearn.matrix</span> <span class="kn">as</span> <span class="nn">dm</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dklearn.matrix</span> <span class="k">as</span> <span class="nn">dm</span>
 
 <span class="c1"># Convert the series `delayed` into a `Matrix`</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">delayed</span><span class="p">)</span>
@@ -399,8 +399,8 @@ fairly quick to do:</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="n">dklearn</span><span class="p">.</span><span class="n">matrix</span><span class="o">&lt;</span><span class="n">matrix</span><span class="o">-</span><span class="p">...,</span> <span class="n">npartitions</span><span class="o">=</span><span class="mi">104</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float64</span><span class="o">&gt;</span><span class="p">,</span>
- <span class="n">dklearn</span><span class="p">.</span><span class="n">matrix</span><span class="o">&lt;</span><span class="n">matrix</span><span class="o">-</span><span class="p">...,</span> <span class="n">npartitions</span><span class="o">=</span><span class="mi">104</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">int64</span><span class="o">&gt;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="err">(dklearn.matrix&lt;matrix-..., npartitions=104, dtype=float64&gt;,</span>
+<span class="err"> dklearn.matrix&lt;matrix-..., npartitions=104, dtype=int64&gt;)</span>
 </pre></div>
 
 
@@ -483,7 +483,7 @@ the scikit-learn interface):</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="mi">0</span><span class="p">.</span><span class="mi">83144082308054479</span>
+<div class="highlight"><pre><span></span><span class="err">0.83144082308054479</span>
 </pre></div>
 
 
@@ -495,7 +495,7 @@ the scikit-learn interface):</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span> <span class="s1">&#39;loss&#39;</span><span class="p">:</span> <span class="s1">&#39;hinge&#39;</span><span class="err">}</span>
+<div class="highlight"><pre><span></span><span class="err">{&#39;alpha&#39;: 0.0001, &#39;loss&#39;: &#39;hinge&#39;}</span>
 </pre></div>
 
 
@@ -510,11 +510,11 @@ stored in the <code>best_estimator_</code> attribute:</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">SGDClassifier</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="k">False</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">eta0</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">,</span> <span class="n">fit_intercept</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">l1_ratio</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">15</span><span class="p">,</span>
-    <span class="n">learning_rate</span><span class="o">=</span><span class="s1">&#39;optimal&#39;</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;hinge&#39;</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-    <span class="n">penalty</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="n">power_t</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="k">True</span><span class="p">,</span>
-    <span class="k">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">warm_start</span><span class="o">=</span><span class="k">False</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="err">SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,</span>
+<span class="err">    eta0=0.0, fit_intercept=True, l1_ratio=0.15,</span>
+<span class="err">    learning_rate=&#39;optimal&#39;, loss=&#39;hinge&#39;, n_iter=5, n_jobs=1,</span>
+<span class="err">    penalty=&#39;l2&#39;, power_t=0.5, random_state=None, shuffle=True,</span>
+<span class="err">    verbose=0, warm_start=False)</span>
 </pre></div>
 
 
@@ -543,7 +543,7 @@ dispatch to a parallel implementation easily. For now, we can call <code>predict
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="mi">0</span><span class="p">.</span><span class="mi">83146828311187182</span>
+<div class="highlight"><pre><span></span><span class="err">0.83146828311187182</span>
 </pre></div>
 
 
@@ -561,7 +561,7 @@ flights leave on time).</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="mi">0</span><span class="p">.</span><span class="mi">83151615151172298</span>
+<div class="highlight"><pre><span></span><span class="err">0.83151615151172298</span>
 </pre></div>
 
 

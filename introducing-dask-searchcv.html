@@ -77,10 +77,10 @@ This involved a few major changes:</p>
 <p>All these changes have led to a name change (previously was <code>dask-learn</code>). The
 new library is <a href="http://dask-searchcv.readthedocs.io"><code>dask-searchcv</code></a>. It can
 be installed via conda or pip:</p>
-<div class="highlight"><pre><span></span><span class="o">#</span> <span class="n">conda</span>
-<span class="err">$</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">dask</span><span class="o">-</span><span class="n">searchcv</span> <span class="o">-</span><span class="k">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span>
-<span class="o">#</span> <span class="n">pip</span>
-<span class="err">$</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">dask</span><span class="o">-</span><span class="n">searchcv</span>
+<div class="highlight"><pre><span></span><span class="err"># conda</span>
+<span class="err">$ conda install dask-searchcv -c conda-forge</span>
+<span class="err"># pip</span>
+<span class="err">$ pip install dask-searchcv</span>
 </pre></div>
 
 
@@ -105,13 +105,13 @@ using the newsgroups dataset from the scikit-learn docs.</p>
 
 <span class="n">categories</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;alt.atheism&#39;</span><span class="p">,</span> <span class="s1">&#39;talk.religion.misc&#39;</span><span class="p">]</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">fetch_20newsgroups</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="n">categories</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of samples: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of samples: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
 </pre></div>
 
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="nb">Number</span> <span class="k">of</span> <span class="n">samples</span><span class="p">:</span> <span class="mi">857</span>
+<div class="highlight"><pre><span></span><span class="err">Number of samples: 857</span>
 </pre></div>
 
 
@@ -138,20 +138,20 @@ of them:</p>
 <div class="highlight"><pre><span></span><span class="c1"># Parameters of steps are set using &#39;__&#39; separated parameter names:</span>
 <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;vect__max_df&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
               <span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
-              <span class="s1">&#39;tfidf__use_idf&#39;</span><span class="p">:</span> <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">),</span>
+              <span class="s1">&#39;tfidf__use_idf&#39;</span><span class="p">:</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
               <span class="s1">&#39;tfidf__norm&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;l1&#39;</span><span class="p">,</span> <span class="s1">&#39;l2&#39;</span><span class="p">),</span>
               <span class="s1">&#39;clf__alpha&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">1e-2</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">),</span>
               <span class="s1">&#39;clf__n_iter&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span>
               <span class="s1">&#39;clf__penalty&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="s1">&#39;elasticnet&#39;</span><span class="p">)}</span>
 
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">ParameterGrid</span>
-<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Number of candidates: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">ParameterGrid</span><span class="p">(</span><span class="n">parameters</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of candidates: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">ParameterGrid</span><span class="p">(</span><span class="n">parameters</span><span class="p">)))</span>
 </pre></div>
 
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="nb">Number</span> <span class="k">of</span> <span class="n">candidates</span><span class="p">:</span> <span class="mi">576</span>
+<div class="highlight"><pre><span></span><span class="err">Number of candidates: 576</span>
 </pre></div>
 
 
@@ -172,8 +172,8 @@ across 8 processes (the number of cores on my machine).</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">CPU</span> <span class="n">times</span><span class="p">:</span> <span class="k">user</span> <span class="mi">39</span><span class="p">.</span><span class="mi">1</span> <span class="n">s</span><span class="p">,</span> <span class="n">sys</span><span class="p">:</span> <span class="mi">12</span><span class="p">.</span><span class="mi">7</span> <span class="n">s</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="mi">51</span><span class="p">.</span><span class="mi">8</span> <span class="n">s</span>
-<span class="n">Wall</span> <span class="n">time</span><span class="p">:</span> <span class="mi">9</span><span class="k">min</span> <span class="mi">12</span><span class="n">s</span>
+<div class="highlight"><pre><span></span><span class="err">CPU times: user 39.1 s, sys: 12.7 s, total: 51.8 s</span>
+<span class="err">Wall time: 9min 12s</span>
 </pre></div>
 
 
@@ -215,13 +215,13 @@ small:</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Client</span><span class="p">:</span> <span class="n">scheduler</span><span class="o">=</span><span class="s1">&#39;tcp://127.0.0.1:64485&#39;</span> <span class="n">processes</span><span class="o">=</span><span class="mi">8</span> <span class="n">cores</span><span class="o">=</span><span class="mi">8</span><span class="o">&gt;</span>
+<div class="highlight"><pre><span></span><span class="err">&lt;Client: scheduler=&#39;tcp://127.0.0.1:64485&#39; processes=8 cores=8&gt;</span>
 </pre></div>
 
 
 </div>
 
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dask_searchcv</span> <span class="kn">as</span> <span class="nn">dcv</span>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dask_searchcv</span> <span class="k">as</span> <span class="nn">dcv</span>
 
 <span class="c1"># Only difference here is absence of `n_jobs` parameter</span>
 <span class="n">dgrid_search</span> <span class="o">=</span> <span class="n">dcv</span><span class="o">.</span><span class="n">GridSearchCV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
@@ -232,8 +232,8 @@ small:</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">CPU</span> <span class="n">times</span><span class="p">:</span> <span class="k">user</span> <span class="mi">36</span><span class="p">.</span><span class="mi">9</span> <span class="n">s</span><span class="p">,</span> <span class="n">sys</span><span class="p">:</span> <span class="mi">9</span><span class="p">.</span><span class="mi">75</span> <span class="n">s</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="mi">46</span><span class="p">.</span><span class="mi">7</span> <span class="n">s</span>
-<span class="n">Wall</span> <span class="n">time</span><span class="p">:</span> <span class="mi">7</span><span class="k">min</span> <span class="mi">16</span><span class="n">s</span>
+<div class="highlight"><pre><span></span><span class="err">CPU times: user 36.9 s, sys: 9.75 s, total: 46.7 s</span>
+<span class="err">Wall time: 7min 16s</span>
 </pre></div>
 
 
@@ -316,7 +316,7 @@ a new client, and then rerun:</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">Client</span><span class="p">:</span> <span class="n">scheduler</span><span class="o">=</span><span class="s1">&#39;tcp://54.146.59.240:8786&#39;</span> <span class="n">processes</span><span class="o">=</span><span class="mi">24</span> <span class="n">cores</span><span class="o">=</span><span class="mi">24</span><span class="o">&gt;</span>
+<div class="highlight"><pre><span></span><span class="err">&lt;Client: scheduler=&#39;tcp://54.146.59.240:8786&#39; processes=24 cores=24&gt;</span>
 </pre></div>
 
 
@@ -328,8 +328,8 @@ a new client, and then rerun:</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">CPU</span> <span class="n">times</span><span class="p">:</span> <span class="k">user</span> <span class="mi">871</span> <span class="n">ms</span><span class="p">,</span> <span class="n">sys</span><span class="p">:</span> <span class="mi">23</span><span class="p">.</span><span class="mi">3</span> <span class="n">ms</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="mi">894</span> <span class="n">ms</span>
-<span class="n">Wall</span> <span class="n">time</span><span class="p">:</span> <span class="mi">2</span><span class="k">min</span> <span class="mi">43</span><span class="n">s</span>
+<div class="highlight"><pre><span></span><span class="err">CPU times: user 871 ms, sys: 23.3 ms, total: 894 ms</span>
+<span class="err">Wall time: 2min 43s</span>
 </pre></div>
 
 
@@ -363,8 +363,8 @@ backend. This is also only a few lines changed:</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">CPU</span> <span class="n">times</span><span class="p">:</span> <span class="k">user</span> <span class="mi">12</span><span class="p">.</span><span class="mi">1</span> <span class="n">s</span><span class="p">,</span> <span class="n">sys</span><span class="p">:</span> <span class="mi">3</span><span class="p">.</span><span class="mi">26</span> <span class="n">s</span><span class="p">,</span> <span class="n">total</span><span class="p">:</span> <span class="mi">15</span><span class="p">.</span><span class="mi">3</span> <span class="n">s</span>
-<span class="n">Wall</span> <span class="n">time</span><span class="p">:</span> <span class="mi">3</span><span class="k">min</span> <span class="mi">32</span><span class="n">s</span>
+<div class="highlight"><pre><span></span><span class="err">CPU times: user 12.1 s, sys: 3.26 s, total: 15.3 s</span>
+<span class="err">Wall time: 3min 32s</span>
 </pre></div>
 
 

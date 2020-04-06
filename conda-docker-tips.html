@@ -60,7 +60,7 @@ size.</p>
 <p>We'll be working through reducing the size of an image for running the Dask
 Scheduler/Workers (a simplified version of those found in the official
 <a class="reference external" href="https://github.com/dask/dask-docker">dask-docker images</a>. The <tt class="docutils literal">Dockerfile</tt> is as follows:</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="s"> continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
 
 <span class="k">RUN</span> conda install --yes <span class="se">\</span>
     <span class="nv">dask</span><span class="o">==</span><span class="m">1</span>.2.2 <span class="se">\</span>
@@ -105,7 +105,7 @@ library. While fast, the binaries included are rather large:</p>
 be done by adding <tt class="docutils literal">nomkl</tt> as a dependency. Users using the <a class="reference external" href="https://conda-forge.org/">Conda-Forge</a>
 channel will get <tt class="docutils literal">openblas</tt> by default and won't need the <tt class="docutils literal">nomkl</tt>
 dependency.</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="s"> continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
 
 <span class="k">RUN</span> conda install --yes <span class="se">\</span>
     nomkl <span class="se">\</span>
@@ -132,7 +132,7 @@ files after the install.</p>
 removes cache files, package tarballs, and the entire package cache. To ensure
 only necessary files are saved in each layer, you'll want to add this to the
 end of any <tt class="docutils literal">RUN</tt> command that installs packages with <tt class="docutils literal">conda</tt>.</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="s"> continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
 
 <span class="k">RUN</span> conda install --yes <span class="se">\</span>
     nomkl <span class="se">\</span>
@@ -159,7 +159,7 @@ version being stored in layers in the image, increasing image size. The
 packages, and should be added to any <tt class="docutils literal">install</tt> command. This isn't super
 important for this image, but becomes more important if multiple rounds of
 <tt class="docutils literal">conda install</tt> commands are used.</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="s"> continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
 
 <span class="k">RUN</span> conda install --yes --freeze-installed <span class="se">\</span>
     nomkl <span class="se">\</span>
@@ -209,7 +209,7 @@ use the minified version in Dask, so we can remove the unminified files.</p>
 </li>
 </ul>
 <p>Applying these changes to our Dockerfile:</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="s"> continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
 
 <span class="k">ENV</span> <span class="nv">PYTHONDONTWRITEBYTECODE</span><span class="o">=</span><span class="nb">true</span>
 
@@ -244,7 +244,7 @@ patches have been applied, and a new miniconda base image is available at
 already has <tt class="docutils literal">tini</tt> installed and sets <tt class="docutils literal">PYTHONDONTWRITEBYTECODE</tt>, so we can
 drop those from our dockerfile.</p>
 <p>Updating our Dockerfile:</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="s"> jcrist/alpine-conda:4.6.8</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">jcrist/alpine-conda:4.6.8</span>
 
 <span class="k">RUN</span> /opt/conda/bin/conda install --yes --freeze-installed <span class="se">\</span>
         <span class="nv">dask</span><span class="o">==</span><span class="m">1</span>.2.2 <span class="se">\</span>

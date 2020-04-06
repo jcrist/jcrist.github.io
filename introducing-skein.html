@@ -172,7 +172,7 @@ address. This again is done through the <a class="reference external" href="http
 getting the address of a single echo server, we'll loop through all registered
 addresses and message each of them. To do this we use the <a class="reference external" href="https://jcrist.github.io/skein/api.html#skein.kv.KeyValueStore.get_prefix">get_prefix</a>
 method to get all keys that start with <tt class="docutils literal">address.</tt>.</p>
-<div class="highlight"><pre><span></span><span class="n">async</span> <span class="k">def</span> <span class="nf">echo_all</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">echo_all</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Send and recieve a message from all running echo servers&quot;&quot;&quot;</span>
     <span class="c1"># Loop through all registered server addresses</span>
     <span class="k">for</span> <span class="n">address</span> <span class="ow">in</span> <span class="n">app</span><span class="o">.</span><span class="n">kv</span><span class="o">.</span><span class="n">get_prefix</span><span class="p">(</span><span class="s1">&#39;address.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
@@ -181,7 +181,7 @@ method to get all keys that start with <tt class="docutils literal">address.</tt
         <span class="n">port</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
 
         <span class="c1"># Send the message to the echo server</span>
-        <span class="n">await</span> <span class="n">tcp_echo_client</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">tcp_echo_client</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">loop</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
 </pre></div>
 <p>The remainder of the client implementation is generic - provide a async
 function to message each server, start the event loop, and run until all

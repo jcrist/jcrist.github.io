@@ -110,11 +110,11 @@ one at a time.</p>
 
     <span class="k">def</span> <span class="nf">handle_starttag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">,</span> <span class="n">attrs</span><span class="p">):</span>
         <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;start_&#39;</span> <span class="o">+</span> <span class="n">tag</span>
-        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">None</span><span class="p">)(</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">None</span><span class="p">)(</span><span class="n">attrs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">handle_endtag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
         <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;end_&#39;</span> <span class="o">+</span> <span class="n">tag</span>
-        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">None</span><span class="p">)()</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">)()</span>
 
     <span class="k">def</span> <span class="nf">_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">in_title</span> <span class="o">=</span> <span class="mi">0</span>
@@ -192,10 +192,10 @@ then learn a binary classification problem to determine from the document text
 whether the document is in the <code>"acq"</code> class.</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">dask.bag</span> <span class="kn">as</span> <span class="nn">db</span>
-<span class="kn">import</span> <span class="nn">dklearn.matrix</span> <span class="kn">as</span> <span class="nn">dm</span>
+<span class="kn">import</span> <span class="nn">dask.bag</span> <span class="k">as</span> <span class="nn">db</span>
+<span class="kn">import</span> <span class="nn">dklearn.matrix</span> <span class="k">as</span> <span class="nn">dm</span>
 
 
 <span class="k">def</span> <span class="nf">file_to_documents</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
@@ -211,7 +211,7 @@ whether the document is in the <code>"acq"</code> class.</p>
 
 <span class="k">def</span> <span class="nf">documents_to_X_text</span><span class="p">(</span><span class="n">docs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Extract the text to use as features&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">[</span><span class="sa">u</span><span class="s1">&#39;{title}</span><span class="se">\n\n</span><span class="s1">{body}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">doc</span><span class="p">)</span> <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">docs</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="sa">u</span><span class="s1">&#39;</span><span class="si">{title}</span><span class="se">\n\n</span><span class="si">{body}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">doc</span><span class="p">)</span> <span class="k">for</span> <span class="n">doc</span> <span class="ow">in</span> <span class="n">docs</span><span class="p">]</span>
 
 
 <span class="k">def</span> <span class="nf">documents_to_y</span><span class="p">(</span><span class="n">docs</span><span class="p">,</span> <span class="n">pos_class</span><span class="o">=</span><span class="s1">&#39;acq&#39;</span><span class="p">):</span>
@@ -258,7 +258,7 @@ dask-learn.</p>
 
 <span class="n">vectorizer</span> <span class="o">=</span> <span class="n">HashingVectorizer</span><span class="p">(</span><span class="n">decode_error</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span>
                                <span class="n">n_features</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span>
-                               <span class="n">non_negative</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                               <span class="n">non_negative</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
 
@@ -286,12 +286,12 @@ wrapped with <code>Chained</code>.</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;vect&#39;</span><span class="p">,</span> <span class="n">HashingVectorizer</span><span class="p">(</span><span class="n">analyzer</span><span class="o">=</span><span class="n">u</span><span class="s1">&#39;word&#39;</span><span class="p">,</span> <span class="nb">binary</span><span class="o">=</span><span class="k">False</span><span class="p">,</span> <span class="n">decode_error</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span>
-         <span class="n">dtype</span><span class="o">=&lt;</span><span class="k">type</span> <span class="s1">&#39;numpy.float64&#39;</span><span class="o">&gt;</span><span class="p">,</span> <span class="k">encoding</span><span class="o">=</span><span class="n">u</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="k">input</span><span class="o">=</span><span class="n">u</span><span class="s1">&#39;content&#39;</span><span class="p">,</span>
-         <span class="n">lowercase</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">262144</span><span class="p">,</span> <span class="n">ngram_range</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-         <span class="n">non_negative</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">u</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="n">preprocessor</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">stop_words</span><span class="o">=</span><span class="n">N</span><span class="p">...</span><span class="mi">2</span><span class="err">&#39;</span><span class="p">,</span> <span class="n">power_t</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">,</span>
-         <span class="n">random_state</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="k">True</span><span class="p">,</span><span class="k">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-         <span class="n">warm_start</span><span class="o">=</span><span class="k">False</span><span class="p">)))])</span>
+<div class="highlight"><pre><span></span><span class="err">Pipeline(steps=[(&#39;vect&#39;, HashingVectorizer(analyzer=u&#39;word&#39;, binary=False, decode_error=&#39;ignore&#39;,</span>
+<span class="err">         dtype=&lt;type &#39;numpy.float64&#39;&gt;, encoding=u&#39;utf-8&#39;, input=u&#39;content&#39;,</span>
+<span class="err">         lowercase=True, n_features=262144, ngram_range=(1, 1),</span>
+<span class="err">         non_negative=True, norm=u&#39;l2&#39;, preprocessor=None, stop_words=N...2&#39;, power_t=0.5,</span>
+<span class="err">         random_state=None, shuffle=True,verbose=0,</span>
+<span class="err">         warm_start=False)))])</span>
 </pre></div>
 
 
@@ -317,11 +317,11 @@ As a dask graph, this looks something like:</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;vect&#39;</span><span class="p">,</span> <span class="n">HashingVectorizer</span><span class="p">(</span><span class="n">analyzer</span><span class="o">=</span><span class="n">u</span><span class="s1">&#39;word&#39;</span><span class="p">,</span> <span class="nb">binary</span><span class="o">=</span><span class="k">False</span><span class="p">,</span> <span class="n">decode_error</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span>
-         <span class="n">dtype</span><span class="o">=&lt;</span><span class="k">type</span> <span class="s1">&#39;numpy.float64&#39;</span><span class="o">&gt;</span><span class="p">,</span> <span class="k">encoding</span><span class="o">=</span><span class="n">u</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span> <span class="k">input</span><span class="o">=</span><span class="n">u</span><span class="s1">&#39;content&#39;</span><span class="p">,</span>
-         <span class="n">lowercase</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">n_features</span><span class="o">=</span><span class="mi">262144</span><span class="p">,</span> <span class="n">ngram_range</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-         <span class="n">non_negative</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">u</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="n">preprocessor</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">stop_words</span><span class="o">=</span><span class="n">N</span><span class="p">...</span><span class="n">ty</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
-         <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;liblinear&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span><span class="k">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">warm_start</span><span class="o">=</span><span class="k">False</span><span class="p">)))])</span>
+<div class="highlight"><pre><span></span><span class="err">Pipeline(steps=[(&#39;vect&#39;, HashingVectorizer(analyzer=u&#39;word&#39;, binary=False, decode_error=&#39;ignore&#39;,</span>
+<span class="err">         dtype=&lt;type &#39;numpy.float64&#39;&gt;, encoding=u&#39;utf-8&#39;, input=u&#39;content&#39;,</span>
+<span class="err">         lowercase=True, n_features=262144, ngram_range=(1, 1),</span>
+<span class="err">         non_negative=True, norm=u&#39;l2&#39;, preprocessor=None, stop_words=N...ty=&#39;l2&#39;, random_state=None,</span>
+<span class="err">         solver=&#39;liblinear&#39;, tol=0.0001,verbose=0, warm_start=False)))])</span>
 </pre></div>
 
 
@@ -393,7 +393,7 @@ measure performance.</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="p">[</span><span class="o">########################################</span><span class="p">]</span> <span class="o">|</span> <span class="mi">100</span><span class="o">%</span> <span class="n">Completed</span> <span class="o">|</span>  <span class="mi">7</span><span class="p">.</span><span class="mi">8</span><span class="n">s</span>
+<div class="highlight"><pre><span></span><span class="err">[########################################] | 100% Completed |  7.8s</span>
 </pre></div>
 
 
@@ -405,7 +405,7 @@ measure performance.</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="mi">0</span>.<span class="mi">96392016376663259</span>    # <span class="nv">The</span> <span class="nv">score</span> <span class="k">for</span> <span class="nv">the</span> <span class="nv">Chained</span><span class="ss">(</span><span class="nv">SGDClassifier</span><span class="ss">())</span>
+<div class="highlight"><pre><span></span><span class="err">0.96392016376663259    # The score for the Chained(SGDClassifier())</span>
 </pre></div>
 
 
@@ -417,7 +417,7 @@ measure performance.</p>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="mi">0</span>.<span class="mi">87871033776867968</span>    # <span class="nv">The</span> <span class="nv">score</span> <span class="k">for</span> <span class="nv">the</span> <span class="nv">Averaged</span><span class="ss">(</span><span class="nv">LogisticRegression</span><span class="ss">())</span>
+<div class="highlight"><pre><span></span><span class="err">0.87871033776867968    # The score for the Averaged(LogisticRegression())</span>
 </pre></div>
 
 

@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="https://jcristharif.com/feeds/all.atom.xml" type="application/atom+xml" title="Jim Crist-Harif Full Atom Feed"/>
+
+    <title>Extending Numba with overload // Jim Crist-Harif</title>
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/code.css" type="text/css" />
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        TeX: { equationNumbers: { autoNumber: "all" } }
+    });
+</script>
+<script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <header>
+      <h1><a href="https://jcristharif.com/">Jim Crist-Harif</a></h1>
+      <ul>
+              <li><a href="https://jcristharif.com/blog.html">Blog</a></li>
+              <li><a href="https://jcristharif.com/about.html">About</a></li>
+              <li><a href="https://jcristharif.com/talks.html">Talks</a></li>
+      </ul>
+    </header>
+
+    <section>
+    <h1>Extending Numba with <tt class="docutils literal">overload</tt></h1>
+    <p class="article-date">Posted on April 06, 2020</p>
+    <p><a class="reference external" href="https://numba.pydata.org">Numba</a> is an amazing project. It's able to just-in-time (JIT) compile a fairly
+large subset of numerical Python code to fast machine code, with the user only
+having to apply a <a class="reference external" href="https://docs.python.org/3/glossary.html#term-decorator">decorator</a> to their function. It looks like this:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nb</span>
+
+<span class="nd">@nb</span><span class="o">.</span><span class="n">njit</span>   <span class="c1"># &lt;- magic Numba decorator</span>
+<span class="k">def</span> <span class="nf">monte_carlo_pi</span><span class="p">(</span><span class="n">nsamples</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate the value of Pi using the monte-carlo method&quot;&quot;&quot;</span>
+    <span class="n">acc</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nsamples</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">y</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">acc</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">acc</span> <span class="o">/</span> <span class="n">nsamples</span>
+</pre></div>
+<p>The above is an example routine for estimating Pi using the <a class="reference external" href="https://en.wikipedia.org/wiki/Monte_Carlo_method">monte-carlo</a>
+method. Without the <tt class="docutils literal">nb.njit</tt> decorator <tt class="docutils literal">monte_carlo_pi</tt> would successfully
+run (everything is valid Python), but with the decorator itruns significantly
+faster (roughly 30x in my quick benchmark).</p>
+<p>Numba does this by analyzing the decorated function's <a class="reference external" href="https://docs.python.org/3/glossary.html#term-bytecode">bytecode</a> to build an
+<a class="reference external" href="http://numba.pydata.org/numba-doc/latest/glossary.html#term-numba-ir">intermediate representation</a> (IR) of the its structure. Type inference is
+then applied, followed by a series of IR transformations. Finally the IR is
+used to generate LLVM IR, which is then compiled to machine code.  Part of this
+transformation process involves swapping out calls to Python functions (like
+<tt class="docutils literal">random.random</tt> above) with faster compiled versions that Numba knows about.</p>
+<p>Numba natively supports a decent subset of Python and NumPy (see <a class="reference external" href="http://numba.pydata.org/numba-doc/latest/reference/pysupported.html">here</a> and
+<a class="reference external" href="http://numba.pydata.org/numba-doc/latest/reference/numpysupported.html">here</a> for
+a full reference). But sometimes you'll run into situations where Numba doesn't
+know about the function you're referencing. In this case you'll get an error:</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nb</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nd">@nb</span><span class="o">.</span><span class="n">njit</span>
+<span class="o">...</span> <span class="k">def</span> <span class="nf">clipped_sum</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">clipped_sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+<span class="n">File</span> <span class="s2">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+<span class="n">File</span> <span class="s2">&quot;/opt/miniconda3/envs/numba/lib/python3.8/site-packages/numba/dispatcher.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">401</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_compile_for_args</span>
+    <span class="n">error_rewrite</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="s1">&#39;typing&#39;</span><span class="p">)</span>
+<span class="n">File</span> <span class="s2">&quot;/opt/miniconda3/envs/numba/lib/python3.8/site-packages/numba/dispatcher.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">344</span><span class="p">,</span> <span class="ow">in</span> <span class="n">error_rewrite</span>
+    <span class="n">reraise</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">e</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">File</span> <span class="s2">&quot;/opt/miniconda3/envs/numba/lib/python3.8/site-packages/numba/six.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">668</span><span class="p">,</span> <span class="ow">in</span> <span class="n">reraise</span>
+    <span class="k">raise</span> <span class="n">value</span><span class="o">.</span><span class="n">with_traceback</span><span class="p">(</span><span class="n">tb</span><span class="p">)</span>
+<span class="n">TypingError</span><span class="p">:</span> <span class="n">Failed</span> <span class="ow">in</span> <span class="n">nopython</span> <span class="n">mode</span> <span class="n">pipeline</span> <span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="n">nopython</span> <span class="n">frontend</span><span class="p">)</span>
+<span class="n">Use</span> <span class="n">of</span> <span class="n">unsupported</span> <span class="n">NumPy</span> <span class="n">function</span> <span class="s1">&#39;numpy.clip&#39;</span> <span class="ow">or</span> <span class="n">unsupported</span> <span class="n">use</span> <span class="n">of</span> <span class="n">the</span> <span class="n">function</span><span class="o">.</span>
+
+<span class="n">File</span> <span class="s2">&quot;&lt;ipython-input-8-3524b5de079c&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">clipped_sum</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="o">^</span>
+
+<span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="n">During</span><span class="p">:</span> <span class="n">typing</span> <span class="n">of</span> <span class="n">get</span> <span class="n">attribute</span> <span class="n">at</span> <span class="o">&lt;</span><span class="n">ipython</span><span class="o">-</span><span class="nb">input</span><span class="o">-</span><span class="mi">8</span><span class="o">-</span><span class="mi">3524</span><span class="n">b5de079c</span><span class="o">&gt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">File</span> <span class="s2">&quot;&lt;ipython-input-8-3524b5de079c&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">clipped_sum</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="o">^</span>
+</pre></div>
+<p>Numba (at least version <tt class="docutils literal">0.48.0</tt>) doesn't know how to handle the <tt class="docutils literal">np.clip</tt>
+call. We'll need to use Numba's <a class="reference external" href="http://numba.pydata.org/numba-doc/latest/extending/index.html">extension API</a> to add
+support for <tt class="docutils literal">np.clip</tt>.</p>
+<div class="section" id="implementing-new-functions-with-overload">
+<h2>Implementing new functions with <tt class="docutils literal">overload</tt></h2>
+<p>To add support for a new function to Numba, we can make use of the
+<a class="reference external" href="http://numba.pydata.org/numba-doc/latest/extending/overloading-guide.html">numba.extending.overload</a>
+decorator. The decorated function is called at compile time with the <em>types</em> of
+the arguments, and should return an <em>implementation</em> for those given types.
+This implementation will then be jit compiled and used in place of the
+overloaded function.</p>
+<p>Lets work a simplified example first, before handling <tt class="docutils literal">np.clip</tt>. Say we
+wanted to add Numba support for the following function:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">myfunc</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;x must be an int or a float&quot;</span><span class="p">)</span>
+</pre></div>
+<p>The above checks if <tt class="docutils literal">x</tt> is an <tt class="docutils literal">int</tt>, and if so increments it. If it's a
+<tt class="docutils literal">float</tt> it doubles it. Otherwise it raises a <tt class="docutils literal">TypeError</tt>.</p>
+<p>These type checks happen at <em>runtime</em>. When writing our Numba implementation,
+the types are known at <em>compile time</em>.  This means that we can elide the type
+checks at runtime by handling the type-based dispatching (and erroring) at
+compile time.</p>
+<p>The corresponding Numba implementation for this function is:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">numba.errors</span> <span class="kn">import</span> <span class="n">TypingError</span>
+<span class="kn">from</span> <span class="nn">numba.extending</span> <span class="kn">import</span> <span class="n">overload</span>
+
+<span class="nd">@overload</span><span class="p">(</span><span class="n">myfunc</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">implement_myfunc</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c1"># This is a code generator for ``myfunc``.</span>
+    <span class="c1"># Here x is the compile-time *type*</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Integer</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="c1"># This is an *implementation* of ``myfunc`` (in this case the</span>
+            <span class="c1"># implementation for integer values of x).</span>
+            <span class="c1"># Here x is the runtime *value*</span>
+            <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Float</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">2</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># If an invalid type is passed to ``implement_myfunc``, a</span>
+        <span class="c1"># ``numba.types.TypingError`` should be raised. This helps inform</span>
+        <span class="c1"># the user what went wrong.</span>
+        <span class="k">raise</span> <span class="n">TypingError</span><span class="p">(</span><span class="s2">&quot;x must be an int or a float&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">impl</span>
+</pre></div>
+<p>At a high level <tt class="docutils literal">implement_myfunc</tt> and <tt class="docutils literal">myfunc</tt> look quite similar. Both
+branch on the type of <tt class="docutils literal">x</tt>, with branches for integers, floats, and errors.
+But while <tt class="docutils literal">myfunc</tt> returns values, <tt class="docutils literal">implement_myfunc</tt> returns a callable
+that will be JIT compiled by numba and used to implement <tt class="docutils literal">myfunc</tt> for the
+provided type.</p>
+<p>Note that Numba types are distinct from their Python counterparts (but there's
+usually a one-to-one mapping between them). These types can be found in
+<tt class="docutils literal">numba.types</tt> (<a class="reference external" href="http://numba.pydata.org/numba-doc/latest/reference/types.html">documentation</a>). If you
+don't know what the corresponding Numba type is for something, you can use
+<tt class="docutils literal">numba.typeof</tt>.</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">typeof</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">typeof</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">int64</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">typeof</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">))</span>
+<span class="n">Tuple</span><span class="p">(</span><span class="n">int64</span><span class="p">,</span> <span class="n">float64</span><span class="p">)</span>
+</pre></div>
+<p>Also, instead of a <tt class="docutils literal">TypeError</tt>, when an invalid type (or combination of
+types) is provided, the decorated function (e.g. <tt class="docutils literal">implement_myfunc</tt>) a should
+raise a <tt class="docutils literal">numba.errors.TypingError</tt>. This will be reported back to the user.</p>
+</div>
+<div class="section" id="adding-an-overload-for-np-clip">
+<h2>Adding an overload for <tt class="docutils literal">np.clip</tt></h2>
+<p>Now lets apply the same process to <tt class="docutils literal">np.clip</tt>, reimplementing the function in
+a way that Numba's JIT can reason about.  To make sure the NumPy and Numba
+versions are compatible, we first check the <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.clip.html">docstring</a>:</p>
+<div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Clip (limit) the values in an array.</span>
+
+<span class="sd">Given an interval, values outside the interval are clipped to</span>
+<span class="sd">the interval edges.  For example, if an interval of ``[0, 1]``</span>
+<span class="sd">is specified, values smaller than 0 become 0, and values larger</span>
+<span class="sd">than 1 become 1.</span>
+
+<span class="sd">Equivalent to but faster than ``np.maximum(a_min, np.minimum(a, a_max))``.</span>
+<span class="sd">No check is performed to ensure ``a_min &lt; a_max``.</span>
+
+<span class="sd">Parameters</span>
+<span class="sd">----------</span>
+<span class="sd">a : array_like</span>
+<span class="sd">    Array containing elements to clip.</span>
+<span class="sd">a_min : scalar or array_like or None</span>
+<span class="sd">    Minimum value. If None, clipping is not performed on lower</span>
+<span class="sd">    interval edge. Not more than one of `a_min` and `a_max` may be</span>
+<span class="sd">    None.</span>
+<span class="sd">a_max : scalar or array_like or None</span>
+<span class="sd">    Maximum value. If None, clipping is not performed on upper</span>
+<span class="sd">    interval edge. Not more than one of `a_min` and `a_max` may be</span>
+<span class="sd">    None. If `a_min` or `a_max` are array_like, then the three</span>
+<span class="sd">    arrays will be broadcasted to match their shapes.</span>
+<span class="sd">...</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+<p>We don't need to support all of <tt class="docutils literal">np.clip</tt>'s possible arguments yet, just the
+ones we need. To simplify things, we'll support:</p>
+<ul class="simple">
+<li>Scalar values for <tt class="docutils literal">a_min</tt>/<tt class="docutils literal">a_max</tt> (<tt class="docutils literal">int</tt>, <tt class="docutils literal">float</tt>, or <tt class="docutils literal">None</tt>).</li>
+<li>Either scalar or 1D-array values for <tt class="docutils literal">a</tt>.</li>
+</ul>
+<p>After a bit of work, I ended up with the following implementation:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">numba.errors</span> <span class="kn">import</span> <span class="n">TypingError</span>
+<span class="kn">from</span> <span class="nn">numba.extending</span> <span class="kn">import</span> <span class="n">overload</span>
+
+<span class="nd">@overload</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">impl_clip</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">):</span>
+    <span class="c1"># Check that `a_min` and `a_max` are scalars, and at most one of them is None.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a_min</span><span class="p">,</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Float</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">NoneType</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">TypingError</span><span class="p">(</span><span class="s2">&quot;a_min must be a_min scalar int/float&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a_max</span><span class="p">,</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Float</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">NoneType</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="n">TypingError</span><span class="p">(</span><span class="s2">&quot;a_max must be a_min scalar int/float&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a_min</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">NoneType</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a_max</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">NoneType</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">TypingError</span><span class="p">(</span><span class="s2">&quot;a_min and a_max can&#39;t both be None&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Float</span><span class="p">)):</span>
+        <span class="c1"># `a` is a scalar with a valid type</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a_min</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">NoneType</span><span class="p">):</span>
+            <span class="c1"># `a_min` is None</span>
+            <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a_max</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a_max</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">NoneType</span><span class="p">):</span>
+            <span class="c1"># `a_max` is None</span>
+            <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a_min</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># neither `a_min` or `a_max` are None</span>
+            <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a_min</span><span class="p">),</span> <span class="n">a_max</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">Integer</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Float</span><span class="p">))</span>
+    <span class="p">):</span>
+        <span class="c1"># `a` is a 1D array of the proper type</span>
+        <span class="k">def</span> <span class="nf">impl</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">):</span>
+            <span class="c1"># Allocate an output array using standard numpy functions</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="c1"># Iterate over `a`, calling `np.clip` on every element</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>
+                <span class="c1"># This will dispatch to the proper scalar implementation (as</span>
+                <span class="c1"># defined above) at *compile time*. There should have no</span>
+                <span class="c1"># overhead at runtime.</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">out</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TypingError</span><span class="p">(</span><span class="s2">&quot;`a` must be an int/float or a 1D array of ints/floats&quot;</span><span class="p">)</span>
+
+    <span class="c1"># The call to `np.clip` has arguments with valid types, return our</span>
+    <span class="c1"># numba-compatible implementation</span>
+    <span class="k">return</span> <span class="n">impl</span>
+</pre></div>
+<p>With our implementation registered, we should now be able to use <tt class="docutils literal">np.clip</tt>
+with Numba. Verifying:</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">numba</span> <span class="k">as</span> <span class="nn">nb</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="nd">@nb</span><span class="o">.</span><span class="n">njit</span>
+<span class="o">...</span> <span class="k">def</span> <span class="nf">test_clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">):</span>
+<span class="o">...</span>     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a_min</span><span class="p">,</span> <span class="n">a_max</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">test_clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">test_clip</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">test_clip</span><span class="p">(</span><span class="mf">5.0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="mf">3.0</span>
+</pre></div>
+</div>
+<div class="section" id="registering-numba-extensions-with-entry-points">
+<h2>Registering Numba Extensions with Entry Points</h2>
+<p>Our above example using <tt class="docutils literal">np.clip</tt> worked because our overloaded definition
+was already registered with Numba. As long as our <tt class="docutils literal">overload</tt> decorated
+functions have been loadAs long as our <tt class="docutils literal">overload</tt> decorated functions have
+been loaded before Numba tries to compile something that relies on them,
+everything should <em>just work</em>. However, sometimes you may need (or want) to
+store the overloaded definitions in a package that would not normally be
+imported by users. For example, the <a class="reference external" href="https://github.com/numba/numba-scipy">numba-scipy</a> package adds Numba support for the
+SciPy library, but is a separate package from <tt class="docutils literal">scipy</tt>.</p>
+<p>To avoid forcing users to <tt class="docutils literal">import numba_scipy</tt> to enable the extension, Numba
+relies on <a class="reference external" href="https://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins">entry points</a>
+to automatically discover any installed extensions.</p>
+<p>To register a module as a Numba extension, you need to:</p>
+<ul>
+<li><p class="first">Define an <tt class="docutils literal">init</tt> function to setup your extension (in our case this is just
+importing any modules with <tt class="docutils literal">overload</tt> definitions):</p>
+<div class="highlight"><pre><span></span><span class="c1"># numba_overload_example/__init__.py</span>
+<span class="k">def</span> <span class="nf">init</span><span class="p">():</span>
+    <span class="c1"># Import the overloads module, registering any functions or types</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">overloads</span>
+</pre></div>
+</li>
+<li><p class="first">Register this <tt class="docutils literal">init</tt> function as an entry point under the
+<tt class="docutils literal">numba_extensions</tt> group.</p>
+<div class="highlight"><pre><span></span><span class="c1"># setup.py</span>
+<span class="n">setup</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">entry_points</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;numba_extensions&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;init = numba_overload_example:init&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</pre></div>
+</li>
+</ul>
+<p>For more information on registering Numba extensions using entry points, see
+the <a class="reference external" href="http://numba.pydata.org/numba-doc/latest/extending/entrypoints.html">documentation</a>.</p>
+</div>
+<div class="section" id="wrapping-up">
+<h2>Wrapping Up</h2>
+<p>Unmodified, Numba is able to compile a decent subset of Python and NumPy. If
+you're writing code that looks similar to how it'd be done in a &quot;low-level&quot;
+language like C (e.g. loops, arithmetic, arrays of scalars, ...) you may never
+need to use the extension API. But when needed, using <tt class="docutils literal">overload</tt> to add
+support for new functions can be quite useful.</p>
+<p>The full code for our example extension module can be found here:
+<a class="reference external" href="https://github.com/jcrist/numba-overload-example">numba-overload-example</a>.</p>
+</div>
+
+    </section>
+
+    <footer>
+        <p>
+            All content copyright 2014-2020 Jim Crist-Harif unless otherwise noted.
+            Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+        </p>
+        <p>
+        Find me on
+        <a href="https://twitter.com/jcristharif">Twitter</a>,
+        <a href="https://github.com/jcrist">GitHub</a>, or shoot me an
+        <a href="mailto:jcristharif@gmail.com">email</a>.
+        </p>
+    </footer>
+</body>
+</html>

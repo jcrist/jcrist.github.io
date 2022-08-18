@@ -171,7 +171,7 @@ representatives per decade, filtering out the ~140 years of no representation:</
 </pre></div>
 <p>For the curious, you can see the generated SQL query using the
 <tt class="docutils literal">ibis.show_sql</tt> function:</p>
-<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">11</span><span class="p">]:</span> <span class="n">ibis</span><span class="o">.</span><span class="n">show_sql</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">11</span><span class="p">]:</span> <span class="n">ibis</span><span class="o">.</span><span class="n">show_sql</span><span class="p">(</span><span class="n">percent_female_by_decade</span><span class="p">)</span>
 <span class="n">SELECT</span>
   <span class="n">t0</span><span class="o">.</span><span class="n">decade</span><span class="p">,</span>
   <span class="n">t0</span><span class="o">.</span><span class="n">percent_female</span>

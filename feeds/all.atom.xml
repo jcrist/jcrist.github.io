@@ -1,5 +1,224 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/all.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2020-04-06T10:00:00-05:00</updated><entry><title>Extending Numba with overload</title><link href="https://jcristharif.com/numba-overload.html" rel="alternate"></link><published>2020-04-06T10:00:00-05:00</published><updated>2020-04-06T10:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2020-04-06:/numba-overload.html</id><summary type="html">&lt;p class="first last"&gt;A quick post on adding new functions to Numba&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/all.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2022-08-18T08:15:00-05:00</updated><entry><title>Ibis-Datasette</title><link href="https://jcristharif.com/ibis-datasette.html" rel="alternate"></link><published>2022-08-18T08:15:00-05:00</published><updated>2022-08-18T08:15:00-05:00</updated><author><name>Jim Crist-Harif</name></author><id>tag:jcristharif.com,2022-08-18:/ibis-datasette.html</id><summary type="html">&lt;p class="first last"&gt;An ibis backend for querying a datasette server&lt;/p&gt;
+</summary><content type="html">&lt;img title="ibis loves datasette" class="align-center" src="/images/ibis-loves-datasette.png" style="width: 60%;" /&gt;&lt;div class="section" id="datasette"&gt;
+&lt;h2&gt;Datasette&lt;/h2&gt;
+&lt;p&gt;&lt;a class="reference external" href="https://datasette.io"&gt;Datasette&lt;/a&gt; is an &lt;em&gt;excellent&lt;/em&gt; tool for exploring and publishing data. Given an
+existing &lt;a class="reference external" href="https://sqlite.org"&gt;SQLite&lt;/a&gt; database, it provides:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;A &lt;a class="reference external" href="https://global-power-plants.datasettes.com"&gt;nice web UI&lt;/a&gt; for exploring
+the dataset&lt;/li&gt;
+&lt;li&gt;A flexible &lt;a class="reference external" href="https://docs.datasette.io/en/stable/json_api.html"&gt;JSON API&lt;/a&gt;
+for querying the dataset using SQL (&lt;tt class="docutils literal"&gt;SELECT&lt;/tt&gt; statements only)&lt;/li&gt;
+&lt;li&gt;Tooling for &lt;a class="reference external" href="https://docs.datasette.io/en/stable/publish.html"&gt;publishing&lt;/a&gt;
+that data on a number of common cloud platforms.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;It also has a &lt;a class="reference external" href="https://docs.datasette.io/en/stable/plugins.html"&gt;large ecosystem of plugins&lt;/a&gt; supporting everything from
+adding maps and visualizations, to extending SQLite with custom SQL functions.&lt;/p&gt;
+&lt;p&gt;For more information, I encourage you to &lt;a class="reference external" href="https://www.youtube.com/watch?v=7kDFBnXaw-c"&gt;watch this intro video&lt;/a&gt;. Or just start poking around
+the &lt;a class="reference external" href="datasette.io/examples"&gt;examples&lt;/a&gt;. The UI lends itself well to
+self-guided exploration.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="ibis"&gt;
+&lt;h2&gt;Ibis&lt;/h2&gt;
+&lt;p&gt;At my &lt;a class="reference external" href="https://voltrondata.com"&gt;new day job&lt;/a&gt; I work on another SQL-adjacent
+tool called &lt;a class="reference external" href="https://ibis-project.org"&gt;Ibis&lt;/a&gt;. Ibis provides a consistent dataframe-like API for querying
+data using a number of SQL (and non-SQL) backends.&lt;/p&gt;
+&lt;p&gt;It looks like this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;ibis&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;options&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;interactive&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;  &lt;span class="c1"&gt;# enable interactive mode&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sqlite&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;legislators.db&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;  &lt;span class="c1"&gt;# connect to a database&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;legislators&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tables&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;legislators&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;  &lt;span class="c1"&gt;# access tables&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;legislators&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;groupby&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;bio_gender&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;  &lt;span class="c1"&gt;# query using a dataframe-like API&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+  &lt;span class="n"&gt;bio_gender&lt;/span&gt;  &lt;span class="n"&gt;count&lt;/span&gt;
+&lt;span class="mi"&gt;0&lt;/span&gt;          &lt;span class="n"&gt;F&lt;/span&gt;    &lt;span class="mi"&gt;399&lt;/span&gt;
+&lt;span class="mi"&gt;1&lt;/span&gt;          &lt;span class="n"&gt;M&lt;/span&gt;  &lt;span class="mi"&gt;12195&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For users less familiar with SQL (like myself), having a dataframe-like API can
+enable better usage of existing data tools. Without Ibis I'd be more prone to
+writing simple &lt;tt class="docutils literal"&gt;SELECT&lt;/tt&gt; statements only to extract the data I cared about,
+then analyze it locally using a more familiar tool like &lt;tt class="docutils literal"&gt;pandas&lt;/tt&gt;. With
+&lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; I can run more of my queries in the backing database itself, improving
+execution time and reducing data transfer.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="datasette-ibis"&gt;
+&lt;h2&gt;Datasette &amp;amp; Ibis&lt;/h2&gt;
+&lt;p&gt;Ibis supports a &lt;a class="reference external" href="https://ibis-project.org/docs/3.1.0/backends/support_matrix/"&gt;large number of backends and operations&lt;/a&gt;. As such, its
+internals can get a bit &lt;em&gt;complicated&lt;/em&gt;. To help onboard myself to the project, I
+decided to write a new tiny backend linking Ibis and Datasette. This is
+something I've wanted for a while - I'm more comfortable in a terminal than a
+web UI, but I wanted to explore all the &lt;a class="reference external" href="https://datasette.io/examples"&gt;interesting open datasets&lt;/a&gt; Simon and team have put together.&lt;/p&gt;
+&lt;p&gt;The project is called &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt; (&lt;a class="reference external" href="https://github.com/jcrist/ibis-datasette"&gt;repo&lt;/a&gt;). It can be installed using
+&lt;tt class="docutils literal"&gt;pip&lt;/tt&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ pip install ibis-datasette
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Using it, you can connect &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; to any &lt;tt class="docutils literal"&gt;datasette&lt;/tt&gt; server by passing in
+the full URL. For example, here we connect to the &lt;a class="reference external" href="https://congress-legislators.datasettes.com"&gt;congress-legislators&lt;/a&gt;
+datasette demo, and run the same query as we did above:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;ibis&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;options&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;interactive&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;datasette&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;    &lt;span class="s2"&gt;&amp;quot;https://congress-legislators.datasettes.com/legislators&amp;quot;&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;legislators&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tables&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;legislators&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;legislators&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;groupby&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;bio_gender&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+  &lt;span class="n"&gt;bio_gender&lt;/span&gt;  &lt;span class="n"&gt;count&lt;/span&gt;
+&lt;span class="mi"&gt;0&lt;/span&gt;          &lt;span class="n"&gt;F&lt;/span&gt;    &lt;span class="mi"&gt;399&lt;/span&gt;
+&lt;span class="mi"&gt;1&lt;/span&gt;          &lt;span class="n"&gt;M&lt;/span&gt;  &lt;span class="mi"&gt;12195&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Even though we're executing on a different backend with a different protocol,
+the user-facing code is the same, only the &lt;tt class="docutils literal"&gt;connect&lt;/tt&gt; call is different.&lt;/p&gt;
+&lt;p&gt;Of course &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; can run more complicated queries.&lt;/p&gt;
+&lt;p&gt;For example, here we learn that &lt;a class="reference external" href="https://en.wikipedia.org/wiki/Jeannette_Rankin"&gt;Jeannette Rankin&lt;/a&gt; was the first female US
+representative, elected in 1917 in Montana.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;terms&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tables&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;legislator_terms&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;first_female_rep&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;    &lt;span class="n"&gt;legislators&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;terms&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;legislators&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;terms&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legislator_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;filter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;lambda&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;bio_gender&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;F&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;select&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;name&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;state&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;start&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sort_by&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;start&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;    &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;first_female_rep&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+               &lt;span class="n"&gt;name&lt;/span&gt; &lt;span class="n"&gt;state&lt;/span&gt;       &lt;span class="n"&gt;start&lt;/span&gt;
+&lt;span class="mi"&gt;0&lt;/span&gt;  &lt;span class="n"&gt;Jeannette&lt;/span&gt; &lt;span class="n"&gt;Rankin&lt;/span&gt;    &lt;span class="n"&gt;MT&lt;/span&gt;  &lt;span class="mi"&gt;1917&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;04&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;02&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For an even more complicated query, here we compute the percentage of female US
+representatives per decade, filtering out the ~140 years of no representation:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;9&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;percent_female_by_decade&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;legislators&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;terms&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;legislators&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;terms&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legislator_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;select&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;bio_gender&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;start&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mutate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;decade&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;lambda&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;date&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;year&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;cast&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;int32&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;group_by&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;decade&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;aggregate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;n_female&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;lambda&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;bio_gender&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;F&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sum&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;n_total&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;lambda&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mutate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;percent_female&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;lambda&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;100&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n_female&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n_total&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;filter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;lambda&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;percent_female&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;select&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;decade&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;percent_female&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;percent_female_by_decade&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+    &lt;span class="n"&gt;decade&lt;/span&gt;  &lt;span class="n"&gt;percent_female&lt;/span&gt;
+&lt;span class="mi"&gt;0&lt;/span&gt;     &lt;span class="mi"&gt;1910&lt;/span&gt;        &lt;span class="mf"&gt;0.040584&lt;/span&gt;
+&lt;span class="mi"&gt;1&lt;/span&gt;     &lt;span class="mi"&gt;1920&lt;/span&gt;        &lt;span class="mf"&gt;0.883179&lt;/span&gt;
+&lt;span class="mi"&gt;2&lt;/span&gt;     &lt;span class="mi"&gt;1930&lt;/span&gt;        &lt;span class="mf"&gt;1.608363&lt;/span&gt;
+&lt;span class="mi"&gt;3&lt;/span&gt;     &lt;span class="mi"&gt;1940&lt;/span&gt;        &lt;span class="mf"&gt;1.845166&lt;/span&gt;
+&lt;span class="mi"&gt;4&lt;/span&gt;     &lt;span class="mi"&gt;1950&lt;/span&gt;        &lt;span class="mf"&gt;3.030303&lt;/span&gt;
+&lt;span class="mi"&gt;5&lt;/span&gt;     &lt;span class="mi"&gt;1960&lt;/span&gt;        &lt;span class="mf"&gt;2.718287&lt;/span&gt;
+&lt;span class="mi"&gt;6&lt;/span&gt;     &lt;span class="mi"&gt;1970&lt;/span&gt;        &lt;span class="mf"&gt;3.592073&lt;/span&gt;
+&lt;span class="mi"&gt;7&lt;/span&gt;     &lt;span class="mi"&gt;1980&lt;/span&gt;        &lt;span class="mf"&gt;4.977188&lt;/span&gt;
+&lt;span class="mi"&gt;8&lt;/span&gt;     &lt;span class="mi"&gt;1990&lt;/span&gt;       &lt;span class="mf"&gt;10.830922&lt;/span&gt;
+&lt;span class="mi"&gt;9&lt;/span&gt;     &lt;span class="mi"&gt;2000&lt;/span&gt;       &lt;span class="mf"&gt;15.865783&lt;/span&gt;
+&lt;span class="mi"&gt;10&lt;/span&gt;    &lt;span class="mi"&gt;2010&lt;/span&gt;       &lt;span class="mf"&gt;20.196641&lt;/span&gt;
+&lt;span class="mi"&gt;11&lt;/span&gt;    &lt;span class="mi"&gt;2020&lt;/span&gt;       &lt;span class="mf"&gt;27.789047&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For the curious, you can see the generated SQL query using the
+&lt;tt class="docutils literal"&gt;ibis.show_sql&lt;/tt&gt; function:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;show_sql&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;percent_female_by_decade&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;SELECT&lt;/span&gt;
+  &lt;span class="n"&gt;t0&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decade&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+  &lt;span class="n"&gt;t0&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;percent_female&lt;/span&gt;
+&lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decade&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;decade&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n_female&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;n_female&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n_total&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;n_total&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;percent_female&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;percent_female&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;SELECT&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decade&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;decade&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n_female&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;n_female&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n_total&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;n_total&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n_female&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="n"&gt;CAST&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;n_total&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;REAL&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+      &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;100&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;percent_female&lt;/span&gt;
+    &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+      &lt;span class="n"&gt;SELECT&lt;/span&gt;
+        &lt;span class="n"&gt;t3&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decade&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;decade&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="n"&gt;SUM&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;CAST&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;t3&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;bio_gender&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;F&amp;#39;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;INTEGER&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;n_female&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+        &lt;span class="n"&gt;COUNT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;*&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;n_total&lt;/span&gt;
+      &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+        &lt;span class="n"&gt;SELECT&lt;/span&gt;
+          &lt;span class="n"&gt;t4&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;bio_gender&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;bio_gender&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+          &lt;span class="n"&gt;t4&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;start&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+          &lt;span class="n"&gt;CAST&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;CAST&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;STRFTIME&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;%Y&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;DATE&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;t4&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;start&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;INTEGER&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt; &lt;span class="n"&gt;CAST&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;REAL&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;INTEGER&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;decade&lt;/span&gt;
+        &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+          &lt;span class="n"&gt;SELECT&lt;/span&gt;
+            &lt;span class="n"&gt;bio_gender&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="n"&gt;start&lt;/span&gt;
+          &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legislators&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t5&lt;/span&gt;
+          &lt;span class="n"&gt;JOIN&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legislator_terms&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t6&lt;/span&gt;
+            &lt;span class="n"&gt;ON&lt;/span&gt; &lt;span class="n"&gt;t5&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;t6&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legislator_id&lt;/span&gt;
+        &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t4&lt;/span&gt;
+      &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t3&lt;/span&gt;
+      &lt;span class="n"&gt;GROUP&lt;/span&gt; &lt;span class="n"&gt;BY&lt;/span&gt;
+        &lt;span class="n"&gt;t3&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;decade&lt;/span&gt;
+    &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t2&lt;/span&gt;
+  &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t1&lt;/span&gt;
+  &lt;span class="n"&gt;WHERE&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;percent_female&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t0&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;I wouldn't want to write all that by hand!&lt;/p&gt;
+&lt;p&gt;But then again, I'm not a SQL programmer. One benefit of Ibis is that it allows
+more seamless interoperation between tools. I didn't have to handwrite the
+above query, but can now share it with SQL users without requiring them to use
+Python.&lt;/p&gt;
+&lt;p&gt;Completing the loop, here's a &lt;a class="reference external" href="https://congress-legislators.datasettes.com/legislators?sql=++++SELECT%0D%0A++++++t0.decade%2C%0D%0A++++++t0.percent_female%0D%0A++++FROM+%28%0D%0A++++++SELECT%0D%0A++++++++t1.decade+AS+decade%2C%0D%0A++++++++t1.n_female+AS+n_female%2C%0D%0A++++++++t1.n_total+AS+n_total%2C%0D%0A++++++++t1.percent_female+AS+percent_female%0D%0A++++++FROM+%28%0D%0A++++++++SELECT%0D%0A++++++++++t2.decade+AS+decade%2C%0D%0A++++++++++t2.n_female+AS+n_female%2C%0D%0A++++++++++t2.n_total+AS+n_total%2C%0D%0A++++++++++%28%0D%0A++++++++++++t2.n_female+%2F+CAST%28t2.n_total+AS+REAL%29%0D%0A++++++++++%29+*+100+AS+percent_female%0D%0A++++++++FROM+%28%0D%0A++++++++++SELECT%0D%0A++++++++++++t3.decade+AS+decade%2C%0D%0A++++++++++++SUM%28CAST%28t3.bio_gender+%3D+%27F%27+AS+INTEGER%29%29+AS+n_female%2C%0D%0A++++++++++++COUNT%28%27*%27%29+AS+n_total%0D%0A++++++++++FROM+%28%0D%0A++++++++++++SELECT%0D%0A++++++++++++++t4.bio_gender+AS+bio_gender%2C%0D%0A++++++++++++++t4.start+AS+start%2C%0D%0A++++++++++++++CAST%28CAST%28STRFTIME%28%27%25Y%27%2C+DATE%28t4.start%29%29+AS+INTEGER%29+%2F+CAST%2810+AS+REAL%29+AS+INTEGER%29+*+10+AS+decade%0D%0A++++++++++++FROM+%28%0D%0A++++++++++++++SELECT%0D%0A++++++++++++++++bio_gender%2C%0D%0A++++++++++++++++start%0D%0A++++++++++++++FROM+main.legislators+AS+t5%0D%0A++++++++++++++JOIN+main.legislator_terms+AS+t6%0D%0A++++++++++++++++ON+t5.id+%3D+t6.legislator_id%0D%0A++++++++++++%29+AS+t4%0D%0A++++++++++%29+AS+t3%0D%0A++++++++++GROUP+BY%0D%0A++++++++++++t3.decade%0D%0A++++++++%29+AS+t2%0D%0A++++++%29+AS+t1%0D%0A++++++WHERE%0D%0A++++++++t1.percent_female+%3E+0%0D%0A++++%29+AS+t0%0D%0A"&gt;static datasette link for the full query&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="wrapping-up"&gt;
+&lt;h2&gt;Wrapping Up&lt;/h2&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt; has been a fun ~1-day hack, and I hope it remains a small
+and simple side project. It was definitely a good learning experience. That
+said, there are a couple known warts:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Ibis makes heavy use of &lt;tt class="docutils literal"&gt;sqlalchemy&lt;/tt&gt; for both SQL generation and execution.
+This meant that I had to write both a &lt;a class="reference external" href="https://peps.python.org/pep-0249/"&gt;dbapi&lt;/a&gt; and &lt;a class="reference external" href="https://www.sqlalchemy.org/"&gt;SQLAlchemy&lt;/a&gt; backend for
+&lt;tt class="docutils literal"&gt;datasette&lt;/tt&gt; to get everything hooked up properly, even though it's just a
+thin wrapper around the existing &lt;tt class="docutils literal"&gt;sqlite&lt;/tt&gt; backend. In the future it might
+be good to separate SQL generation from execution in &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; to simplify
+this process. This may also open up opportunities for further optimization,
+since we may be able to make use of more efficient database APIs instead of
+relying on the generic &lt;tt class="docutils literal"&gt;dbapi 2.0&lt;/tt&gt; spec.&lt;/li&gt;
+&lt;li&gt;Datasette's JSON API doesn't expose a way to provide non-string parameters
+for parametrized queries, while SQLAlchemy generates &lt;em&gt;lots&lt;/em&gt; of parametrized
+queries. For now I'm hacking around this with some terrible string
+processing; since it's only for numeric values on an immutable database, the
+chance of a &lt;a class="reference external" href="https://xkcd.com/327/"&gt;Bobby Tables incident&lt;/a&gt; is low. It still
+feels wrong though. In the future we should be able to avoid this issue
+entirely by handling parametrization entirely in &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; (or
+&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I wouldn't recommend using &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt; for serious work, but I've found
+it a useful tool for exploring public &lt;tt class="docutils literal"&gt;datasette&lt;/tt&gt; instances.&lt;/p&gt;
+&lt;p&gt;I &lt;em&gt;would&lt;/em&gt; recommend using &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;datasette&lt;/tt&gt; for serious work though.
+They're both excellent, mature libraries, bringing some user friendliness to
+SQL database work.&lt;/p&gt;
+&lt;p&gt;Interested in &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; or &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt;? Please feel free to reach out on
+&lt;a class="reference external" href="https://github.com/jcrist"&gt;github&lt;/a&gt; or &lt;a class="reference external" href="https://twitter.com/jcristharif"&gt;twitter&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="misc"></category></entry><entry><title>Extending Numba with overload</title><link href="https://jcristharif.com/numba-overload.html" rel="alternate"></link><published>2020-04-06T10:00:00-05:00</published><updated>2020-04-06T10:00:00-05:00</updated><author><name>Jim Crist</name></author><id>tag:jcristharif.com,2020-04-06:/numba-overload.html</id><summary type="html">&lt;p class="first last"&gt;A quick post on adding new functions to Numba&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;&lt;a class="reference external" href="https://numba.pydata.org"&gt;Numba&lt;/a&gt; is an amazing project. It's able to just-in-time (JIT) compile a fairly
 large subset of numerical Python code to fast machine code, with the user only
 having to apply a &lt;a class="reference external" href="https://docs.python.org/3/glossary.html#term-decorator"&gt;decorator&lt;/a&gt; to their function. It looks like this:&lt;/p&gt;

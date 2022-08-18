@@ -55,30 +55,27 @@ physics/mechanics/bicycle_example.html">bicycle model example</a>. </p>
 weeks. It's a super slow test that I'd never actual gotten to run before. But
 with the speed improvements made, it actual finishes in a reasonable time.
 Except it still doesn't work. I'm able to run all the way up to</p>
-<div class="highlight"><pre><span></span><span class="n">M</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">linearize</span><span class="p">()</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">M</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">linearize</span><span class="p">()</span>
+</code></pre></div>
 
 <p>But when I go to sub in values for symbols in these matrices, things get hairy.
 There are two issues:</p>
 <h3>Issue 1: Get <code>nan</code> when not simplified</h3>
 <p><code>M.subs(val_dict)</code> results in <code>nan</code> and <code>oo</code> upon after <code>subs</code>. But doesn't
 if it's simplified before the subs. An example of this behavior would be:</p>
-<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span><span class="o">/</span><span class="n">tan</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span><span class="o">/</span><span class="n">tan</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">M</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">q1</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
 <span class="n">nan</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Note that if this is simplified, this results in something completely different:</p>
-<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span><span class="o">/</span><span class="n">tan</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span><span class="o">/</span><span class="n">tan</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">trigsimp</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">M</span>
 <span class="n">cos</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">M</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">q1</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
 <span class="mi">1</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>However, for the bicycle case M has <em>over 19 thousand operations</em>. This doesn't
 simplify quickly. Also, by default we don't simplify before <code>subs</code> in
@@ -128,12 +125,11 @@ for calculating the constraint forces. Also, when linearizing with Lagrange's
 method, the multipliers have operating points as well, and these need to be
 calculated based on the operating point for the other states ($q$, $\dot{q}$,
 etc...). Now a user can go:</p>
-<div class="highlight"><pre><span></span><span class="n">op_point</span> <span class="o">=</span> <span class="n">dict_or_iterable_of_dicts</span>
+<div class="highlight"><pre><span></span><code><span class="n">op_point</span> <span class="o">=</span> <span class="n">dict_or_iterable_of_dicts</span>
 <span class="n">lam_op</span> <span class="o">=</span> <span class="n">LM</span><span class="o">.</span><span class="n">solve_multipliers</span><span class="p">(</span><span class="n">op_point</span><span class="p">)</span>
 <span class="n">op_point</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lam_op</span><span class="p">)</span>     <span class="c1"># Or op_point.update if op_point is a dict, not a list of dicts</span>
 <span class="n">M</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">LM</span><span class="o">.</span><span class="n">linearize</span><span class="p">(</span><span class="n">q_ind</span><span class="o">=</span><span class="n">q_ind</span><span class="p">,</span> <span class="n">qd_ind</span><span class="o">=</span><span class="n">qd_ind</span><span class="p">,</span> <span class="n">op_point</span><span class="o">=</span><span class="n">op_point</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 </li>
 </ol>

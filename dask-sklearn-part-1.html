@@ -74,55 +74,48 @@ can (optionally) be automatically parallelized using
 <a href="https://pythonhosted.org/joblib/index.html">joblib</a>.</p>
 <p>This is best illustrated with an example. First we'll make an example dataset
 for doing classification against:</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">make_classification</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">make_classification</span>
 
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_classification</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
                            <span class="n">n_features</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
                            <span class="n">n_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
                            <span class="n">n_redundant</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>
                            <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>To solve this classification problem, we'll create a pipeline of a <code>PCA</code> and a
 <code>LogisticRegression</code>:</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span><span class="p">,</span> <span class="n">decomposition</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn</span> <span class="kn">import</span> <span class="n">linear_model</span><span class="p">,</span> <span class="n">decomposition</span>
 <span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
 
 <span class="n">logistic</span> <span class="o">=</span> <span class="n">linear_model</span><span class="o">.</span><span class="n">LogisticRegression</span><span class="p">()</span>
 <span class="n">pca</span> <span class="o">=</span> <span class="n">decomposition</span><span class="o">.</span><span class="n">PCA</span><span class="p">()</span>
 <span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;pca&#39;</span><span class="p">,</span> <span class="n">pca</span><span class="p">),</span>
                        <span class="p">(</span><span class="s1">&#39;logistic&#39;</span><span class="p">,</span> <span class="n">logistic</span><span class="p">)])</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Both of these classes take several hyperparameters, we'll do a grid-search
 across only a few of them:</p>
-<div class="highlight"><pre><span></span><span class="c1">#Parameters of pipelines can be set using ‘__’ separated parameter names:</span>
+<div class="highlight"><pre><span></span><code><span class="c1">#Parameters of pipelines can be set using ‘__’ separated parameter names:</span>
 <span class="n">grid</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">pca__n_components</span><span class="o">=</span><span class="p">[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">250</span><span class="p">],</span>
             <span class="n">logistic__C</span><span class="o">=</span><span class="p">[</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1e4</span><span class="p">],</span>
             <span class="n">logistic__penalty</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;l1&#39;</span><span class="p">,</span> <span class="s1">&#39;l2&#39;</span><span class="p">])</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Finally, we can create an instance of <code>GridSearchCV</code>, and perform the grid
 search. The parameter <code>n_jobs=-1</code> tells joblib to use as many processes as I
 have cores (8).</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.grid_search</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.grid_search</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
 
 <span class="n">estimator</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="o">%</span><span class="n">time</span> <span class="n">estimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">CPU times: user 5.3 s, sys: 243 ms, total: 5.54 s</span>
-<span class="err">Wall time: 21.6 s</span>
-</pre></div>
-
-
+    CPU times: user 5.3 s, sys: 243 ms, total: 5.54 s
+    Wall time: 21.6 s
 </div>
 
 <p>What happened here was:</p>
@@ -137,326 +130,279 @@ default).</li>
 </ul>
 <p>The corresponding best score, parameters, and estimator can all be found as
 attributes on the resulting object:</p>
-<div class="highlight"><pre><span></span><span class="n">estimator</span><span class="o">.</span><span class="n">best_score_</span>
-</pre></div>
-
-
-<div class=md_output>
-
-<div class="highlight"><pre><span></span><span class="err">0.89290000000000003</span>
-</pre></div>
-
-
-</div>
-
-<div class="highlight"><pre><span></span><span class="n">estimator</span><span class="o">.</span><span class="n">best_params_</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">estimator</span><span class="o">.</span><span class="n">best_score_</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">{&#39;logistic__C&#39;: 0.0001, &#39;logistic__penalty&#39;: &#39;l2&#39;, &#39;pca__n_components&#39;: 50}</span>
-</pre></div>
-
-
+    0.89290000000000003
 </div>
 
-<div class="highlight"><pre><span></span><span class="n">estimator</span><span class="o">.</span><span class="n">best_estimator_</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">estimator</span><span class="o">.</span><span class="n">best_params_</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;pca&#39;</span><span class="p">,</span> <span class="n">PCA</span><span class="p">(</span><span class="k">copy</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">whiten</span><span class="o">=</span><span class="k">False</span><span class="p">)),</span> <span class="p">(</span><span class="s1">&#39;logistic&#39;</span><span class="p">,</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="k">C</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">dual</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
-        <span class="n">fit_intercept</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">intercept_scaling</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">multi_class</span><span class="o">=</span><span class="s1">&#39;ovr&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
-        <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;liblinear&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span> <span class="k">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">warm_start</span><span class="o">=</span><span class="k">False</span><span class="p">))])</span><span class="o">&lt;</span><span class="n">div</span> <span class="k">class</span><span class="o">=</span><span class="n">md_output</span><span class="o">&gt;</span>
-
-    <span class="err">{</span><span class="s1">&#39;logistic__C&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span> <span class="s1">&#39;logistic__penalty&#39;</span><span class="p">:</span> <span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="s1">&#39;pca__n_components&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="err">}</span>
-</pre></div>
-
-
+    {'logistic__C': 0.0001, 'logistic__penalty': 'l2', 'pca__n_components': 50}
 </div>
 
-<h2>Grid search with dask-learn</h2>
-<p>Here we'll repeat the same fit using dask-learn. I've tried to match the
+<div class="highlight"><pre><span></span><code><span class="n">estimator</span><span class="o">.</span><span class="n">best_estimator_</span>
+</code></pre></div>
+
+<div class=md_output>
+
+    Pipeline(steps=[('pca', PCA(copy=True, n_components=50, whiten=False)), ('logistic', LogisticRegression(C=0.0001, class_weight=None, dual=False,
+            fit_intercept=True, intercept_scaling=1, max_iter=100,
+            multi_class='ovr', n_jobs=1, penalty='l2', random_state=None,
+            solver='liblinear', tol=0.0001, verbose=0, warm_start=False))])<div class=md_output>
+
+        {'logistic__C': 0.0001, 'logistic__penalty': 'l2', 'pca__n_components': 50}
+</div>
+
+## Grid search with dask-learn
+
+Here we'll repeat the same fit using dask-learn. I've tried to match the
 scikit-learn interface as much as possible, although not everything is
-implemented. Here the only thing that really changes is the <code>GridSearchCV</code>
-import. We don't need the <code>n_jobs</code> keyword, as this will be parallelized across
-all cores by default.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dklearn.grid_search</span> <span class="kn">import</span> <span class="n">GridSearchCV</span> <span class="k">as</span> <span class="n">DaskGridSearchCV</span>
+implemented. Here the only thing that really changes is the `GridSearchCV`
+import. We don't need the `n_jobs` keyword, as this will be parallelized across
+all cores by default.
 
-<span class="n">destimator</span> <span class="o">=</span> <span class="n">DaskGridSearchCV</span><span class="p">(</span><span class="n">pipe</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
+    ::Python
+    from dklearn.grid_search import GridSearchCV as DaskGridSearchCV
 
-<span class="o">%</span><span class="n">time</span> <span class="n">destimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-</pre></div>
+    destimator = DaskGridSearchCV(pipe, grid)
 
-
+    %time destimator.fit(X, y)
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">CPU times: user 16.3 s, sys: 1.89 s, total: 18.2 s</span>
-<span class="err">Wall time: 5.63 s</span>
-</pre></div>
-
-
+    CPU times: user 16.3 s, sys: 1.89 s, total: 18.2 s
+    Wall time: 5.63 s
 </div>
 
-<p>As before, the best score, parameters, and estimator can all be found as
-attributes on the object. Here we'll just show that they're equivalent:</p>
-<div class="highlight"><pre><span></span><span class="n">destimator</span><span class="o">.</span><span class="n">best_score_</span> <span class="o">==</span> <span class="n">estimator</span><span class="o">.</span><span class="n">best_score_</span>
-</pre></div>
+As before, the best score, parameters, and estimator can all be found as
+attributes on the object. Here we'll just show that they're equivalent:
 
-
+    ::Python
+    destimator.best_score_ == estimator.best_score_
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">True</span>
-</pre></div>
-
-
+    True
 </div>
 
-<div class="highlight"><pre><span></span><span class="n">destimator</span><span class="o">.</span><span class="n">best_params_</span> <span class="o">==</span> <span class="n">estimator</span><span class="o">.</span><span class="n">best_params_</span>
-</pre></div>
-
-
+    ::Python
+    destimator.best_params_ == estimator.best_params_
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">True</span>
-</pre></div>
-
-
+    True
 </div>
 
-<div class="highlight"><pre><span></span><span class="n">destimator</span><span class="o">.</span><span class="n">best_estimator_</span>
-</pre></div>
-
-
+    ::Python
+    destimator.best_estimator_
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;pca&#39;</span><span class="p">,</span> <span class="n">PCA</span><span class="p">(</span><span class="k">copy</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">whiten</span><span class="o">=</span><span class="k">False</span><span class="p">)),</span> <span class="p">(</span><span class="s1">&#39;logistic&#39;</span><span class="p">,</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="k">C</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="k">None</span><span class="p">,</span> <span class="n">dual</span><span class="o">=</span><span class="k">False</span><span class="p">,</span>
-        <span class="n">fit_intercept</span><span class="o">=</span><span class="k">True</span><span class="p">,</span> <span class="n">intercept_scaling</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-        <span class="n">multi_class</span><span class="o">=</span><span class="s1">&#39;ovr&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="k">None</span><span class="p">,</span>
-        <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;liblinear&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span> <span class="k">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">warm_start</span><span class="o">=</span><span class="k">False</span><span class="p">))])</span><span class="o">&lt;</span><span class="n">div</span> <span class="k">class</span><span class="o">=</span><span class="n">md_output</span><span class="o">&gt;</span>
+    Pipeline(steps=[('pca', PCA(copy=True, n_components=50, whiten=False)), ('logistic', LogisticRegression(C=0.0001, class_weight=None, dual=False,
+            fit_intercept=True, intercept_scaling=1, max_iter=100,
+            multi_class='ovr', n_jobs=1, penalty='l2', random_state=None,
+            solver='liblinear', tol=0.0001, verbose=0, warm_start=False))])<div class=md_output>
 
-    <span class="err">{</span><span class="s1">&#39;logistic__C&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0001</span><span class="p">,</span> <span class="s1">&#39;logistic__penalty&#39;</span><span class="p">:</span> <span class="s1">&#39;l2&#39;</span><span class="p">,</span> <span class="s1">&#39;pca__n_components&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="err">}</span>
-</pre></div>
-
-
+        {'logistic__C': 0.0001, 'logistic__penalty': 'l2', 'pca__n_components': 50}
 </div>
 
-<h2>Why is the dask version faster?</h2>
-<p>If you look at the times above, you'll note that the dask version was <code>~4X</code>
+
+## Why is the dask version faster?
+
+If you look at the times above, you'll note that the dask version was `~4X`
 faster than the scikit-learn version. This is not because we have optimized any
-of the pieces of the <code>Pipeline</code>, or that there's a significant amount of
-overhead to <code>joblib</code> (on the contrary, joblib does some pretty amazing things,
+of the pieces of the `Pipeline`, or that there's a significant amount of
+overhead to `joblib` (on the contrary, joblib does some pretty amazing things,
 and I had to construct a contrived example to beat it this badly). The reason
-is simply that the dask version is doing less work.</p>
-<p>This maybe best explained in pseudocode. The scikit-learn version of the above
-(in serial) looks something like (pseudocode):</p>
-<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="ow">in</span> <span class="n">cv</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;pca__n_components&#39;</span><span class="p">]:</span>
-        <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;logistic__C&#39;</span><span class="p">]:</span>
-            <span class="k">for</span> <span class="n">penalty</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;logistic__penalty&#39;</span><span class="p">]:</span>
-                <span class="c1"># Create and fit a PCA on the input data</span>
-                <span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-                <span class="c1"># Transform both the train and test data</span>
-                <span class="n">X_train2</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
-                <span class="n">X_test2</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-                <span class="c1"># Create and fit a LogisticRegression on the transformed data</span>
-                <span class="n">logistic</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="n">penalty</span><span class="p">)</span>
-                <span class="n">logistic</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train2</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-                <span class="c1"># Score the total pipeline</span>
-                <span class="n">score</span> <span class="o">=</span> <span class="n">logistic</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test2</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
-                <span class="c1"># Save the score and parameters</span>
-                <span class="n">scores_and_params</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">score</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">C</span><span class="p">))</span>
+is simply that the dask version is doing less work.
 
-<span class="c1"># Find the best set of parameters (for some definition of best)</span>
-<span class="n">find_best_parameters</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-</pre></div>
+This maybe best explained in pseudocode. The scikit-learn version of the above
+(in serial) looks something like (pseudocode):
 
 
-<p>This is looping through a cartesian product of the cross-validation sets and
+    ::Python
+    for X_train, X_test, y_train, y_test in cv:
+        for n in grid['pca__n_components']:
+            for C in grid['logistic__C']:
+                for penalty in grid['logistic__penalty']:
+                    # Create and fit a PCA on the input data
+                    pca = PCA(n_components=n).fit(X_train, y_train)
+                    # Transform both the train and test data
+                    X_train2 = pca.transform(X_train)
+                    X_test2 = pca.transform(X_test)
+                    # Create and fit a LogisticRegression on the transformed data
+                    logistic = LogisticRegression(C=C, penalty=penalty)
+                    logistic.fit(X_train2, y_train)
+                    # Score the total pipeline
+                    score = logistic.score(X_test2, y_test)
+                    # Save the score and parameters
+                    scores_and_params.append((score, n, C))
+
+    # Find the best set of parameters (for some definition of best)
+    find_best_parameters(scores)
+
+This is looping through a cartesian product of the cross-validation sets and
 all the parameter combinations, and then creating and fitting a new estimator
 for each combination. While embarassingly parallel, this can also result in
 repeated work, as earlier stages in the pipeline are refit multiple times on
-the same parameter + data combinations.</p>
-<p>In contrast, the dask version hashes all inputs (forming a sort of <a href="https://en.wikipedia.org/wiki/Merkle_tree">Merkle
-DAG</a>), resulting in the intermediate
+the same parameter + data combinations.
+
+In contrast, the dask version hashes all inputs (forming a sort of [Merkle
+DAG](https://en.wikipedia.org/wiki/Merkle_tree)), resulting in the intermediate
 results being shared. Keeping with the pseudocode above, the dask version might
-look like:</p>
-<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="ow">in</span> <span class="n">cv</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;pca__n_components&#39;</span><span class="p">]:</span>
-        <span class="c1"># Create and fit a PCA on the input data</span>
-        <span class="n">pca</span> <span class="o">=</span> <span class="n">PCA</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-        <span class="c1"># Transform both the train and test data</span>
-        <span class="n">X_train2</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
-        <span class="n">X_test2</span> <span class="o">=</span> <span class="n">pca</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;logistic__C&#39;</span><span class="p">]:</span>
-            <span class="k">for</span> <span class="n">penalty</span> <span class="ow">in</span> <span class="n">grid</span><span class="p">[</span><span class="s1">&#39;logistic__penalty&#39;</span><span class="p">]:</span>
-                <span class="c1"># Create and fit a LogisticRegression on the transformed data</span>
-                <span class="n">logistic</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="n">C</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="n">penalty</span><span class="p">)</span>
-                <span class="n">logistic</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train2</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-                <span class="c1"># Score the total pipeline</span>
-                <span class="n">score</span> <span class="o">=</span> <span class="n">logistic</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test2</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
-                <span class="c1"># Save the score and parameters</span>
-                <span class="n">scores_and_params</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">score</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">penalty</span><span class="p">))</span>
+look like:
 
-<span class="c1"># Find the best set of parameters (for some definition of best)</span>
-<span class="n">find_best_parameters</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-</pre></div>
+    ::Python
+    for X_train, X_test, y_train, y_test in cv:
+        for n in grid['pca__n_components']:
+            # Create and fit a PCA on the input data
+            pca = PCA(n_components=n).fit(X_train, y_train)
+            # Transform both the train and test data
+            X_train2 = pca.transform(X_train)
+            X_test2 = pca.transform(X_test)
+            for C in grid['logistic__C']:
+                for penalty in grid['logistic__penalty']:
+                    # Create and fit a LogisticRegression on the transformed data
+                    logistic = LogisticRegression(C=C, penalty=penalty)
+                    logistic.fit(X_train2, y_train)
+                    # Score the total pipeline
+                    score = logistic.score(X_test2, y_test)
+                    # Save the score and parameters
+                    scores_and_params.append((score, n, C, penalty))
 
+    # Find the best set of parameters (for some definition of best)
+    find_best_parameters(scores)
 
-<p>This can still be parallelized, but in a less straightforward manner - the
+This can still be parallelized, but in a less straightforward manner - the
 graph is a bit more complicated than just a simple map-reduce pattern.
-Thankfully the <a href="http://dask.pydata.org/en/latest/scheduler-overview.html">dask
-schedulers</a> are well
+Thankfully the [dask
+schedulers](http://dask.pydata.org/en/latest/scheduler-overview.html) are well
 equipped to handle arbitrary graph topologies. Below is a GIF showing how the
 dask scheduler (the threaded scheduler specifically) executed the grid search
 performed above. Each rectangle represents data, and each circle represents a
-task. Each is categorized by color:</p>
-<ul>
-<li>
-<p>Red means actively taking up resources. These are tasks executing in a thread,
-  or intermediate results occupying memory</p>
-</li>
-<li>
-<p>Blue means finished or released. These are already finished tasks, or data
-  that's been released from memory because it's no longer needed</p>
-</li>
-</ul>
-<p><img src="images/grid_search_schedule.gif" alt="Dask Graph Execution" style="width:100%"></p>
-<p>Looking at the trace, a few things stand out:</p>
-<ul>
-<li>
-<p>We do a good job sharing intermediates. Each step in a pipeline is only fit
+task. Each is categorized by color:
+
+- Red means actively taking up resources. These are tasks executing in a thread,
+  or intermediate results occupying memory
+
+- Blue means finished or released. These are already finished tasks, or data
+  that's been released from memory because it's no longer needed
+
+<img src="images/grid_search_schedule.gif" alt="Dask Graph Execution" style="width:100%">
+
+
+Looking at the trace, a few things stand out:
+
+- We do a good job sharing intermediates. Each step in a pipeline is only fit
   once given the same parameters/data, resulting in some intermediates having
-  many dependent tasks.</p>
-</li>
-<li>
-<p>The scheduler does a decent job of quickly finishing up tasks required to
+  many dependent tasks.
+
+- The scheduler does a decent job of quickly finishing up tasks required to
   release data. This doesn't matter as much here (none of the intermediates
   take up much memory), but for other workloads this is very useful. See Matt
-  Rocklin's <a href="http://matthewrocklin.com/blog/work/2015/01/06/Towards-OOC-Scheduling">excellent blogpost
-  here</a>
-  for more discussion on this.</p>
-</li>
-</ul>
-<h2>Distributed grid search using dask-learn</h2>
-<p>The <a href="http://dask.pydata.org/en/latest/scheduler-overview.html">schedulers</a> used
+  Rocklin's [excellent blogpost
+  here](http://matthewrocklin.com/blog/work/2015/01/06/Towards-OOC-Scheduling)
+  for more discussion on this.
+
+## Distributed grid search using dask-learn
+
+The [schedulers](http://dask.pydata.org/en/latest/scheduler-overview.html) used
 in dask are configurable. The default (used above) is the threaded scheduler,
 but we can just as easily swap it out for the distributed scheduler. Here I've
 just spun up two local workers to demonstrate, but this works equally well
-across multiple machines.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">distributed</span> <span class="kn">import</span> <span class="n">Executor</span>
+across multiple machines.
 
-<span class="c1"># Create an Executor, and set it as the default scheduler</span>
-<span class="n">exc</span> <span class="o">=</span> <span class="n">Executor</span><span class="p">(</span><span class="s1">&#39;10.0.0.3:8786&#39;</span><span class="p">,</span> <span class="n">set_as_default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">exc</span>
-</pre></div>
+    ::Python
+    from distributed import Executor
 
-
+    # Create an Executor, and set it as the default scheduler
+    exc = Executor('10.0.0.3:8786', set_as_default=True)
+    exc
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">&lt;Executor: scheduler=&quot;10.0.0.3:8786&quot; processes=2 cores=8&gt;</span>
-</pre></div>
-
-
+    <Executor: scheduler="10.0.0.3:8786" processes=2 cores=8>
 </div>
 
-<div class="highlight"><pre><span></span><span class="o">%</span><span class="n">time</span> <span class="n">destimator</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-</pre></div>
-
-
+    ::Python
+    %time destimator.fit(X, y)
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">CPU times: user 1.69 s, sys: 433 ms, total: 2.12 s</span>
-<span class="err">Wall time: 7.66 s</span>
-</pre></div>
-
-
+    CPU times: user 1.69 s, sys: 433 ms, total: 2.12 s
+    Wall time: 7.66 s
 </div>
 
-<div class="highlight"><pre><span></span><span class="p">(</span><span class="n">destimator</span><span class="o">.</span><span class="n">best_score_</span> <span class="o">==</span> <span class="n">estimator</span><span class="o">.</span><span class="n">best_score_</span> <span class="ow">and</span>
- <span class="n">destimator</span><span class="o">.</span><span class="n">best_params_</span> <span class="o">==</span> <span class="n">estimator</span><span class="o">.</span><span class="n">best_params_</span><span class="p">)</span>
-</pre></div>
-
-
+    ::Python
+    (destimator.best_score_ == estimator.best_score_ and
+     destimator.best_params_ == estimator.best_params_)
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">True</span>
-</pre></div>
-
-
+    True
 </div>
 
-<p>Note that this is slightly slower than the threaded execution, so it doesn't
-make sense for this workload, but for others it might.</p>
-<h2>What worked well</h2>
-<ul>
-<li>
-<p>The <a href="https://github.com/dask/dask-learn/blob/master/dklearn/grid_search.py">code for doing
-  this</a>
+Note that this is slightly slower than the threaded execution, so it doesn't
+make sense for this workload, but for others it might.
+
+## What worked well
+
+- The [code for doing
+  this](https://github.com/dask/dask-learn/blob/master/dklearn/grid_search.py)
   is quite short.  There's also an implementation of
-  <a href="http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.RandomizedSearchCV.html"><code>RandomizedSearchCV</code></a>,
+  [`RandomizedSearchCV`](http://scikit-learn.org/stable/modules/generated/sklearn.grid_search.RandomizedSearchCV.html),
   which is only a few extra lines (hooray for good class hierarchies!).
   Instead of working with dask graphs directly, both implementations use
-  <a href="http://dask.pydata.org/en/latest/delayed.html">dask.delayed</a> wherever
-  possible, which also makes the code easy to read.</p>
-</li>
-<li>
-<p>Due to the internal hashing used in dask (which is extensible!), duplicate
-  computations are avoided.</p>
-</li>
-<li>
-<p>Since the graphs are separated from the scheduler, this works both locally
-  and distributed with only a few extra lines.</p>
-</li>
-</ul>
-<h2>Caveats and what could be better</h2>
-<ul>
-<li>
-<p>The scikit-learn api makes use of mutation (<code>est.fit(X, y)</code> mutates <code>est</code>),
+  [dask.delayed](http://dask.pydata.org/en/latest/delayed.html) wherever
+  possible, which also makes the code easy to read.
+
+- Due to the internal hashing used in dask (which is extensible!), duplicate
+  computations are avoided.
+
+- Since the graphs are separated from the scheduler, this works both locally
+  and distributed with only a few extra lines.
+
+## Caveats and what could be better
+
+- The scikit-learn api makes use of mutation (`est.fit(X, y)` mutates `est`),
   while dask collections are mostly immutable. After playing around with a few
   different ideas, I settled on dask-learn estimators being immutable (except
   for grid-search, more on this in a bit). This made the code easier to reason
-  about, but does mean that you need to do <code>est = est.fit(X, y)</code> when working
-  with dask-learn estimators.</p>
-</li>
-<li>
-<p><code>GridSearchCV</code> posed a different problem. Due to the <code>refit</code> keyword, the
+  about, but does mean that you need to do `est = est.fit(X, y)` when working
+  with dask-learn estimators.
+
+- `GridSearchCV` posed a different problem. Due to the `refit` keyword, the
   implementation can't be done in a single pass over the data. This means that
   we can't build a single graph describing both the grid search and the refit,
   which prevents it from being done lazily. I debated removing this keyword,
-  but decided in the end to make <code>fit</code> execute immediately. This means that
-  there's a bit of a disconnect between <code>GridSearchCV</code> and the other classes in
+  but decided in the end to make `fit` execute immediately. This means that
+  there's a bit of a disconnect between `GridSearchCV` and the other classes in
   the library, which I don't like. On the other hand, it does mean that this
-  version of <code>GridSearchCV</code> could be a drop-in for the sckit-learn one.</p>
-</li>
-<li>
-<p>The approach presented here is nice, but is really <em>only beneficial when
-  there's duplicate work to be avoided, and that duplicate work is expensive</em>.
+  version of `GridSearchCV` could be a drop-in for the sckit-learn one.
+
+- The approach presented here is nice, but is really *only beneficial when
+  there's duplicate work to be avoided, and that duplicate work is expensive*.
   Repeating the above with only a single estimator (instead of a pipeline)
   results in identical (or slightly worse) performance than joblib. Similarly,
   if the repeated steps are cheap the difference in performance is much smaller
   (try the above using
-  <a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectKBest.html">SelectKBest</a>
-  instead of <code>PCA</code>).</p>
-</li>
-<li>
-<p>The ability to swap easily from local to distributed execution is nice, but
-  <a href="http://distributed.readthedocs.io/en/latest/joblib.html">distributed also contains a joblib
-  frontend</a> that can
-  do this just as easily.</p>
-</li>
-</ul>
-<h2>Help</h2>
-<p>I am not a machine learning expert. Is any of this useful? Do you have
+  [SelectKBest](http://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectKBest.html)
+  instead of `PCA`).
+
+- The ability to swap easily from local to distributed execution is nice, but
+  [distributed also contains a joblib
+  frontend](http://distributed.readthedocs.io/en/latest/joblib.html) that can
+  do this just as easily.
+
+## Help
+
+I am not a machine learning expert. Is any of this useful? Do you have
 suggestions for improvements (or better yet PRs for improvements :))? Please
-feel free to reach out in the comments below, or <a href="https://github.com/dask/dask-learn">on
-github</a>.</p>
-<p><em>This work is supported by <a href="http://continuum.io/">Continuum Analytics</a> and the
-<a href="http://www.darpa.mil/program/XDATA">XDATA</a> program as part of the <a href="http://blaze.pydata.org/">Blaze
-Project</a>.</em></p>
+feel free to reach out in the comments below, or [on
+github](https://github.com/dask/dask-learn).
+
+*This work is supported by [Continuum Analytics](http://continuum.io/) and the
+[XDATA](http://www.darpa.mil/program/XDATA) program as part of the [Blaze
+Project](http://blaze.pydata.org/).*
     </section>
 
     <footer>

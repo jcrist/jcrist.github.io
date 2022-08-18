@@ -81,18 +81,18 @@ in the dask-yarn documentation for more information.</p>
 <p>Here we provide a quick example of starting and using a Dask cluster on YARN.
 This assumes you're logged into the edge node and <a class="reference external" href="https://conda.io/docs/">Conda</a> is available.</p>
 <p>First, we create a new conda environment for our dependencies.</p>
-<div class="highlight"><pre><span></span><span class="gp">#</span> Create a new conda environment <span class="k">for</span> our dependencies
-<span class="gp">$</span> conda create -n demo -c conda-forge dask-yarn conda-pack ipython pyarrow
+<div class="highlight"><pre><span></span><span class="gp"># </span>Create a new conda environment <span class="k">for</span> our dependencies
+<span class="gp">$ </span>conda create -n demo -c conda-forge dask-yarn conda-pack ipython pyarrow
 <span class="go">...</span>
 
-<span class="gp">#</span> Activate the environment
-<span class="gp">$</span> conda activate demo
+<span class="gp"># </span>Activate the environment
+<span class="gp">$ </span>conda activate demo
 </pre></div>
 <p>Next we package this environment for distribution. We can do this using the
 <tt class="docutils literal">conda pack</tt> command. This packages the environment into a relocatable
 tarball so it can be distributed to the YARN containers.</p>
-<div class="highlight"><pre><span></span><span class="gp">#</span> Package the environment into environment.tar.gz
-<span class="gp">$</span> conda pack -o environment.tar.gz
+<div class="highlight"><pre><span></span><span class="gp"># </span>Package the environment into environment.tar.gz
+<span class="gp">$ </span>conda pack -o environment.tar.gz
 <span class="go">Collecting packages...</span>
 <span class="go">Packing environment at &#39;/home/jcrist/miniconda/envs/demo&#39; to &#39;environment.tar.gz&#39;</span>
 <span class="go">[########################################] | 100% Completed | 45.8s</span>

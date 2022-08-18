@@ -182,7 +182,7 @@ You can think of this kind of like a vector. There's another symbolic
 vector type as well in Sympy (<code>DeferredVector</code>). I may end up supporting
 it, but I'm not really sure what it's for. In its current implementation,
 the following works:</p>
-<div class="highlight"><pre><span></span><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span><span class="p">,</span> <span class="n">q5</span><span class="p">]</span>
+<div class="highlight"><pre><span></span><code><span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span><span class="p">,</span> <span class="n">q5</span><span class="p">]</span>
 <span class="n">q_vec</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">sub_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">q_vec</span><span class="p">))</span>
 <span class="c1"># Replaces each q with elements from q_vec</span>
@@ -190,8 +190,7 @@ the following works:</p>
 <span class="c1"># Generate a function that takes a numpy array (q) and returns expr</span>
 <span class="c1"># This works if expr is an expression, or a matrix</span>
 <span class="n">func</span> <span class="o">=</span> <span class="n">autowrap</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 </li>
 </ul>
@@ -229,9 +228,8 @@ to implement support for all possible operations, and the many BLAS/LAPACK
 routines that support them, I'll focus just on the inverse, as it's commonly
 found in expressions in <code>mechanics</code>. The thought is, we should be able to
 run:</p>
-<div class="highlight"><pre><span></span><span class="n">func</span> <span class="o">=</span> <span class="n">autowrap</span><span class="p">(</span><span class="n">Inverse</span><span class="p">(</span><span class="n">M</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">)</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">func</span> <span class="o">=</span> <span class="n">autowrap</span><span class="p">(</span><span class="n">Inverse</span><span class="p">(</span><span class="n">M</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">)</span>
+</code></pre></div>
 
 <p>And have code generated that solves the expression in a fast manner, without
 having to symbolically find the inverse of <code>M</code> and combine it with <code>F</code> into

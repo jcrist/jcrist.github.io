@@ -65,18 +65,14 @@ roughly 121 million rows, so it could be worked with on a single machine -
 we'll use it here for illustration purposes only.</p>
 <p>I'm running this on a 4 node cluster of <code>m3.2xlarge</code> instances (8 cores, 30 GB
 RAM each), with one worker sharing a node with the scheduler.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">distributed</span> <span class="kn">import</span> <span class="n">Executor</span><span class="p">,</span> <span class="n">progress</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">distributed</span> <span class="kn">import</span> <span class="n">Executor</span><span class="p">,</span> <span class="n">progress</span>
 <span class="n">exc</span> <span class="o">=</span> <span class="n">Executor</span><span class="p">(</span><span class="s1">&#39;172.31.11.71:8786&#39;</span><span class="p">,</span> <span class="n">set_as_default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">exc</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">&lt;Executor: scheduler=&quot;172.31.11.71:8786&quot; processes=4 cores=32&gt;</span>
-</pre></div>
-
-
+    <Executor: scheduler="172.31.11.71:8786" processes=4 cores=32>
 </div>
 
 <h2>Loading the data</h2>
@@ -84,7 +80,7 @@ RAM each), with one worker sharing a node with the scheduler.</p>
 read them into a dask dataframe using <code>read_csv</code>. The <code>usecols</code> keyword
 specifies the subset of columns we want to use. We also pass in <code>blocksize</code> to
 tell dask to partition the data into larger partitions than the default.</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dask.dataframe</span> <span class="k">as</span> <span class="nn">dd</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dask.dataframe</span> <span class="k">as</span> <span class="nn">dd</span>
 
 <span class="c1"># Subset of the columns to use</span>
 <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Year&#39;</span><span class="p">,</span> <span class="s1">&#39;Month&#39;</span><span class="p">,</span> <span class="s1">&#39;DayOfWeek&#39;</span><span class="p">,</span> <span class="s1">&#39;DepDelay&#39;</span><span class="p">,</span>
@@ -96,15 +92,11 @@ tell dask to partition the data into larger partitions than the default.</p>
                  <span class="n">blocksize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">128e6</span><span class="p">),</span>
                  <span class="n">storage_options</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">anon</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="n">df</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">&lt;dd.DataFrame&lt;from-de..., npartitions=104&gt;</span>
-</pre></div>
-
-
+    <dd.DataFrame<from-de..., npartitions=104>
 </div>
 
 <p>Note that this hasn't done any work yet, we've just built up a graph specifying
@@ -126,57 +118,43 @@ more preprocessing steps:</p>
 </li>
 </ul>
 <p>These all can be done using normal pandas operations:</p>
-<div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;DepDelay&#39;</span><span class="p">,</span> <span class="s1">&#39;CRSDepTime&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;DepDelay&#39;</span><span class="p">,</span> <span class="s1">&#39;CRSDepTime&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">CRSDepTime</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper</span><span class="o">=</span><span class="mi">2399</span><span class="p">)</span><span class="o">//</span><span class="mi">100</span><span class="p">,</span>
                 <span class="n">delayed</span><span class="o">=</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">DepDelay</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;i8&#39;</span><span class="p">)))</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>After setting up all the preprocessing, we can call <code>Executor.persist</code> to fully
 compute the dataframe and cache it in memory across the cluster. We do this
 because it can easily fit in distributed memory, and will speed up all of the
 remaining steps (I/O can be expensive).</p>
-<div class="highlight"><pre><span></span><span class="n">exc</span><span class="o">.</span><span class="n">persist</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">exc</span><span class="o">.</span><span class="n">persist</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
 <span class="n">progress</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">notebook</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-
-
-<div class=md_output>
-
-<div class="highlight"><pre><span></span><span class="err">[########################################] | 100% Completed |  1min 17.7s</span>
-</pre></div>
-
-
-</div>
-
-<div class="highlight"><pre><span></span><span class="n">df</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">dd.DataFrame&lt;_assign..., npartitions=104&gt;</span>
-</pre></div>
-
-
+    [########################################] | 100% Completed |  1min 17.7s
 </div>
 
-<div class="highlight"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span>   <span class="c1"># Number of rows in millions</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">df</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">121.232833</span>
-</pre></div>
-
-
+    dd.DataFrame<_assign..., npartitions=104>
 </div>
 
-<div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-</pre></div>
+<div class="highlight"><pre><span></span><code><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span>   <span class="c1"># Number of rows in millions</span>
+</code></pre></div>
 
+<div class=md_output>
+
+    121.232833
+</div>
+
+<div class="highlight"><pre><span></span><code><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</code></pre></div>
 
 <div class="md_output">
 <table class="dataframe" border="1">
@@ -260,7 +238,7 @@ important later on.</p>
 <p>Now that we have the data loaded into memory on the cluster, most dataframe
 computations will run <em>much</em> faster. Lets do some exploratory plotting to see
 the relationship between certain features and our target variable.</p>
-<div class="highlight"><pre><span></span><span class="c1"># Define some aggregations to plot</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Define some aggregations to plot</span>
 <span class="n">aggregations</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;Year&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delayed</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
                 <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;Month&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delayed</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
                 <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;hour&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">delayed</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
@@ -271,8 +249,7 @@ the relationship between certain features and our target variable.</p>
 <span class="n">delayed_by_month</span><span class="p">,</span>
 <span class="n">delayed_by_hour</span><span class="p">,</span>
 <span class="n">delayed_by_carrier</span><span class="p">)</span> <span class="o">=</span> <span class="n">dask</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="o">*</span><span class="n">aggregations</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Plotting these series with bokeh gives:</p>
 <p><head>
@@ -280,13 +257,12 @@ the relationship between certain features and our target variable.</p>
     <title>grouped</title></p>
 <p><link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.0.min.css" type="text/css" /></p>
 <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.0.min.js"></script>
-
 <script type="text/javascript">
 Bokeh.set_log_level("info");
 </script>
+<p></head></p>
+<body>
 
-<p></head>
-<body></p>
 <div class="bk-root">
     <div class="plotdiv" id="e6baeda8-a427-41ff-947e-e4b92df15404"></div>
 </div>
@@ -299,8 +275,8 @@ Bokeh.set_log_level("info");
     Bokeh.embed.embed_items(docs_json, render_items);
 });
 </script>
+</body>
 
-<p></body></p>
 <p>The hour one is especially interesting, as it shows an increase in frequency of
 delays over the course of each day. This is possibly due to a cascading effect,
 as earlier delayed flights cause problems for later flights waiting on the
@@ -318,7 +294,7 @@ interface.</p>
 <code>pandas.DataFrame</code> into a sparse matrix, given a mapping of categories for each
 column. We've decorated the function with <code>dask.delayed</code>, which makes the
 function return a lazy object instead of computing immediately.</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">dask</span> <span class="kn">import</span> <span class="n">delayed</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
@@ -357,14 +333,13 @@ function return a lazy object instead of computing immediately.</p>
     <span class="n">arrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">one_hot_encode_series</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">],</span> <span class="n">cats</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">cats</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">categories</span><span class="o">.</span><span class="n">items</span><span class="p">())]</span>
     <span class="k">return</span> <span class="n">sparse</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">arrs</span><span class="p">)</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>To use this function, we need to get a <code>dict</code> mapping column names to their
 categorical values. This isn't ideal, as it requires a complete pass over the
 data before transformation. Since the data is already in memory though, this is
 fairly quick to do:</p>
-<div class="highlight"><pre><span></span><span class="c1"># Extract categories for each feature</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Extract categories for each feature</span>
 <span class="n">categories</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Year</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1987</span><span class="p">,</span> <span class="mi">2009</span><span class="p">),</span>
                   <span class="n">Month</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span>
                   <span class="n">DayOfWeek</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
@@ -375,12 +350,11 @@ fairly quick to do:</p>
 
 <span class="c1"># Compute all the categories in one pass</span>
 <span class="n">categories</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">categories</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Finally, we can build up our feature and target matrices, as two
 <code>dklearn.matrix.Matrix</code> objects.</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dklearn.matrix</span> <span class="k">as</span> <span class="nn">dm</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dklearn.matrix</span> <span class="k">as</span> <span class="nn">dm</span>
 
 <span class="c1"># Convert the series `delayed` into a `Matrix`</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">delayed</span><span class="p">)</span>
@@ -394,16 +368,12 @@ fairly quick to do:</p>
 <span class="n">X</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">from_delayed</span><span class="p">([</span><span class="n">one_hot_encode</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">categories</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">],</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;f8&#39;</span><span class="p">)</span>
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">(dklearn.matrix&lt;matrix-..., npartitions=104, dtype=float64&gt;,</span>
-<span class="err"> dklearn.matrix&lt;matrix-..., npartitions=104, dtype=int64&gt;)</span>
-</pre></div>
-
-
+    (dklearn.matrix<matrix-..., npartitions=104, dtype=float64>,
+     dklearn.matrix<matrix-..., npartitions=104, dtype=int64>)
 </div>
 
 <h2>Extract train-test splits</h2>
@@ -413,11 +383,10 @@ data for testing later on. To do that, we can use the <code>train_test_split</co
 function, which mirrors the <a href="http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.train_test_split.html">scikit-learn function of the same
 name</a>.
 We'll hold back <code>20%</code> of the rows:</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dklearn.cross_validation</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dklearn.cross_validation</span> <span class="kn">import</span> <span class="n">train_test_split</span>
 
 <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <h2>Create an estimator</h2>
 <p>As discussed in <a href="https://jcristharif.com/dask-sklearn-part-2.html">the previous post</a>,
@@ -426,12 +395,11 @@ estimators. These make it easy to use with any estimator that matches the
 scikit-learn standard interface. Here we'll wrap a <code>SGDClassifier</code> with the
 <code>Averaged</code> wrapper. This will fit the classifier on each partition of the data,
 and then average the resulting coefficients to produce a final estimator.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dklearn</span> <span class="kn">import</span> <span class="n">Averaged</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dklearn</span> <span class="kn">import</span> <span class="n">Averaged</span>
 <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">SGDClassifier</span>
 
 <span class="n">est</span> <span class="o">=</span> <span class="n">Averaged</span><span class="p">(</span><span class="n">SGDClassifier</span><span class="p">())</span>
-</pre></div>
-
+</code></pre></div>
 
 <h2>Distributed grid search</h2>
 <p>The <code>SGDClassifier</code> also takes several hyperparameters, we'll do a grid search
@@ -441,7 +409,7 @@ equivalent. We'll also pass in an instance of <code>RandomSplit</code> to use fo
 cross-validation, instead of the default <code>KFold</code>. We do this because the
 samples are ordered approximately chronologically, and <code>KFold</code> would result in
 training data with potentially missing years.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dklearn.cross_validation</span> <span class="kn">import</span> <span class="n">RandomSplit</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dklearn.cross_validation</span> <span class="kn">import</span> <span class="n">RandomSplit</span>
 <span class="kn">from</span> <span class="nn">dklearn.grid_search</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
 
 <span class="n">grid</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">],</span>
@@ -449,16 +417,14 @@ training data with potentially missing years.</p>
 
 <span class="n">search</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">est</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span>
                       <span class="n">cv</span><span class="o">=</span><span class="n">RandomSplit</span><span class="p">(</span><span class="n">n_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">))</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Finally we can call <code>fit</code> and perform the grid search. As discussed in <a href="https://jcristharif.com/dask-sklearn-part-1.html">In part
 1</a>, <code>GridSearchCV</code> isn't lazy due to some
 complications with the scikit-learn api, so this call to <code>fit</code> runs
 immediately.</p>
-<div class="highlight"><pre><span></span><span class="n">search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</code></pre></div>
 
 <p>What's happening here is:</p>
 <ul>
@@ -477,47 +443,35 @@ it compute. This takes a couple minutes, here's a gif of just the start:</p>
 <p>Once all the computation is done, we can see the best score and parameters by
 checking the <code>best_score_</code> and <code>best_params_</code> attributes (continuing to mirror
 the scikit-learn interface):</p>
-<div class="highlight"><pre><span></span><span class="n">search</span><span class="o">.</span><span class="n">best_score_</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">search</span><span class="o">.</span><span class="n">best_score_</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">0.83144082308054479</span>
-</pre></div>
-
-
+    0.83144082308054479
 </div>
 
-<div class="highlight"><pre><span></span><span class="n">search</span><span class="o">.</span><span class="n">best_params_</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">search</span><span class="o">.</span><span class="n">best_params_</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">{&#39;alpha&#39;: 0.0001, &#39;loss&#39;: &#39;hinge&#39;}</span>
-</pre></div>
-
-
+    {'alpha': 0.0001, 'loss': 'hinge'}
 </div>
 
 <p>So we got <code>~83%</code> accuracy on predicting if a flight was delayed based on these
 features. The best estimator (after refitting on all of the training data) is
 stored in the <code>best_estimator_</code> attribute:</p>
-<div class="highlight"><pre><span></span><span class="n">search</span><span class="o">.</span><span class="n">best_estimator_</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">search</span><span class="o">.</span><span class="n">best_estimator_</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,</span>
-<span class="err">    eta0=0.0, fit_intercept=True, l1_ratio=0.15,</span>
-<span class="err">    learning_rate=&#39;optimal&#39;, loss=&#39;hinge&#39;, n_iter=5, n_jobs=1,</span>
-<span class="err">    penalty=&#39;l2&#39;, power_t=0.5, random_state=None, shuffle=True,</span>
-<span class="err">    verbose=0, warm_start=False)</span>
-</pre></div>
-
-
+    SGDClassifier(alpha=0.0001, average=False, class_weight=None, epsilon=0.1,
+        eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+        learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+        penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+        verbose=0, warm_start=False)
 </div>
 
 <h2>Scoring the model</h2>
@@ -528,7 +482,7 @@ don't know which one a given estimator uses in its <code>score</code> method, we
 dispatch to a parallel implementation easily. For now, we can call <code>predict</code>
 (which we can parallelize), and then compute the score directly using the
 <code>accuracy_score</code> function (the default score for classifiers).</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
 
 <span class="c1"># Call `predict` in parallel on the testing data</span>
 <span class="n">y_pred</span> <span class="o">=</span> <span class="n">search</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
@@ -538,33 +492,25 @@ dispatch to a parallel implementation easily. For now, we can call <code>predict
 
 <span class="c1"># Score locally</span>
 <span class="n">accuracy_score</span><span class="p">(</span><span class="n">actual</span><span class="p">,</span> <span class="n">predicted</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">0.83146828311187182</span>
-</pre></div>
-
-
+    0.83146828311187182
 </div>
 
 <p>So the overall accuracy score is <code>~83%</code>, roughly the same as the best score
 from <code>GridSearchCV</code> above. This may sound good, but it's actually equivalent to
 the strategy of predicting that no flights are delayed (roughly <code>83%</code> of all
 flights leave on time).</p>
-<div class="highlight"><pre><span></span><span class="c1"># Compute the fraction of flights that aren&#39;t delayed.</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Compute the fraction of flights that aren&#39;t delayed.</span>
 <span class="n">s</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">delayed</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
 <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;f8&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="n">s</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">0.83151615151172298</span>
-</pre></div>
-
-
+    0.83151615151172298
 </div>
 
 <p>I'm sure there is a better way to fit this data (I'm not a machine learning
@@ -604,13 +550,15 @@ create these workflows, and I hope I was successful in that at least.</p>
   their <code>score</code> method, <code>some_dask_estimator.score</code> must pull all the the data
   to score onto one worker to score it. For smaller datasets this is fine, but
   for larger datasets this serialization becomes more costly.
-  <p>
+<br>
+<p>
   One thought would be to infer the scoring function from the type of estimator
-  (e.g. use <code>accuracy_score</code> for classifiers, <code>r2_score</code> for regressors,
-  etc...). Dask versions of each could then be implemented, which would be <em>much</em>
+  (e.g. use `accuracy_score` for classifiers, `r2_score` for regressors,
+  etc...). Dask versions of each could then be implemented, which would be *much*
   more efficient. This wouldn't work well with estimators that didn't use the
   defaults though.
-  </p></p>
+  </p>
+</p>
 </li>
 <li>
 <p>As discussed in part 1, <code>GridSearchCV</code> isn't lazy (due to the need to support

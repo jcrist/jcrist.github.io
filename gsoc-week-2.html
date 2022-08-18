@@ -89,7 +89,7 @@ finishing up the remaining control paths for just motion, just
 configuration, and no constraint systems next week. For testing this
 functionality, I used the rolling disk example used in Luke and Gilbert's paper.
 With the current functionality, linearization works as:</p>
-<div class="highlight"><pre><span></span><span class="c1"># Equations for the disk are derived above, KM is a KanesMethod object</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Equations for the disk are derived above, KM is a KanesMethod object</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">linearizer</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">to_linearizer</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">linearizer</span><span class="o">.</span><span class="n">linearize</span><span class="p">(</span><span class="n">eq_q</span><span class="p">,</span> <span class="n">eq_u</span><span class="p">,</span> <span class="n">eq_qd</span><span class="p">,</span> <span class="n">eq_ud</span><span class="p">,</span> <span class="n">A_and_B</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -99,8 +99,7 @@ With the current functionality, linearization works as:</p>
 <span class="c1">#Calculating the critical speed eigenvalues, they should all be zero</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">A</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">upright_critical_speed</span><span class="p">)</span><span class="o">.</span><span class="n">eigenvals</span><span class="p">()</span>
 <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mi">8</span><span class="p">}</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>I also added a <code>to_linearizer</code> method to the <code>KanesMethod</code> class. This finds all
 the needed information in the <code>KanesMethod</code> object, and returns a <code>Linearizer</code>

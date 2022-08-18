@@ -77,12 +77,11 @@ This involved a few major changes:</p>
 <p>All these changes have led to a name change (previously was <code>dask-learn</code>). The
 new library is <a href="http://dask-searchcv.readthedocs.io"><code>dask-searchcv</code></a>. It can
 be installed via conda or pip:</p>
-<div class="highlight"><pre><span></span><span class="err"># conda</span>
-<span class="err">$ conda install dask-searchcv -c conda-forge</span>
-<span class="err"># pip</span>
-<span class="err">$ pip install dask-searchcv</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code># conda
+$ conda install dask-searchcv -c conda-forge
+# pip
+$ pip install dask-searchcv
+</code></pre></div>
 
 <p>In this post I'll give a brief overview of the library, and touch on when you
 might want to use it over other options.</p>
@@ -101,20 +100,16 @@ example</a>.
 using the newsgroups dataset from the scikit-learn docs.</p>
 <h3>Setup</h3>
 <p>First we need to load the data:</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">fetch_20newsgroups</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">fetch_20newsgroups</span>
 
 <span class="n">categories</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;alt.atheism&#39;</span><span class="p">,</span> <span class="s1">&#39;talk.religion.misc&#39;</span><span class="p">]</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">fetch_20newsgroups</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="n">categories</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of samples: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">Number of samples: 857</span>
-</pre></div>
-
-
+    Number of samples: 857
 </div>
 
 <p>Next, we'll build a pipeline to do the feature extraction and classification.
@@ -122,7 +117,7 @@ This is composed of a
 <a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html">CountVectorizer</a>,
 a <a href="http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html">TfidfTransformer</a>,
 and a <a href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html">SGDClassifier</a>.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">CountVectorizer</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">CountVectorizer</span>
 <span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">TfidfTransformer</span>
 <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">SGDClassifier</span>
 <span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
@@ -130,12 +125,11 @@ and a <a href="http://scikit-learn.org/stable/modules/generated/sklearn.linear_m
 <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([(</span><span class="s1">&#39;vect&#39;</span><span class="p">,</span> <span class="n">CountVectorizer</span><span class="p">()),</span>
                      <span class="p">(</span><span class="s1">&#39;tfidf&#39;</span><span class="p">,</span> <span class="n">TfidfTransformer</span><span class="p">()),</span>
                      <span class="p">(</span><span class="s1">&#39;clf&#39;</span><span class="p">,</span> <span class="n">SGDClassifier</span><span class="p">())])</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>All of these take several parameters. We'll only do a grid search across a few
 of them:</p>
-<div class="highlight"><pre><span></span><span class="c1"># Parameters of steps are set using &#39;__&#39; separated parameter names:</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Parameters of steps are set using &#39;__&#39; separated parameter names:</span>
 <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;vect__max_df&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
               <span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">:</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
               <span class="s1">&#39;tfidf__use_idf&#39;</span><span class="p">:</span> <span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
@@ -146,15 +140,11 @@ of them:</p>
 
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">ParameterGrid</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of candidates: </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">ParameterGrid</span><span class="p">(</span><span class="n">parameters</span><span class="p">)))</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">Number of candidates: 576</span>
-</pre></div>
-
-
+    Number of candidates: 576
 </div>
 
 <h3>Fitting with Scikit-Learn</h3>
@@ -162,21 +152,17 @@ of them:</p>
 can (optionally) be automatically parallelized using
 <a href="https://pythonhosted.org/joblib/index.html">joblib</a>. Here we'll parallelize
 across 8 processes (the number of cores on my machine).</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">GridSearchCV</span>
 
 <span class="n">grid_search</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 
 <span class="o">%</span><span class="n">time</span> <span class="n">grid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">CPU times: user 39.1 s, sys: 12.7 s, total: 51.8 s</span>
-<span class="err">Wall time: 9min 12s</span>
-</pre></div>
-
-
+    CPU times: user 39.1 s, sys: 12.7 s, total: 51.8 s
+    Wall time: 9min 12s
 </div>
 
 <h3>Fitting with Dask-SearchCV</h3>
@@ -206,37 +192,29 @@ processes, each with a single thread. We choose this setup because:</p>
 </ul>
 <p>Note the changes between using Scikit-Learn and Dask-SearchCV here are quite
 small:</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask.distributed</span> <span class="kn">import</span> <span class="n">Client</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dask.distributed</span> <span class="kn">import</span> <span class="n">Client</span>
 <span class="c1"># Create a local cluster, and set as the default scheduler</span>
 <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
 <span class="n">client</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">&lt;Client: scheduler=&#39;tcp://127.0.0.1:64485&#39; processes=8 cores=8&gt;</span>
-</pre></div>
-
-
+    <Client: scheduler='tcp://127.0.0.1:64485' processes=8 cores=8>
 </div>
 
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">dask_searchcv</span> <span class="k">as</span> <span class="nn">dcv</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">dask_searchcv</span> <span class="k">as</span> <span class="nn">dcv</span>
 
 <span class="c1"># Only difference here is absence of `n_jobs` parameter</span>
 <span class="n">dgrid_search</span> <span class="o">=</span> <span class="n">dcv</span><span class="o">.</span><span class="n">GridSearchCV</span><span class="p">(</span><span class="n">pipeline</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
 
 <span class="o">%</span><span class="n">time</span> <span class="n">dgrid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">CPU times: user 36.9 s, sys: 9.75 s, total: 46.7 s</span>
-<span class="err">Wall time: 7min 16s</span>
-</pre></div>
-
-
+    CPU times: user 36.9 s, sys: 9.75 s, total: 46.7 s
+    Wall time: 7min 16s
 </div>
 
 <h2>Why is the dask version faster?</h2>
@@ -246,15 +224,14 @@ of the pieces of the <code>Pipeline</code>, or that there's a significant amount
 overhead to <code>joblib</code>. The reason is simply that the dask version is doing less
 work.</p>
 <p>Given a smaller grid</p>
-<div class="highlight"><pre><span></span><span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
+<div class="highlight"><pre><span></span><code><span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
               <span class="s1">&#39;tfidf__norm&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;l1&#39;</span><span class="p">,</span> <span class="s1">&#39;l2&#39;</span><span class="p">],</span>
               <span class="s1">&#39;clf__alpha&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">]}</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>and the same pipeline as above, the Scikit-Learn version looks something like
 (simplified):</p>
-<div class="highlight"><pre><span></span><span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="highlight"><pre><span></span><code><span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">ngram_range</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">]:</span>
     <span class="k">for</span> <span class="n">norm</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;tfidf__norm&#39;</span><span class="p">]:</span>
         <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;clf__alpha&#39;</span><span class="p">]:</span>
@@ -266,13 +243,12 @@ work.</p>
             <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X3</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
             <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clf</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X3</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
 <span class="n">best</span> <span class="o">=</span> <span class="n">choose_best_parameters</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>As a directed acyclic graph, this might look like:</p>
 <p><img src="images/unmerged_grid_search_graph.png" alt="Scikit-Learn Grid Search Graph" style="width:100%"></p>
 <p>In contrast, the dask version looks more like:</p>
-<div class="highlight"><pre><span></span><span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+<div class="highlight"><pre><span></span><code><span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">ngram_range</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">[</span><span class="s1">&#39;vect__ngram_range&#39;</span><span class="p">]:</span>
     <span class="n">vect</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">ngram_range</span><span class="o">=</span><span class="n">ngram_range</span><span class="p">)</span>
     <span class="n">X2</span> <span class="o">=</span> <span class="n">vect</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
@@ -284,8 +260,7 @@ work.</p>
             <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X3</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
             <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clf</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X3</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
 <span class="n">best</span> <span class="o">=</span> <span class="n">choose_best_parameters</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>As a directed acyclic graph, this might look like:</p>
 <p><img src="images/merged_grid_search_graph.png" alt="Dask-SearchCV Grid Search Graph" style="width:100%"></p>
@@ -303,36 +278,27 @@ with a quick change in scheduler. Here I've setup a cluster of 3
 workers (each with 8 single-threaded processes), and another instance for the
 scheduler. This was easy to do with a single command using the
 <a href="https://github.com/dask/dask-ec2"><code>dask-ec2</code></a> utility:</p>
-<div class="highlight"><pre><span></span>$ dask-ec2 up --keyname mykey --keypair ~/.ssh/mykey.pem --nprocs <span class="m">8</span> --type m4.2xlarge
-</pre></div>
-
+<div class="highlight"><pre><span></span><code>$ dask-ec2 up --keyname mykey --keypair ~/.ssh/mykey.pem --nprocs <span class="m">8</span> --type m4.2xlarge
+</code></pre></div>
 
 <p>To switch to using the cluster instead of running locally, we just instantiate
 a new client, and then rerun:</p>
-<div class="highlight"><pre><span></span><span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s1">&#39;54.146.59.240:8786&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s1">&#39;54.146.59.240:8786&#39;</span><span class="p">)</span>
 <span class="n">client</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">&lt;Client: scheduler=&#39;tcp://54.146.59.240:8786&#39; processes=24 cores=24&gt;</span>
-</pre></div>
-
-
+    <Client: scheduler='tcp://54.146.59.240:8786' processes=24 cores=24>
 </div>
 
-<div class="highlight"><pre><span></span><span class="o">%</span><span class="n">time</span> <span class="n">dgrid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="o">%</span><span class="n">time</span> <span class="n">dgrid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">CPU times: user 871 ms, sys: 23.3 ms, total: 894 ms</span>
-<span class="err">Wall time: 2min 43s</span>
-</pre></div>
-
-
+    CPU times: user 871 ms, sys: 23.3 ms, total: 894 ms
+    Wall time: 2min 43s
 </div>
 
 <p>Roughly a 3x speedup, which is what we'd expect given 3x more workers. By just
@@ -351,23 +317,19 @@ tasks, making it look worse than it really is.</p>
 <p>For comparison, we'll also run the Scikit-Learn grid search using joblib with
 the <a href="http://distributed.readthedocs.io/en/latest/joblib.html"><code>dask.distributed</code></a>
 backend. This is also only a few lines changed:</p>
-<div class="highlight"><pre><span></span><span class="c1"># Need to import the backend to register it</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Need to import the backend to register it</span>
 <span class="kn">import</span> <span class="nn">distributed.joblib</span>
 <span class="kn">from</span> <span class="nn">sklearn.externals.joblib</span> <span class="kn">import</span> <span class="n">parallel_backend</span>
 
 <span class="c1"># Use the dask.distributed backend with our current cluster</span>
 <span class="k">with</span> <span class="n">parallel_backend</span><span class="p">(</span><span class="s1">&#39;dask.distributed&#39;</span><span class="p">,</span> <span class="s1">&#39;54.146.59.240:8786&#39;</span><span class="p">):</span>
     <span class="o">%</span><span class="n">time</span> <span class="n">grid_search</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">CPU times: user 12.1 s, sys: 3.26 s, total: 15.3 s</span>
-<span class="err">Wall time: 3min 32s</span>
-</pre></div>
-
-
+    CPU times: user 12.1 s, sys: 3.26 s, total: 15.3 s
+    Wall time: 3min 32s
 </div>
 
 <h2>Analysis</h2>

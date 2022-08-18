@@ -86,7 +86,7 @@ gone.</p>
 <p>The second, and more serious issue, is that there was no way to tell if the limit
 at that point was equal to the value the expression should actually evaluate too, or if it
 is just the value of the <em>limit at that point</em>. For example:</p>
-<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="n">expr</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">expr</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">op_point</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">op_point</span><span class="p">)</span>
 <span class="n">nan</span>
@@ -94,8 +94,7 @@ is just the value of the <em>limit at that point</em>. For example:</p>
 <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">limit</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
 <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Using the method described above, it would seem that the expression should just
 evaluate to <code>1/2</code>. However, if you actually plot this expression, you'll find

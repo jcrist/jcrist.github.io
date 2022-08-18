@@ -60,15 +60,15 @@ size.</p>
 <p>We'll be working through reducing the size of an image for running the Dask
 Scheduler/Workers (a simplified version of those found in the official
 <a class="reference external" href="https://github.com/dask/dask-docker">dask-docker images</a>. The <tt class="docutils literal">Dockerfile</tt> is as follows:</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">continuumio/miniconda3:4.6.14</span>
 
-<span class="k">RUN</span> conda install --yes <span class="se">\</span>
+<span class="k">RUN</span><span class="w"> </span>conda install --yes <span class="se">\</span>
     <span class="nv">dask</span><span class="o">==</span><span class="m">1</span>.2.2 <span class="se">\</span>
     <span class="nv">numpy</span><span class="o">==</span><span class="m">1</span>.16.3 <span class="se">\</span>
     <span class="nv">pandas</span><span class="o">==</span><span class="m">0</span>.24.2 <span class="se">\</span>
     <span class="nv">tini</span><span class="o">==</span><span class="m">0</span>.18.0
 
-<span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span> <span class="s2">&quot;-g&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">]</span>
+<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-g&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--&quot;</span><span class="p">]</span>
 </pre></div>
 <p>It installs a few dependencies, and sets <a class="reference external" href="https://github.com/krallin/tini">tini</a> as the entrypoint. Building and
 testing that it works:</p>
@@ -105,16 +105,16 @@ library. While fast, the binaries included are rather large:</p>
 be done by adding <tt class="docutils literal">nomkl</tt> as a dependency. Users using the <a class="reference external" href="https://conda-forge.org/">Conda-Forge</a>
 channel will get <tt class="docutils literal">openblas</tt> by default and won't need the <tt class="docutils literal">nomkl</tt>
 dependency.</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">continuumio/miniconda3:4.6.14</span>
 
-<span class="k">RUN</span> conda install --yes <span class="se">\</span>
+<span class="k">RUN</span><span class="w"> </span>conda install --yes <span class="se">\</span>
     nomkl <span class="se">\</span>
     <span class="nv">dask</span><span class="o">==</span><span class="m">1</span>.2.2 <span class="se">\</span>
     <span class="nv">numpy</span><span class="o">==</span><span class="m">1</span>.16.3 <span class="se">\</span>
     <span class="nv">pandas</span><span class="o">==</span><span class="m">0</span>.24.2 <span class="se">\</span>
     <span class="nv">tini</span><span class="o">==</span><span class="m">0</span>.18.0
 
-<span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span> <span class="s2">&quot;-g&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">]</span>
+<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-g&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--&quot;</span><span class="p">]</span>
 </pre></div>
 <div class="highlight"><pre><span></span>$ docker image ls myimage
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
@@ -132,9 +132,9 @@ files after the install.</p>
 removes cache files, package tarballs, and the entire package cache. To ensure
 only necessary files are saved in each layer, you'll want to add this to the
 end of any <tt class="docutils literal">RUN</tt> command that installs packages with <tt class="docutils literal">conda</tt>.</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">continuumio/miniconda3:4.6.14</span>
 
-<span class="k">RUN</span> conda install --yes <span class="se">\</span>
+<span class="k">RUN</span><span class="w"> </span>conda install --yes <span class="se">\</span>
     nomkl <span class="se">\</span>
     <span class="nv">dask</span><span class="o">==</span><span class="m">1</span>.2.2 <span class="se">\</span>
     <span class="nv">numpy</span><span class="o">==</span><span class="m">1</span>.16.3 <span class="se">\</span>
@@ -142,7 +142,7 @@ end of any <tt class="docutils literal">RUN</tt> command that installs packages 
     <span class="nv">tini</span><span class="o">==</span><span class="m">0</span>.18.0 <span class="se">\</span>
     <span class="o">&amp;&amp;</span> conda clean -afy
 
-<span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span> <span class="s2">&quot;-g&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">]</span>
+<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-g&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--&quot;</span><span class="p">]</span>
 </pre></div>
 <div class="highlight"><pre><span></span>$ docker image ls myimage
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
@@ -159,9 +159,9 @@ version being stored in layers in the image, increasing image size. The
 packages, and should be added to any <tt class="docutils literal">install</tt> command. This isn't super
 important for this image, but becomes more important if multiple rounds of
 <tt class="docutils literal">conda install</tt> commands are used.</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">continuumio/miniconda3:4.6.14</span>
 
-<span class="k">RUN</span> conda install --yes --freeze-installed <span class="se">\</span>
+<span class="k">RUN</span><span class="w"> </span>conda install --yes --freeze-installed <span class="se">\</span>
     nomkl <span class="se">\</span>
     <span class="nv">dask</span><span class="o">==</span><span class="m">1</span>.2.2 <span class="se">\</span>
     <span class="nv">numpy</span><span class="o">==</span><span class="m">1</span>.16.3 <span class="se">\</span>
@@ -169,7 +169,7 @@ important for this image, but becomes more important if multiple rounds of
     <span class="nv">tini</span><span class="o">==</span><span class="m">0</span>.18.0 <span class="se">\</span>
     <span class="o">&amp;&amp;</span> conda clean -afy
 
-<span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span> <span class="s2">&quot;-g&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">]</span>
+<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-g&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--&quot;</span><span class="p">]</span>
 </pre></div>
 <div class="highlight"><pre><span></span>$ docker image ls myimage
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
@@ -209,11 +209,11 @@ use the minified version in Dask, so we can remove the unminified files.</p>
 </li>
 </ul>
 <p>Applying these changes to our Dockerfile:</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">continuumio/miniconda3:4.6.14</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">continuumio/miniconda3:4.6.14</span>
 
-<span class="k">ENV</span> <span class="nv">PYTHONDONTWRITEBYTECODE</span><span class="o">=</span><span class="nb">true</span>
+<span class="k">ENV</span><span class="w"> </span><span class="nv">PYTHONDONTWRITEBYTECODE</span><span class="o">=</span><span class="nb">true</span>
 
-<span class="k">RUN</span> conda install --yes --freeze-installed <span class="se">\</span>
+<span class="k">RUN</span><span class="w"> </span>conda install --yes --freeze-installed <span class="se">\</span>
     nomkl <span class="se">\</span>
     <span class="nv">dask</span><span class="o">==</span><span class="m">1</span>.2.2 <span class="se">\</span>
     <span class="nv">numpy</span><span class="o">==</span><span class="m">1</span>.16.3 <span class="se">\</span>
@@ -225,7 +225,7 @@ use the minified version in Dask, so we can remove the unminified files.</p>
     <span class="o">&amp;&amp;</span> find /opt/conda/ -follow -type f -name <span class="s1">&#39;*.js.map&#39;</span> -delete <span class="se">\</span>
     <span class="o">&amp;&amp;</span> find /opt/conda/lib/python*/site-packages/bokeh/server/static -follow -type f -name <span class="s1">&#39;*.js&#39;</span> ! -name <span class="s1">&#39;*.min.js&#39;</span> -delete
 
-<span class="k">ENTRYPOINT</span> <span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span> <span class="s2">&quot;-g&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">]</span>
+<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tini&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-g&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;--&quot;</span><span class="p">]</span>
 </pre></div>
 <div class="highlight"><pre><span></span>$ docker image ls myimage
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
@@ -244,9 +244,9 @@ patches have been applied, and a new miniconda base image is available at
 already has <tt class="docutils literal">tini</tt> installed and sets <tt class="docutils literal">PYTHONDONTWRITEBYTECODE</tt>, so we can
 drop those from our dockerfile.</p>
 <p>Updating our Dockerfile:</p>
-<div class="highlight"><pre><span></span><span class="k">FROM</span> <span class="s">jcrist/alpine-conda:4.6.8</span>
+<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">jcrist/alpine-conda:4.6.8</span>
 
-<span class="k">RUN</span> /opt/conda/bin/conda install --yes --freeze-installed <span class="se">\</span>
+<span class="k">RUN</span><span class="w"> </span>/opt/conda/bin/conda install --yes --freeze-installed <span class="se">\</span>
         <span class="nv">dask</span><span class="o">==</span><span class="m">1</span>.2.2 <span class="se">\</span>
         <span class="nv">numpy</span><span class="o">==</span><span class="m">1</span>.16.3 <span class="se">\</span>
         <span class="nv">pandas</span><span class="o">==</span><span class="m">0</span>.24.2 <span class="se">\</span>

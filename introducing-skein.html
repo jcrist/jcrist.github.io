@@ -195,21 +195,21 @@ to be distributed with the application. For Python applications, one way of
 handling this is to use the <a class="reference external" href="https://conda.io/docs/">conda package manager</a> to create a Python
 environment, and <a class="reference external" href="https://conda.github.io/conda-pack/">conda-pack</a> to package that environment for distribution.
 This is what we'll do here.</p>
-<div class="highlight"><pre><span></span><span class="gp">#</span> Create a new environment with all dependencies
-<span class="gp">$</span> conda create -y -n demo -c conda-forge python skein conda-pack
+<div class="highlight"><pre><span></span><span class="gp"># </span>Create a new environment with all dependencies
+<span class="gp">$ </span>conda create -y -n demo -c conda-forge python skein conda-pack
 <span class="go">...</span>
 
-<span class="gp">#</span> Activate the environment
-<span class="gp">$</span> conda activate demo
+<span class="gp"># </span>Activate the environment
+<span class="gp">$ </span>conda activate demo
 
-<span class="gp">#</span> Package the environment into environment.tar.gz
-<span class="gp">$</span> conda-pack -o environment.tar.gz
+<span class="gp"># </span>Package the environment into environment.tar.gz
+<span class="gp">$ </span>conda-pack -o environment.tar.gz
 <span class="go">Collecting packages...</span>
 <span class="go">Packing environment at &#39;/home/jcrist/miniconda/envs/demo&#39; to &#39;environment.tar.gz&#39;</span>
 <span class="go">[########################################] | 100% Completed | 16.6s</span>
 
-<span class="gp">#</span> See the size of the output environment
-<span class="gp">$</span> du -h environment.tar.gz
+<span class="gp"># </span>See the size of the output environment
+<span class="gp">$ </span>du -h environment.tar.gz
 <span class="go">102M    environment.tar.gz</span>
 </pre></div>
 <p>During <a class="reference external" href="https://hortonworks.com/blog/resource-localization-in-yarn-deep-dive/">YARN Resource Localization</a> this environment can then be unpacked and
@@ -224,25 +224,25 @@ application specification. We'll only make use of a few of the specification
 fields here; the full schema can be found in the <a class="reference external" href="https://jcrist.github.io/skein/specification.html">specification docs</a>.</p>
 <p>The echo server specification can be found <a class="reference external" href="https://github.com/jcrist/skein/blob/master/examples/echo_server/spec.yaml">here</a>,
 and is also duplicated below:</p>
-<div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">echoserver</span>
+<div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echoserver</span><span class="w"></span>
 
-<span class="nt">services</span><span class="p">:</span>
-    <span class="nt">server</span><span class="p">:</span>
-        <span class="nt">resources</span><span class="p">:</span>
-            <span class="nt">vcores</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-            <span class="nt">memory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">256</span>
-        <span class="nt">files</span><span class="p">:</span>
-            <span class="c1"># A packaged conda environment to be distributed with the</span>
-            <span class="c1"># application. During YARN resource localization this will be</span>
-            <span class="c1"># automatically unpacked into the directory ``environment``.</span>
-            <span class="nt">environment</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">environment.tar.gz</span>
-            <span class="c1"># The server implementation.</span>
-            <span class="nt">server.py</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">server.py</span>
-        <span class="nt">commands</span><span class="p">:</span>
-            <span class="c1"># Activate the conda environment</span>
-            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">source environment/bin/activate</span>
-            <span class="c1"># Start the server</span>
-            <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">python server.py</span>
+<span class="nt">services</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">server</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">resources</span><span class="p">:</span><span class="w"></span>
+<span class="w">            </span><span class="nt">vcores</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">            </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">256</span><span class="w"></span>
+<span class="w">        </span><span class="nt">files</span><span class="p">:</span><span class="w"></span>
+<span class="w">            </span><span class="c1"># A packaged conda environment to be distributed with the</span><span class="w"></span>
+<span class="w">            </span><span class="c1"># application. During YARN resource localization this will be</span><span class="w"></span>
+<span class="w">            </span><span class="c1"># automatically unpacked into the directory ``environment``.</span><span class="w"></span>
+<span class="w">            </span><span class="nt">environment</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">environment.tar.gz</span><span class="w"></span>
+<span class="w">            </span><span class="c1"># The server implementation.</span><span class="w"></span>
+<span class="w">            </span><span class="nt">server.py</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">server.py</span><span class="w"></span>
+<span class="w">        </span><span class="nt">commands</span><span class="p">:</span><span class="w"></span>
+<span class="w">            </span><span class="c1"># Activate the conda environment</span><span class="w"></span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source environment/bin/activate</span><span class="w"></span>
+<span class="w">            </span><span class="c1"># Start the server</span><span class="w"></span>
+<span class="w">            </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python server.py</span><span class="w"></span>
 </pre></div>
 <p>We define a single service <tt class="docutils literal">server</tt>, and specify that each instance needs
 one virtual-core (usually equal to one CPU, cluster specific) and 256 MB of
@@ -257,14 +257,14 @@ and running the server script.</p>
 <h3>Running the Application</h3>
 <p>We're now ready to start the application. This could be done using the <a class="reference external" href="https://jcrist.github.io/skein/api.html">Python
 API</a>, but here we'll make use of the <a class="reference external" href="https://jcrist.github.io/skein/cli.html">CLI</a>.</p>
-<div class="highlight"><pre><span></span><span class="gp">#</span> Start the application, and store the application id as APPID
-<span class="gp">$</span> <span class="nv">APPID</span><span class="o">=</span><span class="sb">`</span>skein application submit spec.yaml<span class="sb">`</span>
+<div class="highlight"><pre><span></span><span class="gp"># </span>Start the application, and store the application id as APPID
+<span class="gp">$ </span><span class="nv">APPID</span><span class="o">=</span><span class="sb">`</span>skein application submit spec.yaml<span class="sb">`</span>
 </pre></div>
 <p>This validates the specification, uploads any necessary file resources to HDFS,
 and then submits the application to YARN. To check on the status of the
 application we can use the <tt class="docutils literal">skein application status</tt> command:</p>
-<div class="highlight"><pre><span></span><span class="gp">#</span> Check the application status
-<span class="gp">$</span> skein application status <span class="nv">$APPID</span>
+<div class="highlight"><pre><span></span><span class="gp"># </span>Check the application status
+<span class="gp">$ </span>skein application status <span class="nv">$APPID</span>
 <span class="go">APPLICATION_ID                    NAME          STATE      STATUS       CONTAINERS    VCORES    MEMORY    RUNTIME</span>
 <span class="go">application_1534186866311_0009    echoserver    RUNNING    UNDEFINED    2             2         768       8s</span>
 </pre></div>
@@ -273,7 +273,7 @@ our echo server. You can also navigate to the YARN Web-UI to check on the
 status of the application, based on the given application ID:</p>
 <img alt="The YARN web-ui" class="align-center" src="/images/skein_resourcemanager_echoserver.png" style="width: 90%;" />
 <p>Trying out our echo client:</p>
-<div class="highlight"><pre><span></span><span class="gp">$</span> python client.py <span class="nv">$APPID</span>
+<div class="highlight"><pre><span></span><span class="gp">$ </span>python client.py <span class="nv">$APPID</span>
 <span class="go">Connecting to server at 172.18.0.4:41846</span>
 <span class="go">Sent: &#39;Hello World!&#39;</span>
 <span class="go">Received: &#39;Hello World!&#39;</span>
@@ -283,11 +283,11 @@ address was found at <tt class="docutils literal">172.18.0.4:41846</tt>, and the
 returned successfully.</p>
 <p>Next, lets try scaling up the number of echo servers using the <tt class="docutils literal">skein
 container scale</tt> command:</p>
-<div class="highlight"><pre><span></span><span class="gp">#</span> Scale to <span class="m">4</span> server instances
-<span class="gp">$</span> skein container scale <span class="nv">$APPID</span> --service server --number <span class="m">4</span>
+<div class="highlight"><pre><span></span><span class="gp"># </span>Scale to <span class="m">4</span> server instances
+<span class="gp">$ </span>skein container scale <span class="nv">$APPID</span> --service server --number <span class="m">4</span>
 
-<span class="gp">#</span> List all <span class="sb">``</span>server<span class="sb">``</span> containers <span class="k">for</span> this application
-<span class="gp">$</span> skein container ls <span class="nv">$APPID</span> --service server
+<span class="gp"># </span>List all <span class="sb">``</span>server<span class="sb">``</span> containers <span class="k">for</span> this application
+<span class="gp">$ </span>skein container ls <span class="nv">$APPID</span> --service server
 <span class="go">SERVICE    ID          STATE      RUNTIME</span>
 <span class="go">server     server_0    RUNNING    2m</span>
 <span class="go">server     server_1    RUNNING    4s</span>
@@ -295,7 +295,7 @@ container scale</tt> command:</p>
 <span class="go">server     server_3    RUNNING    2s</span>
 </pre></div>
 <p>Running the echo client again:</p>
-<div class="highlight"><pre><span></span><span class="gp">$</span> python client.py <span class="nv">$APPID</span>
+<div class="highlight"><pre><span></span><span class="gp">$ </span>python client.py <span class="nv">$APPID</span>
 <span class="go">python client.py $APPID</span>
 <span class="go">Connecting to server at 172.18.0.4:41846</span>
 <span class="go">Sent: &#39;Hello World!&#39;</span>
@@ -314,11 +314,11 @@ container scale</tt> command:</p>
 server instance.</p>
 <p>Finally, we can shutdown our application using the <tt class="docutils literal">skein application
 shutdown</tt> command:</p>
-<div class="highlight"><pre><span></span><span class="gp">#</span> Shutdown the application
-<span class="gp">$</span> skein application shutdown <span class="nv">$APPID</span>
+<div class="highlight"><pre><span></span><span class="gp"># </span>Shutdown the application
+<span class="gp">$ </span>skein application shutdown <span class="nv">$APPID</span>
 
-<span class="gp">#</span> Show the application was shutdown
-<span class="gp">$</span> skein application status <span class="nv">$APPID</span>
+<span class="gp"># </span>Show the application was shutdown
+<span class="gp">$ </span>skein application status <span class="nv">$APPID</span>
 <span class="go">APPLICATION_ID                    NAME          STATE       STATUS       CONTAINERS    VCORES    MEMORY    RUNTIME</span>
 <span class="go">application_1534186866311_0009    echoserver    FINISHED    SUCCEEDED    0             0         0         5m</span>
 </pre></div>
@@ -356,17 +356,17 @@ clusters. Images with both <tt class="docutils literal">simple</tt> and <tt clas
 are available, and the tool is written to allow extending with further options.</p>
 <p>Assuming you have docker already installed, using a kerberized test cluster is
 as easy as</p>
-<div class="highlight"><pre><span></span><span class="gp">#</span> Start the cluster, mounting the <span class="nb">local</span> directory
-<span class="gp">$</span> htcluster startup --image kerberos --mount .:workdir
+<div class="highlight"><pre><span></span><span class="gp"># </span>Start the cluster, mounting the <span class="nb">local</span> directory
+<span class="gp">$ </span>htcluster startup --image kerberos --mount .:workdir
 
-<span class="gp">#</span> Login
-<span class="gp">$</span> htcluster login
+<span class="gp"># </span>Login
+<span class="gp">$ </span>htcluster login
 
-<span class="gp">#</span> Or run a <span class="nb">command</span> externally
-<span class="gp">$</span> htcluster <span class="nb">exec</span> -- py.test mylibrary
+<span class="gp"># </span>Or run a <span class="nb">command</span> externally
+<span class="gp">$ </span>htcluster <span class="nb">exec</span> -- py.test mylibrary
 
-<span class="gp">#</span> Shutdown the cluster
-<span class="gp">$</span> htcluster shutdown
+<span class="gp"># </span>Shutdown the cluster
+<span class="gp">$ </span>htcluster shutdown
 </pre></div>
 <p>Making the tests easy to run locally has eased development, and helps ensure
 Skein is robust across different Hadoop deployments.</p>

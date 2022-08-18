@@ -95,7 +95,7 @@ describing its content (e.g. "acq").</p>
 <p>Following the scikit-learn example, we'll copy-paste in their subclass of
 <code>HTMLParser</code>. This is used for parsing the the <code>.sgm</code> files and yielding them
 one at a time.</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">re</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">re</span>
 
 <span class="kn">from</span> <span class="nn">sklearn.externals.six.moves</span> <span class="kn">import</span> <span class="n">html_parser</span>
 <span class="kn">from</span> <span class="nn">sklearn.externals.six.moves</span> <span class="kn">import</span> <span class="n">urllib</span>
@@ -178,8 +178,7 @@ one at a time.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">in_topic_d</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">topics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">topic_d</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">topic_d</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Using that parser, we can create a few preprocessing functions for extracting
 features and targets. We'll then apply these functions to each file/document
@@ -190,7 +189,7 @@ also have a <code>dklearn.matrix.Matrix</code> of booleans indicating whether th
 is labeled with the <code>"acq"</code> topic &mdash; this will be our target matrix. We'll
 then learn a binary classification problem to determine from the document text
 whether the document is in the <code>"acq"</code> class.</p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -226,8 +225,7 @@ whether the document is in the <code>"acq"</code> class.</p>
           <span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">remove_empty_topics</span><span class="p">))</span>
 <span class="n">X_text</span> <span class="o">=</span> <span class="n">docs</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">documents_to_X_text</span><span class="p">)</span><span class="o">.</span><span class="n">concat</span><span class="p">()</span>
 <span class="n">y</span> <span class="o">=</span> <span class="n">dm</span><span class="o">.</span><span class="n">from_bag</span><span class="p">(</span><span class="n">docs</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">documents_to_y</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;i1&#39;</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <h3>Extract train-test splits</h3>
 <p>To validate our fit estimators, we'll need to hold back a sample of data to use
@@ -235,11 +233,10 @@ for testing. To do that, we can use the <code>train_test_split</code> function, 
 mirrors the <a href="http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.train_test_split.html">scikit-learn function of the same
 name</a>.
 We'll hold back <code>20%</code> of the data to use as a test set.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dklearn.cross_validation</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dklearn.cross_validation</span> <span class="kn">import</span> <span class="n">train_test_split</span>
 
 <span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X_text</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <h3>Feature Extraction</h3>
 <p>We can't train directly on the text data, we first need to extract it out into
@@ -254,13 +251,12 @@ looks something like:</p>
 <p><img src="images/parallel_graph.svg" alt="HashingVectorizer graph" style="width:40%"></p>
 <p>To do this mapping automatically, we've implemented a simple wrapper in
 dask-learn.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dklearn.feature_extraction</span> <span class="kn">import</span> <span class="n">HashingVectorizer</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dklearn.feature_extraction</span> <span class="kn">import</span> <span class="n">HashingVectorizer</span>
 
 <span class="n">vectorizer</span> <span class="o">=</span> <span class="n">HashingVectorizer</span><span class="p">(</span><span class="n">decode_error</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span>
                                <span class="n">n_features</span><span class="o">=</span><span class="mi">2</span><span class="o">**</span><span class="mi">18</span><span class="p">,</span>
                                <span class="n">non_negative</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <h3>Parallelization patterns</h3>
 <p>Dask-learn contains several parallelization patterns for wrapping scikit-learn
@@ -275,26 +271,22 @@ As a dask graph, this looks something like:</p>
 <p>We'll create a <code>Pipeline</code> that first transforms the input using the
 <code>HashingVectorizer</code> created above, and then follows it with a <code>SGDClassifier</code>
 wrapped with <code>Chained</code>.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dklearn</span> <span class="kn">import</span> <span class="n">Chained</span><span class="p">,</span> <span class="n">Pipeline</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dklearn</span> <span class="kn">import</span> <span class="n">Chained</span><span class="p">,</span> <span class="n">Pipeline</span>
 <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">SGDClassifier</span>
 
 <span class="n">pipe1</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([(</span><span class="s1">&#39;vect&#39;</span><span class="p">,</span> <span class="n">vectorizer</span><span class="p">),</span>
                   <span class="p">(</span><span class="s1">&#39;sgd&#39;</span><span class="p">,</span> <span class="n">Chained</span><span class="p">(</span><span class="n">SGDClassifier</span><span class="p">()))])</span>
 <span class="n">pipe1</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">Pipeline(steps=[(&#39;vect&#39;, HashingVectorizer(analyzer=u&#39;word&#39;, binary=False, decode_error=&#39;ignore&#39;,</span>
-<span class="err">         dtype=&lt;type &#39;numpy.float64&#39;&gt;, encoding=u&#39;utf-8&#39;, input=u&#39;content&#39;,</span>
-<span class="err">         lowercase=True, n_features=262144, ngram_range=(1, 1),</span>
-<span class="err">         non_negative=True, norm=u&#39;l2&#39;, preprocessor=None, stop_words=N...2&#39;, power_t=0.5,</span>
-<span class="err">         random_state=None, shuffle=True,verbose=0,</span>
-<span class="err">         warm_start=False)))])</span>
-</pre></div>
-
-
+    Pipeline(steps=[('vect', HashingVectorizer(analyzer=u'word', binary=False, decode_error='ignore',
+             dtype=<type 'numpy.float64'>, encoding=u'utf-8', input=u'content',
+             lowercase=True, n_features=262144, ngram_range=(1, 1),
+             non_negative=True, norm=u'l2', preprocessor=None, stop_words=N...2', power_t=0.5,
+             random_state=None, shuffle=True,verbose=0,
+             warm_start=False)))])
 </div>
 
 <h4>Averaged</h4>
@@ -306,25 +298,21 @@ As a dask graph, this looks something like:</p>
 <p><img src="images/averaged_graph.svg" alt="Averaged.fit graph" style="width:80%"></p>
 <p>We'll create a <code>Pipeline</code> as before, but this time fitting a
 <code>LogisticRegression</code> wrapped with <code>Averaged</code>.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dklearn</span> <span class="kn">import</span> <span class="n">Averaged</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dklearn</span> <span class="kn">import</span> <span class="n">Averaged</span>
 <span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
 
 <span class="n">pipe2</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([(</span><span class="s1">&#39;vect&#39;</span><span class="p">,</span> <span class="n">vectorizer</span><span class="p">),</span>
                   <span class="p">(</span><span class="s1">&#39;logistic&#39;</span><span class="p">,</span> <span class="n">Averaged</span><span class="p">(</span><span class="n">LogisticRegression</span><span class="p">()))])</span>
 <span class="n">pipe2</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">Pipeline(steps=[(&#39;vect&#39;, HashingVectorizer(analyzer=u&#39;word&#39;, binary=False, decode_error=&#39;ignore&#39;,</span>
-<span class="err">         dtype=&lt;type &#39;numpy.float64&#39;&gt;, encoding=u&#39;utf-8&#39;, input=u&#39;content&#39;,</span>
-<span class="err">         lowercase=True, n_features=262144, ngram_range=(1, 1),</span>
-<span class="err">         non_negative=True, norm=u&#39;l2&#39;, preprocessor=None, stop_words=N...ty=&#39;l2&#39;, random_state=None,</span>
-<span class="err">         solver=&#39;liblinear&#39;, tol=0.0001,verbose=0, warm_start=False)))])</span>
-</pre></div>
-
-
+    Pipeline(steps=[('vect', HashingVectorizer(analyzer=u'word', binary=False, decode_error='ignore',
+             dtype=<type 'numpy.float64'>, encoding=u'utf-8', input=u'content',
+             lowercase=True, n_features=262144, ngram_range=(1, 1),
+             non_negative=True, norm=u'l2', preprocessor=None, stop_words=N...ty='l2', random_state=None,
+             solver='liblinear', tol=0.0001,verbose=0, warm_start=False)))])
 </div>
 
 <h3>A closer look at dask-learn estimators</h3>
@@ -356,13 +344,12 @@ post</a>).</p>
 <h3>Fitting and scoring the estimators</h3>
 <p>Here we'll fit and score both estimators. Remember this is all done lazily, so
 no actual work will be done until we call <code>compute</code>.</p>
-<div class="highlight"><pre><span></span><span class="n">fit1</span> <span class="o">=</span> <span class="n">pipe1</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">sgd__classes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<div class="highlight"><pre><span></span><code><span class="n">fit1</span> <span class="o">=</span> <span class="n">pipe1</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">sgd__classes</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <span class="n">score1</span> <span class="o">=</span> <span class="n">fit1</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
 
 <span class="n">fit2</span> <span class="o">=</span> <span class="n">pipe2</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 <span class="n">score2</span> <span class="o">=</span> <span class="n">fit2</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Note that the chained pipeline received a <code>classes</code> keyword to <code>fit</code>. This is
 because <code>partial_fit</code> requires the keyword on the first call. If it wasn't
@@ -381,65 +368,50 @@ to be shared. This entire graph contains:</p>
 <p>We'll also use the profiling functionality provided in
 <a href="http://dask.pydata.org/en/latest/diagnostics.html">dask.diagnostics</a> to
 measure performance.</p>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">dask.diagnostics</span> <span class="kn">import</span> <span class="n">ResourceProfiler</span><span class="p">,</span> <span class="n">Profiler</span><span class="p">,</span> <span class="n">ProgressBar</span><span class="p">,</span> <span class="n">visualize</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dask.diagnostics</span> <span class="kn">import</span> <span class="n">ResourceProfiler</span><span class="p">,</span> <span class="n">Profiler</span><span class="p">,</span> <span class="n">ProgressBar</span><span class="p">,</span> <span class="n">visualize</span>
 <span class="kn">from</span> <span class="nn">dask.multiprocessing</span> <span class="kn">import</span> <span class="n">get</span> <span class="k">as</span> <span class="n">mp_get</span>
 <span class="kn">from</span> <span class="nn">dask</span> <span class="kn">import</span> <span class="n">compute</span>
 
 <span class="k">with</span> <span class="n">ResourceProfiler</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="k">as</span> <span class="n">rprof</span><span class="p">,</span> <span class="n">Profiler</span><span class="p">()</span> <span class="k">as</span> <span class="n">prof</span><span class="p">,</span> <span class="n">ProgressBar</span><span class="p">():</span>
     <span class="n">fit1</span><span class="p">,</span> <span class="n">fit2</span><span class="p">,</span> <span class="n">score1</span><span class="p">,</span> <span class="n">score2</span> <span class="o">=</span> <span class="n">compute</span><span class="p">(</span><span class="n">fit1</span><span class="p">,</span> <span class="n">fit2</span><span class="p">,</span> <span class="n">score1</span><span class="p">,</span> <span class="n">score2</span><span class="p">,</span>
                                          <span class="n">get</span><span class="o">=</span><span class="n">mp_get</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-</pre></div>
-
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">[########################################] | 100% Completed |  7.8s</span>
-</pre></div>
-
-
+    [########################################] | 100% Completed |  7.8s
 </div>
 
-<div class="highlight"><pre><span></span><span class="n">score1</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">score1</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">0.96392016376663259    # The score for the Chained(SGDClassifier())</span>
-</pre></div>
-
-
+    0.96392016376663259    # The score for the Chained(SGDClassifier())
 </div>
 
-<div class="highlight"><pre><span></span><span class="n">score2</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">score2</span>
+</code></pre></div>
 
 <div class=md_output>
 
-<div class="highlight"><pre><span></span><span class="err">0.87871033776867968    # The score for the Averaged(LogisticRegression())</span>
-</pre></div>
-
-
+    0.87871033776867968    # The score for the Averaged(LogisticRegression())
 </div>
 
 <p>From these scores, it seems that the <code>Chained(SGDClassifier())</code> pipeline
 performs better for this text classification problem. Now let's look at the
 profile plot:</p>
-<div class="highlight"><pre><span></span><span class="n">visualize</span><span class="p">([</span><span class="n">prof</span><span class="p">,</span> <span class="n">rprof</span><span class="p">])</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="n">visualize</span><span class="p">([</span><span class="n">prof</span><span class="p">,</span> <span class="n">rprof</span><span class="p">])</span>
+</code></pre></div>
 
 <p><head>
     <meta charset="utf-8">
     <title>Bokeh Plot</title></p>
 <p><link rel="stylesheet" href="https://cdn.pydata.org/bokeh/release/bokeh-0.12.0.min.css" type="text/css" /></p>
 <script type="text/javascript" src="https://cdn.pydata.org/bokeh/release/bokeh-0.12.0.min.js"></script>
-
 <script type="text/javascript">
     Bokeh.set_log_level("info");
 </script>
-
 <style>
 html {
 width: 100%;
@@ -451,9 +423,9 @@ height: 100%;
 margin: auto;
 }
 </style>
+<p></head></p>
+<body>
 
-<p></head>
-<body></p>
 <div class="bk-root">
     <div class="plotdiv" id="908f8375-28cf-4e21-a6e3-f4d38a24b8ab"></div>
 </div>
@@ -466,8 +438,8 @@ margin: auto;
     Bokeh.embed.embed_items(docs_json, render_items);
 });
 </script>
+</body>
 
-<p></body></p>
 <p>Looking at the above profiling plot, we can observe a few things:</p>
 <ul>
 <li>

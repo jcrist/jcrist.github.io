@@ -7,6 +7,8 @@ SITEURL = ""
 PATH = "content"
 THEME = "theme"
 
+PLUGINS = ["pelican_jupyter.liquid"]
+
 TIMEZONE = "America/Chicago"
 
 DEFAULT_LANG = "en"
@@ -41,9 +43,6 @@ MENUITEMS = [
 ]
 TEMPLATE_PAGES = {"talks.html": "talks.html"}
 
-PLUGIN_PATHS = ["./plugins", "../pelican-plugins"]
-PLUGINS = ["ipynb.liquid"]
-NOTEBOOK_DIR = "notebooks"
 MARKUP = ["md", "rst"]
 
 extra_dir = os.path.join(os.path.dirname(__file__), "content", "extra")

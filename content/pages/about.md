@@ -4,7 +4,7 @@ save_as: about.html
 <img class="avatar" src="https://avatars3.githubusercontent.com/u/2783717?s=200"/>
 
 I'm **Jim**. Born and raised in Minneapolis, MN, currently working for
-[Prefect](https://www.prefect.io/) in Austin, TX.
+[Voltron Data](https://voltrondata.com/) in Austin, TX.
 
 ## Background
 

@@ -1,11 +1,10 @@
 Ibis-Datasette
 ##############
 
-:date: 2022-08-18 10:00
+:date: 2022-08-18 8:15
 :slug: ibis-datasette
 :author: Jim Crist-Harif
 :summary: An ibis backend for querying a datasette server
-:status: draft
 
 .. raw:: html
 
@@ -178,7 +177,7 @@ For the curious, you can see the generated SQL query using the
 
 .. code-blocK:: python
 
-    In [11]: ibis.show_sql(results)
+    In [11]: ibis.show_sql(percent_female_by_decade)
     SELECT
       t0.decade,
       t0.percent_female

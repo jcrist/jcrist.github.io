@@ -1,5 +1,510 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif - misc</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/misc.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2022-08-18T08:15:00-05:00</updated><entry><title>Ibis-Datasette</title><link href="https://jcristharif.com/ibis-datasette.html" rel="alternate"></link><published>2022-08-18T08:15:00-05:00</published><updated>2022-08-18T08:15:00-05:00</updated><author><name>Jim Crist-Harif</name></author><id>tag:jcristharif.com,2022-08-18:/ibis-datasette.html</id><summary type="html">&lt;p class="first last"&gt;An ibis backend for querying a datasette server&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif - misc</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/misc.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2022-08-24T22:30:00-05:00</updated><entry><title>Exploring ScotRail Audio Clips using Ibis-Datasette</title><link href="https://jcristharif.com/ibis-datasette-scotrail.html" rel="alternate"></link><published>2022-08-24T22:30:00-05:00</published><updated>2022-08-24T22:30:00-05:00</updated><author><name>Jim Crist-Harif</name></author><id>tag:jcristharif.com,2022-08-24:/ibis-datasette-scotrail.html</id><summary type="html">&lt;p class="first last"&gt;Using ibis-datasette to explore a collection of ScotRail audio announcements&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;
+&lt;em&gt;
+Note: This blogpost is available as an interactive notebook
+&lt;a class="reference external"
+   href="https://gke.mybinder.org/v2/gh/jcrist/ibis-datasette/main?urlpath=/tree/Scotrail.ipynb"
+&gt;here&lt;/a&gt;.
+&lt;/em&gt;
+&lt;/p&gt;&lt;p&gt;&lt;a class="reference external image-reference" href="https://gke.mybinder.org/v2/gh/jcrist/ibis-datasette/main?urlpath=/tree/Scotrail.ipynb"&gt;&lt;object data="https://mybinder.org/badge_logo.svg" type="image/svg+xml"&gt;binder&lt;/object&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;In the &lt;a class="reference external" href="https://jcristharif.com/ibis-datasette.html"&gt;previous post&lt;/a&gt; we introduced
+&lt;a class="reference external" href="https://github.com/jcrist/ibis-datasette"&gt;ibis-datasette&lt;/a&gt;. To recap:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://datasette.io"&gt;Datasette&lt;/a&gt;  is a tool for publishing and exploring &lt;a class="reference external" href="https://sqlite.org"&gt;SQLite&lt;/a&gt; databases. Among
+other things, it exposes a UI and JSON API for querying a remote SQLite
+database.&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://ibis-project.org"&gt;Ibis&lt;/a&gt; is a Python library that provides a consistent dataframe-like API for
+querying data using a number of SQL (and non-SQL) backends.&lt;/li&gt;
+&lt;li&gt;&lt;a class="reference external" href="https://github.com/jcrist/ibis-datasette"&gt;Ibis-Datasette&lt;/a&gt; is a backend for Ibis that lets it interact with a datasette
+server just like it was a local SQLite database.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In this post, we'll use &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt; to explore the
+&lt;a class="reference external" href="https://scotrail.datasette.io/"&gt;ScotRail&lt;/a&gt; datasette.&lt;/p&gt;
+&lt;p&gt;This datasette is super fun to play around with. It's composed of ~2400
+different audioclips (and transcriptions) from Scottish train operator
+ScotRail's automated station announcements.&lt;/p&gt;
+&lt;p&gt;If you haven't seen it, I encourage you to read Simon Willison's &lt;a class="reference external" href="https://simonwillison.net/2022/Aug/21/scotrail/"&gt;excellent
+blogpost&lt;/a&gt; on putting this
+datasette together, and some interesting queries to try (we'll be replicating
+one of these below).&lt;/p&gt;
+&lt;p&gt;While you can use the &lt;a class="reference external" href="https://scotrail.datasette.io"&gt;datasette UI&lt;/a&gt; directly,
+I wanted to use &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; and the full power of Python to explore and build some
+interesting things.&lt;/p&gt;
+&lt;p&gt;---&lt;/p&gt;
+&lt;p&gt;First we start with some imports and initialization.&lt;/p&gt;
+&lt;p&gt;Here we:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Import &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; and its &lt;tt class="docutils literal"&gt;_&lt;/tt&gt; helper (more on this later)&lt;/li&gt;
+&lt;li&gt;Enable interactive mode.&lt;/li&gt;
+&lt;li&gt;We also tweak some &lt;tt class="docutils literal"&gt;pandas&lt;/tt&gt; display options to better render wide columns.
+This makes the transcriptions below easier to read.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;ibis&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;ibis&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;options&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;interactive&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pandas&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;pd&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;set_option&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;max_colwidth&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;400&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Next we need to connect to the datasette. This is done by passing the full URL
+to &lt;tt class="docutils literal"&gt;ibis.datasette.connect&lt;/tt&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;datasette&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;https://scotrail.datasette.io/scotrail&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Once connected, we can start poking around.&lt;/p&gt;
+&lt;p&gt;The first thing I usually do when exploring a new dataset is examine the tables
+and schemas.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;list_tables&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;announcements&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+ &lt;span class="s1"&gt;&amp;#39;announcements_fts&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+ &lt;span class="s1"&gt;&amp;#39;announcements_fts_config&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+ &lt;span class="s1"&gt;&amp;#39;announcements_fts_data&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+ &lt;span class="s1"&gt;&amp;#39;announcements_fts_docsize&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+ &lt;span class="s1"&gt;&amp;#39;announcements_fts_idx&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tables&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;schema&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+&lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Schema&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;File&lt;/span&gt;           &lt;span class="n"&gt;string&lt;/span&gt;
+  &lt;span class="n"&gt;Transcription&lt;/span&gt;  &lt;span class="n"&gt;string&lt;/span&gt;
+  &lt;span class="n"&gt;Category&lt;/span&gt;       &lt;span class="n"&gt;string&lt;/span&gt;
+  &lt;span class="n"&gt;mp3&lt;/span&gt;            &lt;span class="n"&gt;string&lt;/span&gt;
+  &lt;span class="n"&gt;Notes&lt;/span&gt;          &lt;span class="n"&gt;string&lt;/span&gt;
+  &lt;span class="n"&gt;Timestamp&lt;/span&gt;      &lt;span class="n"&gt;string&lt;/span&gt;
+  &lt;span class="n"&gt;NRE_ID&lt;/span&gt;         &lt;span class="n"&gt;string&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;  &lt;span class="n"&gt;con&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tables&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;head&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+   &lt;span class="n"&gt;File&lt;/span&gt;                              &lt;span class="n"&gt;Transcription&lt;/span&gt; &lt;span class="n"&gt;Category&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;                      &lt;span class="n"&gt;Notes&lt;/span&gt; &lt;span class="n"&gt;Timestamp&lt;/span&gt; &lt;span class="n"&gt;NRE_ID&lt;/span&gt;
+&lt;span class="mi"&gt;0&lt;/span&gt;  &lt;span class="mi"&gt;0031&lt;/span&gt;            &lt;span class="n"&gt;I&lt;/span&gt; &lt;span class="n"&gt;am&lt;/span&gt; &lt;span class="n"&gt;sorry&lt;/span&gt; &lt;span class="n"&gt;to&lt;/span&gt; &lt;span class="n"&gt;announce&lt;/span&gt; &lt;span class="n"&gt;that&lt;/span&gt; &lt;span class="n"&gt;the&lt;/span&gt;  &lt;span class="n"&gt;Apology&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;1&lt;/span&gt;  &lt;span class="mi"&gt;0085&lt;/span&gt;          &lt;span class="n"&gt;We&lt;/span&gt; &lt;span class="n"&gt;are&lt;/span&gt; &lt;span class="n"&gt;sorry&lt;/span&gt; &lt;span class="n"&gt;to&lt;/span&gt; &lt;span class="n"&gt;announce&lt;/span&gt; &lt;span class="n"&gt;that&lt;/span&gt; &lt;span class="n"&gt;the&lt;/span&gt;  &lt;span class="n"&gt;Apology&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;  &lt;span class="n"&gt;Most&lt;/span&gt; &lt;span class="n"&gt;frequently&lt;/span&gt; &lt;span class="n"&gt;used&lt;/span&gt; &lt;span class="n"&gt;file&lt;/span&gt;
+&lt;span class="mi"&gt;2&lt;/span&gt;  &lt;span class="mi"&gt;1339&lt;/span&gt;              &lt;span class="n"&gt;We&lt;/span&gt; &lt;span class="n"&gt;are&lt;/span&gt; &lt;span class="n"&gt;sorry&lt;/span&gt; &lt;span class="n"&gt;to&lt;/span&gt; &lt;span class="n"&gt;announce&lt;/span&gt; &lt;span class="n"&gt;that&lt;/span&gt;  &lt;span class="n"&gt;Apology&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;3&lt;/span&gt;  &lt;span class="mi"&gt;1488&lt;/span&gt;  &lt;span class="n"&gt;we&lt;/span&gt; &lt;span class="n"&gt;apologise&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;the&lt;/span&gt; &lt;span class="n"&gt;inconvenience&lt;/span&gt; &lt;span class="n"&gt;caused&lt;/span&gt;  &lt;span class="n"&gt;Apology&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;4&lt;/span&gt;  &lt;span class="mi"&gt;1524&lt;/span&gt;                  &lt;span class="n"&gt;Apologies&lt;/span&gt; &lt;span class="n"&gt;to&lt;/span&gt; &lt;span class="n"&gt;customers&lt;/span&gt;&lt;span class="o"&gt;...&lt;/span&gt;  &lt;span class="n"&gt;Apology&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+
+&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt; &lt;span class="n"&gt;rows&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="mi"&gt;7&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The main table is &lt;tt class="docutils literal"&gt;announcements&lt;/tt&gt;, the most interesting columns of which are:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Transcription&lt;/tt&gt;: a full transcription of the audio clip&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Category&lt;/tt&gt;: a category that the audio clip belongs to&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;mp3&lt;/tt&gt;: a link to the audio clip, hosted on GitHub&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Since we're going to be accessing this table a lot below, lets save it to a
+shorter local variable name:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;t&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;con&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;tables&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;To get a better sense of the scale of data we're working with, lets take a
+closer look at the &lt;tt class="docutils literal"&gt;Category&lt;/tt&gt; column.&lt;/p&gt;
+&lt;p&gt;I want to know how many categories there are, and how the audio clips are
+distributed across these categories.&lt;/p&gt;
+&lt;p&gt;To do this, we can use:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;.group_by(&amp;quot;Category&amp;quot;)&lt;/span&gt;&lt;/tt&gt; to split the data into separate groups by &lt;tt class="docutils literal"&gt;Category&lt;/tt&gt;&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;.count()&lt;/tt&gt; to then count how many rows are in each category.&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;.sort_by(ibis.desc(&amp;quot;count&amp;quot;))&lt;/span&gt;&lt;/tt&gt; to then sort the rows by &lt;tt class="docutils literal"&gt;count&lt;/tt&gt;,
+descending.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;9&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;category_counts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;t&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;group_by&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;      &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;      &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sort_by&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;desc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;count&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;)&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+   &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;category_counts&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;9&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+                    &lt;span class="n"&gt;Category&lt;/span&gt;  &lt;span class="n"&gt;count&lt;/span&gt;
+&lt;span class="mi"&gt;0&lt;/span&gt;                &lt;span class="n"&gt;Destination&lt;/span&gt;   &lt;span class="mi"&gt;1271&lt;/span&gt;
+&lt;span class="mi"&gt;1&lt;/span&gt;                     &lt;span class="n"&gt;Reason&lt;/span&gt;    &lt;span class="mi"&gt;421&lt;/span&gt;
+&lt;span class="mi"&gt;2&lt;/span&gt;                       &lt;span class="n"&gt;Time&lt;/span&gt;    &lt;span class="mi"&gt;161&lt;/span&gt;
+&lt;span class="mi"&gt;3&lt;/span&gt;      &lt;span class="n"&gt;Passenger&lt;/span&gt; &lt;span class="n"&gt;information&lt;/span&gt;    &lt;span class="mi"&gt;153&lt;/span&gt;
+&lt;span class="mi"&gt;4&lt;/span&gt;                     &lt;span class="n"&gt;Number&lt;/span&gt;    &lt;span class="mi"&gt;102&lt;/span&gt;
+&lt;span class="mi"&gt;5&lt;/span&gt;    &lt;span class="n"&gt;Train&lt;/span&gt; &lt;span class="n"&gt;operating&lt;/span&gt; &lt;span class="n"&gt;company&lt;/span&gt;     &lt;span class="mi"&gt;76&lt;/span&gt;
+&lt;span class="mi"&gt;6&lt;/span&gt;       &lt;span class="n"&gt;Platform&lt;/span&gt; &lt;span class="n"&gt;information&lt;/span&gt;     &lt;span class="mi"&gt;67&lt;/span&gt;
+&lt;span class="mi"&gt;7&lt;/span&gt;                 &lt;span class="n"&gt;Conjoining&lt;/span&gt;     &lt;span class="mi"&gt;66&lt;/span&gt;
+&lt;span class="mi"&gt;8&lt;/span&gt;                    &lt;span class="n"&gt;Weather&lt;/span&gt;     &lt;span class="mi"&gt;30&lt;/span&gt;
+&lt;span class="mi"&gt;9&lt;/span&gt;                     &lt;span class="n"&gt;Safety&lt;/span&gt;     &lt;span class="mi"&gt;15&lt;/span&gt;
+&lt;span class="mi"&gt;10&lt;/span&gt;           &lt;span class="n"&gt;Train&lt;/span&gt; &lt;span class="n"&gt;formation&lt;/span&gt;     &lt;span class="mi"&gt;14&lt;/span&gt;
+&lt;span class="mi"&gt;11&lt;/span&gt;             &lt;span class="n"&gt;Special&lt;/span&gt; &lt;span class="n"&gt;train&lt;/span&gt;     &lt;span class="mi"&gt;12&lt;/span&gt;
+&lt;span class="mi"&gt;12&lt;/span&gt;               &lt;span class="n"&gt;Operational&lt;/span&gt;     &lt;span class="mi"&gt;10&lt;/span&gt;
+&lt;span class="mi"&gt;13&lt;/span&gt;                   &lt;span class="n"&gt;Apology&lt;/span&gt;      &lt;span class="mi"&gt;8&lt;/span&gt;
+&lt;span class="mi"&gt;14&lt;/span&gt;          &lt;span class="n"&gt;Fare&lt;/span&gt; &lt;span class="n"&gt;information&lt;/span&gt;      &lt;span class="mi"&gt;7&lt;/span&gt;
+&lt;span class="mi"&gt;15&lt;/span&gt;               &lt;span class="n"&gt;Platform&lt;/span&gt; &lt;span class="n"&gt;ID&lt;/span&gt;      &lt;span class="mi"&gt;7&lt;/span&gt;
+&lt;span class="mi"&gt;16&lt;/span&gt;          &lt;span class="n"&gt;Heritage&lt;/span&gt; &lt;span class="n"&gt;Railway&lt;/span&gt;      &lt;span class="mi"&gt;6&lt;/span&gt;
+&lt;span class="mi"&gt;17&lt;/span&gt;              &lt;span class="n"&gt;Number&lt;/span&gt; &lt;span class="n"&gt;combo&lt;/span&gt;      &lt;span class="mi"&gt;4&lt;/span&gt;
+&lt;span class="mi"&gt;18&lt;/span&gt;                 &lt;span class="n"&gt;Non&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;vocal&lt;/span&gt;      &lt;span class="mi"&gt;3&lt;/span&gt;
+&lt;span class="mi"&gt;19&lt;/span&gt;         &lt;span class="n"&gt;Strathclyde&lt;/span&gt; &lt;span class="n"&gt;metro&lt;/span&gt;      &lt;span class="mi"&gt;3&lt;/span&gt;
+&lt;span class="mi"&gt;20&lt;/span&gt;              &lt;span class="n"&gt;Request&lt;/span&gt; &lt;span class="n"&gt;stop&lt;/span&gt;      &lt;span class="mi"&gt;2&lt;/span&gt;
+&lt;span class="mi"&gt;21&lt;/span&gt;                   &lt;span class="n"&gt;Station&lt;/span&gt;      &lt;span class="mi"&gt;1&lt;/span&gt;
+&lt;span class="mi"&gt;22&lt;/span&gt;  &lt;span class="n"&gt;Train&lt;/span&gt; &lt;span class="n"&gt;operating&lt;/span&gt; &lt;span class="n"&gt;company&lt;/span&gt;       &lt;span class="mi"&gt;1&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here we can see there are 23 categories, with 90% of the audio clips falling
+into the first 6. A few categories to highlight:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Destination&lt;/tt&gt; is a ScotRail stop&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Reason&lt;/tt&gt; is a reason for a cancellation. These are fun to look through.&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Passenger information&lt;/tt&gt; is a bit of miscellaneous. (&amp;quot;The train is ready to
+leave&amp;quot; for example)&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Number&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;Time&lt;/tt&gt; are just clips of saying numbers and times&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Train operating company&lt;/tt&gt; is the name of a train operating company&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;Apology&lt;/tt&gt; is the start of an apology for a service disruption (&amp;quot;I am sorry
+to announce that the&amp;quot; for example)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The &lt;tt class="docutils literal"&gt;Reason&lt;/tt&gt; category is the most fun to look through. There are all sorts of
+reasons a train might be cancelled, from &amp;quot;Sheep on the railway&amp;quot; to &amp;quot;A wartime
+bomb near the railway&amp;quot;.&lt;/p&gt;
+&lt;p&gt;One reoccuring reason is theft (err, &amp;quot;attempted theft&amp;quot;) of various things. Lets
+find all reasons involving &amp;quot;theft&amp;quot;.&lt;/p&gt;
+&lt;p&gt;This can be done by using &lt;tt class="docutils literal"&gt;.filter()&lt;/tt&gt; to filter rows based on a predicate.
+Here we need two predicates:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;_.Category == &amp;quot;Reason&amp;quot;&lt;/tt&gt; selects all rows that have a category of &amp;quot;Reason&amp;quot;&lt;/li&gt;
+&lt;li&gt;&lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;_.Transcription.contains(&amp;quot;theft&amp;quot;)&lt;/span&gt;&lt;/tt&gt; selects all rows with a transcription
+containing the string &amp;quot;theft&amp;quot;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;thefts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;t&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;filter&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Category&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Reason&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Transcription&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;contains&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;theft&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;thefts&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+    &lt;span class="n"&gt;File&lt;/span&gt;                                                             &lt;span class="n"&gt;Transcription&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt; &lt;span class="n"&gt;Timestamp&lt;/span&gt; &lt;span class="n"&gt;NRE_ID&lt;/span&gt;
+&lt;span class="mi"&gt;0&lt;/span&gt;   &lt;span class="mi"&gt;0969&lt;/span&gt;                &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;overhead&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="n"&gt;electrification&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;1&lt;/span&gt;   &lt;span class="mi"&gt;0970&lt;/span&gt;  &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;overhead&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="n"&gt;electrification&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt; &lt;span class="n"&gt;earlier&lt;/span&gt; &lt;span class="n"&gt;today&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;2&lt;/span&gt;   &lt;span class="mi"&gt;0971&lt;/span&gt;      &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;overhead&lt;/span&gt; &lt;span class="n"&gt;line&lt;/span&gt; &lt;span class="n"&gt;electrification&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt; &lt;span class="n"&gt;yesterday&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;3&lt;/span&gt;   &lt;span class="mi"&gt;0972&lt;/span&gt;                                      &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;railway&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;4&lt;/span&gt;   &lt;span class="mi"&gt;0973&lt;/span&gt;                        &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;railway&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt; &lt;span class="n"&gt;earlier&lt;/span&gt; &lt;span class="n"&gt;today&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;5&lt;/span&gt;   &lt;span class="mi"&gt;0974&lt;/span&gt;                            &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;railway&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt; &lt;span class="n"&gt;yesterday&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;6&lt;/span&gt;   &lt;span class="mi"&gt;0975&lt;/span&gt;                                      &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;signalling&lt;/span&gt; &lt;span class="n"&gt;cables&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;7&lt;/span&gt;   &lt;span class="mi"&gt;0976&lt;/span&gt;                        &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;signalling&lt;/span&gt; &lt;span class="n"&gt;cables&lt;/span&gt; &lt;span class="n"&gt;earlier&lt;/span&gt; &lt;span class="n"&gt;today&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;8&lt;/span&gt;   &lt;span class="mi"&gt;0977&lt;/span&gt;                            &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;signalling&lt;/span&gt; &lt;span class="n"&gt;cables&lt;/span&gt; &lt;span class="n"&gt;yesterday&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;9&lt;/span&gt;   &lt;span class="mi"&gt;0978&lt;/span&gt;                   &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;third&lt;/span&gt; &lt;span class="n"&gt;rail&lt;/span&gt; &lt;span class="n"&gt;electrification&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;10&lt;/span&gt;  &lt;span class="mi"&gt;0979&lt;/span&gt;     &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;third&lt;/span&gt; &lt;span class="n"&gt;rail&lt;/span&gt; &lt;span class="n"&gt;electrification&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt; &lt;span class="n"&gt;earlier&lt;/span&gt; &lt;span class="n"&gt;today&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="mi"&gt;11&lt;/span&gt;  &lt;span class="mi"&gt;0980&lt;/span&gt;         &lt;span class="n"&gt;Attempted&lt;/span&gt; &lt;span class="n"&gt;theft&lt;/span&gt; &lt;span class="n"&gt;of&lt;/span&gt; &lt;span class="n"&gt;third&lt;/span&gt; &lt;span class="n"&gt;rail&lt;/span&gt; &lt;span class="n"&gt;electrification&lt;/span&gt; &lt;span class="n"&gt;equipment&lt;/span&gt; &lt;span class="n"&gt;yesterday&lt;/span&gt;  &lt;span class="o"&gt;...&lt;/span&gt;
+
+&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;12&lt;/span&gt; &lt;span class="n"&gt;rows&lt;/span&gt; &lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="mi"&gt;7&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;All of these rows also include a link to an &lt;cite&gt;mp3&lt;/cite&gt; file containing that clip. To
+play a clip in a jupyter notebook, we can make use of &lt;cite&gt;IPython.display.Audio&lt;/cite&gt;.
+For example, lets play the first clip from above:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;12&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;IPython.display&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Audio&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;mp3_url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;thefts&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;execute&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;iloc&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Audio&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mp3_url&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;audio controls&gt;
+&lt;source src="https://github.com/matteason/scotrail-announcements-june-2022/raw/main/announcements/0969.mp3" type="audio/mpeg"&gt;
+Your browser does not support the audio element.
+&lt;/audio&gt;&lt;div class="section" id="generating-a-random-apology"&gt;
+&lt;h2&gt;Generating a Random Apology&lt;/h2&gt;
+&lt;p&gt;In &lt;a class="reference external" href="https://simonwillison.net/2022/Aug/21/scotrail/"&gt;his blogpost&lt;/a&gt; Simon
+wrote up a SQL query for generating a Random apology by combining a few random
+rows from different categories above. It generates surprisingly coherent
+sentences, you can see the datasette version &lt;a class="reference external" href="https://scotrail.datasette.io/scotrail/random_apology"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;If you're interested you can click &amp;quot;show&amp;quot; at the top to see the full SQL query
+- it's readable, but a bit long.&lt;/p&gt;
+&lt;p&gt;I wanted to reproduce the same query using &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt;. Since &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; is just a
+Python library, you can make use of things like functions to abstract away some
+of the repetitiveness in the SQL query above.&lt;/p&gt;
+&lt;p&gt;Here's what I came up with:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;12&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;category&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="s2"&gt;&amp;quot;&amp;quot;&amp;quot;Select a random row from a given category&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;t&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;filter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Category&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;category&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;          &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sort_by&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;random&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;          &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;select&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;mp3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;          &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;phrase&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="s2"&gt;&amp;quot;&amp;quot;&amp;quot;Select a row with a specific transcription&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;t&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;filter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Transcription&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;          &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;select&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;mp3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;          &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;union&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Apology&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Train operating company&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Destination&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;phrase&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;has been cancelled&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;phrase&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;due to&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Reason&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Since the query selects random rows, if you run the cell below multiple times,
+you should see different results every time:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;13&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;execute&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;13&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+                     &lt;span class="n"&gt;Transcription&lt;/span&gt;                                                                                            &lt;span class="n"&gt;mp3&lt;/span&gt;
+&lt;span class="mi"&gt;0&lt;/span&gt;  &lt;span class="n"&gt;I&lt;/span&gt; &lt;span class="n"&gt;am&lt;/span&gt; &lt;span class="n"&gt;sorry&lt;/span&gt; &lt;span class="n"&gt;to&lt;/span&gt; &lt;span class="n"&gt;announce&lt;/span&gt; &lt;span class="n"&gt;that&lt;/span&gt; &lt;span class="n"&gt;the&lt;/span&gt;  &lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;github&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;matteason&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;scotrail&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;june&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2022&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;raw&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mf"&gt;1529.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;
+&lt;span class="mi"&gt;1&lt;/span&gt;              &lt;span class="n"&gt;Southeastern&lt;/span&gt; &lt;span class="n"&gt;Trains&lt;/span&gt;  &lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;github&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;matteason&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;scotrail&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;june&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2022&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;raw&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mf"&gt;0201.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;
+&lt;span class="mi"&gt;2&lt;/span&gt;                          &lt;span class="n"&gt;Dawlish&lt;/span&gt;  &lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;github&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;matteason&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;scotrail&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;june&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2022&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;raw&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mf"&gt;0702.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;
+&lt;span class="mi"&gt;3&lt;/span&gt;               &lt;span class="n"&gt;has&lt;/span&gt; &lt;span class="n"&gt;been&lt;/span&gt; &lt;span class="n"&gt;cancelled&lt;/span&gt;  &lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;github&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;matteason&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;scotrail&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;june&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2022&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;raw&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mf"&gt;0340.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;
+&lt;span class="mi"&gt;4&lt;/span&gt;                           &lt;span class="n"&gt;due&lt;/span&gt; &lt;span class="n"&gt;to&lt;/span&gt;  &lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;github&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;matteason&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;scotrail&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;june&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2022&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;raw&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mf"&gt;1528.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;
+&lt;span class="mi"&gt;5&lt;/span&gt;    &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;person&lt;/span&gt; &lt;span class="n"&gt;being&lt;/span&gt; &lt;span class="n"&gt;hit&lt;/span&gt; &lt;span class="n"&gt;by&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="n"&gt;train&lt;/span&gt;  &lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;github&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;matteason&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;scotrail&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;june&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;2022&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;raw&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mf"&gt;0834.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If we wanted to do all computation in the backend, we could use
+&lt;tt class="docutils literal"&gt;group_concat&lt;/tt&gt; (&lt;a class="reference external" href="https://www.sqlite.org/lang_aggfunc.html#group_concat"&gt;docs&lt;/a&gt;) to then concatenate
+the Transcription rows together, returning a single string:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;14&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;random_apology&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Transcription&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;group_concat&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot; &amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;random_apology&lt;/span&gt;
+&lt;span class="n"&gt;Out&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;14&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;we apologise for the inconvenience caused East Midlands Cartsdyke has&lt;/span&gt;
+&lt;span class="n"&gt;been&lt;/span&gt; &lt;span class="n"&gt;cancelled&lt;/span&gt; &lt;span class="n"&gt;due&lt;/span&gt; &lt;span class="n"&gt;to&lt;/span&gt; &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;train&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;stopping&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;the&lt;/span&gt; &lt;span class="n"&gt;correct&lt;/span&gt; &lt;span class="n"&gt;position&lt;/span&gt; &lt;span class="n"&gt;at&lt;/span&gt; &lt;span class="n"&gt;a&lt;/span&gt; &lt;span class="n"&gt;station&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Note that the full query above is translated to SQL and executed on the
+&lt;tt class="docutils literal"&gt;datasette&lt;/tt&gt; server, no computation is happening locally.&lt;/p&gt;
+&lt;p&gt;If you want to see the generated SQL, you can use the &lt;tt class="docutils literal"&gt;ibis.show_sql&lt;/tt&gt;
+function. It's much longer than the Python code that generated it:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="n"&gt;ibis&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;show_sql&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;random_apology&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;WITH&lt;/span&gt; &lt;span class="n"&gt;anon_1&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;SELECT&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t2&lt;/span&gt;
+    &lt;span class="n"&gt;WHERE&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Apology&amp;#39;&lt;/span&gt;
+    &lt;span class="n"&gt;ORDER&lt;/span&gt; &lt;span class="n"&gt;BY&lt;/span&gt;
+      &lt;span class="n"&gt;RANDOM&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+  &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t1&lt;/span&gt;
+  &lt;span class="n"&gt;LIMIT&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+  &lt;span class="n"&gt;OFFSET&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;anon_2&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;SELECT&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t2&lt;/span&gt;
+    &lt;span class="n"&gt;WHERE&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Train operating company&amp;#39;&lt;/span&gt;
+    &lt;span class="n"&gt;ORDER&lt;/span&gt; &lt;span class="n"&gt;BY&lt;/span&gt;
+      &lt;span class="n"&gt;RANDOM&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+  &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t1&lt;/span&gt;
+  &lt;span class="n"&gt;LIMIT&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+  &lt;span class="n"&gt;OFFSET&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;anon_3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;SELECT&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t2&lt;/span&gt;
+    &lt;span class="n"&gt;WHERE&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Destination&amp;#39;&lt;/span&gt;
+    &lt;span class="n"&gt;ORDER&lt;/span&gt; &lt;span class="n"&gt;BY&lt;/span&gt;
+      &lt;span class="n"&gt;RANDOM&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+  &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t1&lt;/span&gt;
+  &lt;span class="n"&gt;LIMIT&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+  &lt;span class="n"&gt;OFFSET&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;anon_4&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;SELECT&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t2&lt;/span&gt;
+    &lt;span class="n"&gt;WHERE&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;has been cancelled&amp;#39;&lt;/span&gt;
+  &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t1&lt;/span&gt;
+  &lt;span class="n"&gt;LIMIT&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+  &lt;span class="n"&gt;OFFSET&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;anon_5&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;SELECT&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t2&lt;/span&gt;
+    &lt;span class="n"&gt;WHERE&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;due to&amp;#39;&lt;/span&gt;
+  &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t1&lt;/span&gt;
+  &lt;span class="n"&gt;LIMIT&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+  &lt;span class="n"&gt;OFFSET&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;anon_6&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;t1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+    &lt;span class="n"&gt;SELECT&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;File&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Notes&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Timestamp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;NRE_ID&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;announcements&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t2&lt;/span&gt;
+    &lt;span class="n"&gt;WHERE&lt;/span&gt;
+      &lt;span class="n"&gt;t2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Category&amp;quot;&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Reason&amp;#39;&lt;/span&gt;
+    &lt;span class="n"&gt;ORDER&lt;/span&gt; &lt;span class="n"&gt;BY&lt;/span&gt;
+      &lt;span class="n"&gt;RANDOM&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+  &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t1&lt;/span&gt;
+  &lt;span class="n"&gt;LIMIT&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+  &lt;span class="n"&gt;OFFSET&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;SELECT&lt;/span&gt;
+  &lt;span class="n"&gt;GROUP_CONCAT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;t0&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; &amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;tmp&lt;/span&gt;
+&lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;anon_1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;anon_1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;anon_1&lt;/span&gt;
+  &lt;span class="n"&gt;UNION&lt;/span&gt; &lt;span class="n"&gt;ALL&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;anon_2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;anon_2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;anon_2&lt;/span&gt;
+  &lt;span class="n"&gt;UNION&lt;/span&gt; &lt;span class="n"&gt;ALL&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;anon_3&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;anon_3&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;anon_3&lt;/span&gt;
+  &lt;span class="n"&gt;UNION&lt;/span&gt; &lt;span class="n"&gt;ALL&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;anon_4&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;anon_4&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;anon_4&lt;/span&gt;
+  &lt;span class="n"&gt;UNION&lt;/span&gt; &lt;span class="n"&gt;ALL&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;anon_5&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;anon_5&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;anon_5&lt;/span&gt;
+  &lt;span class="n"&gt;UNION&lt;/span&gt; &lt;span class="n"&gt;ALL&lt;/span&gt;
+  &lt;span class="n"&gt;SELECT&lt;/span&gt;
+    &lt;span class="n"&gt;anon_6&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;Transcription&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;anon_6&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;mp3&lt;/span&gt;
+  &lt;span class="n"&gt;FROM&lt;/span&gt; &lt;span class="n"&gt;anon_6&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="n"&gt;AS&lt;/span&gt; &lt;span class="n"&gt;t0&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;However, we're only using &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; to push the bulk of the computation to the
+backend. We don't need to handle &lt;em&gt;everything&lt;/em&gt; in SQL, only enough to reduce the
+size of the results to something reasonable to return from the &lt;tt class="docutils literal"&gt;datasette&lt;/tt&gt;
+server.&lt;/p&gt;
+&lt;p&gt;We also have access to the full Python ecosystem to process results. This lets
+us do some things that wouldn't be possible in SQL alone, like concatenating
+&lt;tt class="docutils literal"&gt;mp3&lt;/tt&gt; files :).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div class="section" id="a-random-apology-button"&gt;
+&lt;h2&gt;A &amp;quot;Random Apology&amp;quot; Button&lt;/h2&gt;
+&lt;p&gt;The &lt;a class="reference external" href="https://ipywidgets.readthedocs.io"&gt;ipywidgets&lt;/a&gt; library provides support for building simple UIs in Python,
+with the rendering handled by the notebook. This is nice for me, as I am &lt;em&gt;not&lt;/em&gt;
+a web engineer - I'm a novice at best at javascript/html. However, I do know
+how to write Python.&lt;/p&gt;
+&lt;p&gt;Below we hack together a quick UI with &lt;tt class="docutils literal"&gt;ipywidgets&lt;/tt&gt; to make a button for
+generating a random apology, complete with a merged &lt;tt class="docutils literal"&gt;mp3&lt;/tt&gt; file so you can
+listen to your work. You don't really need to understand this code, it has
+nothing to do with &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; or &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt; itself.&lt;/p&gt;
+&lt;p&gt;Clicking the button will pull generate a new random apology, download and merge
+the mp3 files, and display both the apology sentence and merged mp3.&lt;/p&gt;
+&lt;p&gt;Obviously this can't run for real in a static blogpost (it's most
+interesting in the interactive notebook on &lt;a class="reference external" href="https://gke.mybinder.org/v2/gh/jcrist/ibis-datasette/main?urlpath=/tree/Scotrail.ipynb"&gt;mybinder&lt;/a&gt;). To work around
+that, we include a single generated audio clip below.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;In&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;tempfile&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pydub&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;httpx&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;ipywidgets&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;IPython.display&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;Audio&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;display&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;output&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ipywidgets&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Output&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;button&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ipywidgets&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Button&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;description&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Random Apology&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;icon&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;repeat&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;UI&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ipywidgets&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;VBox&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="n"&gt;button&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;concatenate_mp3s&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;urls&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nb"&gt;list&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;str&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt; &lt;span class="o"&gt;-&amp;gt;&lt;/span&gt; &lt;span class="nb"&gt;bytes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;httpx&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Client&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;follow_redirects&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;client&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;tempfile&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;TemporaryDirectory&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;tempdir&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;output&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;url&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;enumerate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;urls&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;             &lt;span class="n"&gt;path&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tempdir&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;part&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;.mp3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;             &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;wb&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;                 &lt;span class="n"&gt;resp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;client&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;url&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;                 &lt;span class="n"&gt;resp&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;raise_for_status&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;                 &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;resp&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;content&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;             &lt;span class="n"&gt;part&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pydub&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;AudioSegment&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;from_mp3&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;             &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;output&lt;/span&gt; &lt;span class="ow"&gt;is&lt;/span&gt; &lt;span class="kc"&gt;None&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;                 &lt;span class="n"&gt;output&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;part&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;             &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;                 &lt;span class="n"&gt;output&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;output&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;part&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;out_path&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tempdir&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;output.mp3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;export&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;out_path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;format&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;mp3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="nb"&gt;open&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;out_path&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;rb&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;             &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;f&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="nd"&gt;@button&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;on_click&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;on_click&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;args&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;clear_output&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;result&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;query&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;execute&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;msg&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot; &amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Transcription&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="n"&gt;mp3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;concatenate_mp3s&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;result&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;     &lt;span class="k"&gt;with&lt;/span&gt; &lt;span class="n"&gt;output&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;         &lt;span class="n"&gt;display&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Audio&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mp3&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="o"&gt;...&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;UI&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;I am sorry to announce that the Midland Mainline Turbostar service from
+Mitcham Eastfields has been cancelled due to The train conductor being
+taken ill
+&lt;/pre&gt;&lt;/div&gt;
+&lt;audio controls&gt;
+&lt;source src="/images/scotrail-madlib.mp3" type="audio/mpeg"&gt;
+Your browser does not support the audio element.
+&lt;/audio&gt;&lt;/div&gt;
+&lt;div class="section" id="review"&gt;
+&lt;h2&gt;Review&lt;/h2&gt;
+&lt;p&gt;&lt;tt class="docutils literal"&gt;datasette&lt;/tt&gt; makes it easier to publish accessible open data on the web, with
+a UI exposed for writing SQL queries. However, not everyone is extremely SQL
+literate (myself included). &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; and &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt; let Python
+programmers access this same data resource, but through a familiar
+dataframe-like interface.&lt;/p&gt;
+&lt;p&gt;Interested in &lt;tt class="docutils literal"&gt;ibis&lt;/tt&gt; or &lt;tt class="docutils literal"&gt;&lt;span class="pre"&gt;ibis-datasette&lt;/span&gt;&lt;/tt&gt;? Please feel free to reach out on
+&lt;a class="reference external" href="https://github.com/jcrist"&gt;github&lt;/a&gt; or &lt;a class="reference external" href="https://twitter.com/jcristharif"&gt;twitter&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+</content><category term="misc"></category></entry><entry><title>Ibis-Datasette</title><link href="https://jcristharif.com/ibis-datasette.html" rel="alternate"></link><published>2022-08-18T08:15:00-05:00</published><updated>2022-08-18T08:15:00-05:00</updated><author><name>Jim Crist-Harif</name></author><id>tag:jcristharif.com,2022-08-18:/ibis-datasette.html</id><summary type="html">&lt;p class="first last"&gt;An ibis backend for querying a datasette server&lt;/p&gt;
 </summary><content type="html">&lt;img title="ibis loves datasette" class="align-center" src="/images/ibis-loves-datasette.png" style="width: 60%;" /&gt;&lt;div class="section" id="datasette"&gt;
 &lt;h2&gt;Datasette&lt;/h2&gt;
 &lt;p&gt;&lt;a class="reference external" href="https://datasette.io"&gt;Datasette&lt;/a&gt; is an &lt;em&gt;excellent&lt;/em&gt; tool for exploring and publishing data. Given an

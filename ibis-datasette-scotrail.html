@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="https://jcristharif.com/feeds/all.atom.xml" type="application/atom+xml" title="Jim Crist-Harif Full Atom Feed"/>
+
+    <title>Exploring ScotRail Audio Clips using Ibis-Datasette // Jim Crist-Harif</title>
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/code.css" type="text/css" />
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        TeX: { equationNumbers: { autoNumber: "all" } }
+    });
+</script>
+<script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <header>
+      <h1><a href="https://jcristharif.com/">Jim Crist-Harif</a></h1>
+      <ul>
+              <li><a href="https://jcristharif.com/blog.html">Blog</a></li>
+              <li><a href="https://jcristharif.com/about.html">About</a></li>
+              <li><a href="https://jcristharif.com/talks.html">Talks</a></li>
+      </ul>
+    </header>
+
+    <section>
+    <h1>Exploring ScotRail Audio Clips using Ibis-Datasette</h1>
+    <p class="article-date">Posted on August 24, 2022</p>
+    <p>
+<em>
+Note: This blogpost is available as an interactive notebook
+<a class="reference external"
+   href="https://gke.mybinder.org/v2/gh/jcrist/ibis-datasette/main?urlpath=/tree/Scotrail.ipynb"
+>here</a>.
+</em>
+</p><p><a class="reference external image-reference" href="https://gke.mybinder.org/v2/gh/jcrist/ibis-datasette/main?urlpath=/tree/Scotrail.ipynb"><object data="https://mybinder.org/badge_logo.svg" type="image/svg+xml">binder</object></a></p>
+<p>In the <a class="reference external" href="https://jcristharif.com/ibis-datasette.html">previous post</a> we introduced
+<a class="reference external" href="https://github.com/jcrist/ibis-datasette">ibis-datasette</a>. To recap:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://datasette.io">Datasette</a>  is a tool for publishing and exploring <a class="reference external" href="https://sqlite.org">SQLite</a> databases. Among
+other things, it exposes a UI and JSON API for querying a remote SQLite
+database.</li>
+<li><a class="reference external" href="https://ibis-project.org">Ibis</a> is a Python library that provides a consistent dataframe-like API for
+querying data using a number of SQL (and non-SQL) backends.</li>
+<li><a class="reference external" href="https://github.com/jcrist/ibis-datasette">Ibis-Datasette</a> is a backend for Ibis that lets it interact with a datasette
+server just like it was a local SQLite database.</li>
+</ul>
+<p>In this post, we'll use <tt class="docutils literal">ibis</tt> and <tt class="docutils literal"><span class="pre">ibis-datasette</span></tt> to explore the
+<a class="reference external" href="https://scotrail.datasette.io/">ScotRail</a> datasette.</p>
+<p>This datasette is super fun to play around with. It's composed of ~2400
+different audioclips (and transcriptions) from Scottish train operator
+ScotRail's automated station announcements.</p>
+<p>If you haven't seen it, I encourage you to read Simon Willison's <a class="reference external" href="https://simonwillison.net/2022/Aug/21/scotrail/">excellent
+blogpost</a> on putting this
+datasette together, and some interesting queries to try (we'll be replicating
+one of these below).</p>
+<p>While you can use the <a class="reference external" href="https://scotrail.datasette.io">datasette UI</a> directly,
+I wanted to use <tt class="docutils literal">ibis</tt> and the full power of Python to explore and build some
+interesting things.</p>
+<p>---</p>
+<p>First we start with some imports and initialization.</p>
+<p>Here we:</p>
+<ul class="simple">
+<li>Import <tt class="docutils literal">ibis</tt> and its <tt class="docutils literal">_</tt> helper (more on this later)</li>
+<li>Enable interactive mode.</li>
+<li>We also tweak some <tt class="docutils literal">pandas</tt> display options to better render wide columns.
+This makes the transcriptions below easier to read.</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">ibis</span>
+<span class="o">...</span><span class="p">:</span> <span class="kn">from</span> <span class="nn">ibis</span> <span class="kn">import</span> <span class="n">_</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">ibis</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">interactive</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="o">...</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;max_colwidth&#39;</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+</pre></div>
+<p>Next we need to connect to the datasette. This is done by passing the full URL
+to <tt class="docutils literal">ibis.datasette.connect</tt>:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">con</span> <span class="o">=</span> <span class="n">ibis</span><span class="o">.</span><span class="n">datasette</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;https://scotrail.datasette.io/scotrail&quot;</span><span class="p">)</span>
+</pre></div>
+<p>Once connected, we can start poking around.</p>
+<p>The first thing I usually do when exploring a new dataset is examine the tables
+and schemas.</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">con</span><span class="o">.</span><span class="n">list_tables</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">5</span><span class="p">]:</span>
+<span class="p">[</span><span class="s1">&#39;announcements&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;announcements_fts&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;announcements_fts_config&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;announcements_fts_data&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;announcements_fts_docsize&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;announcements_fts_idx&#39;</span><span class="p">]</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">con</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">announcements</span><span class="o">.</span><span class="n">schema</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">6</span><span class="p">]:</span>
+<span class="n">ibis</span><span class="o">.</span><span class="n">Schema</span> <span class="p">{</span>
+  <span class="n">File</span>           <span class="n">string</span>
+  <span class="n">Transcription</span>  <span class="n">string</span>
+  <span class="n">Category</span>       <span class="n">string</span>
+  <span class="n">mp3</span>            <span class="n">string</span>
+  <span class="n">Notes</span>          <span class="n">string</span>
+  <span class="n">Timestamp</span>      <span class="n">string</span>
+  <span class="n">NRE_ID</span>         <span class="n">string</span>
+<span class="p">}</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">7</span><span class="p">]:</span>  <span class="n">con</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">announcements</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">7</span><span class="p">]:</span>
+   <span class="n">File</span>                              <span class="n">Transcription</span> <span class="n">Category</span>  <span class="o">...</span>                      <span class="n">Notes</span> <span class="n">Timestamp</span> <span class="n">NRE_ID</span>
+<span class="mi">0</span>  <span class="mi">0031</span>            <span class="n">I</span> <span class="n">am</span> <span class="n">sorry</span> <span class="n">to</span> <span class="n">announce</span> <span class="n">that</span> <span class="n">the</span>  <span class="n">Apology</span>  <span class="o">...</span>
+<span class="mi">1</span>  <span class="mi">0085</span>          <span class="n">We</span> <span class="n">are</span> <span class="n">sorry</span> <span class="n">to</span> <span class="n">announce</span> <span class="n">that</span> <span class="n">the</span>  <span class="n">Apology</span>  <span class="o">...</span>  <span class="n">Most</span> <span class="n">frequently</span> <span class="n">used</span> <span class="n">file</span>
+<span class="mi">2</span>  <span class="mi">1339</span>              <span class="n">We</span> <span class="n">are</span> <span class="n">sorry</span> <span class="n">to</span> <span class="n">announce</span> <span class="n">that</span>  <span class="n">Apology</span>  <span class="o">...</span>
+<span class="mi">3</span>  <span class="mi">1488</span>  <span class="n">we</span> <span class="n">apologise</span> <span class="k">for</span> <span class="n">the</span> <span class="n">inconvenience</span> <span class="n">caused</span>  <span class="n">Apology</span>  <span class="o">...</span>
+<span class="mi">4</span>  <span class="mi">1524</span>                  <span class="n">Apologies</span> <span class="n">to</span> <span class="n">customers</span><span class="o">...</span>  <span class="n">Apology</span>  <span class="o">...</span>
+
+<span class="p">[</span><span class="mi">5</span> <span class="n">rows</span> <span class="n">x</span> <span class="mi">7</span> <span class="n">columns</span><span class="p">]</span>
+</pre></div>
+<p>The main table is <tt class="docutils literal">announcements</tt>, the most interesting columns of which are:</p>
+<ul class="simple">
+<li><tt class="docutils literal">Transcription</tt>: a full transcription of the audio clip</li>
+<li><tt class="docutils literal">Category</tt>: a category that the audio clip belongs to</li>
+<li><tt class="docutils literal">mp3</tt>: a link to the audio clip, hosted on GitHub</li>
+</ul>
+<p>Since we're going to be accessing this table a lot below, lets save it to a
+shorter local variable name:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">8</span><span class="p">]:</span> <span class="n">t</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">announcements</span>
+</pre></div>
+<p>To get a better sense of the scale of data we're working with, lets take a
+closer look at the <tt class="docutils literal">Category</tt> column.</p>
+<p>I want to know how many categories there are, and how the audio clips are
+distributed across these categories.</p>
+<p>To do this, we can use:</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">.group_by(&quot;Category&quot;)</span></tt> to split the data into separate groups by <tt class="docutils literal">Category</tt></li>
+<li><tt class="docutils literal">.count()</tt> to then count how many rows are in each category.</li>
+<li><tt class="docutils literal"><span class="pre">.sort_by(ibis.desc(&quot;count&quot;))</span></tt> to then sort the rows by <tt class="docutils literal">count</tt>,
+descending.</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">9</span><span class="p">]:</span> <span class="n">category_counts</span> <span class="o">=</span> <span class="p">(</span>
+   <span class="o">...</span><span class="p">:</span>     <span class="n">t</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="s2">&quot;Category&quot;</span><span class="p">)</span>
+   <span class="o">...</span><span class="p">:</span>      <span class="o">.</span><span class="n">count</span><span class="p">()</span>
+   <span class="o">...</span><span class="p">:</span>      <span class="o">.</span><span class="n">sort_by</span><span class="p">(</span><span class="n">ibis</span><span class="o">.</span><span class="n">desc</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">))</span>
+   <span class="o">...</span><span class="p">:</span> <span class="p">)</span>
+   <span class="o">...</span><span class="p">:</span>
+   <span class="o">...</span><span class="p">:</span> <span class="n">category_counts</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">9</span><span class="p">]:</span>
+                    <span class="n">Category</span>  <span class="n">count</span>
+<span class="mi">0</span>                <span class="n">Destination</span>   <span class="mi">1271</span>
+<span class="mi">1</span>                     <span class="n">Reason</span>    <span class="mi">421</span>
+<span class="mi">2</span>                       <span class="n">Time</span>    <span class="mi">161</span>
+<span class="mi">3</span>      <span class="n">Passenger</span> <span class="n">information</span>    <span class="mi">153</span>
+<span class="mi">4</span>                     <span class="n">Number</span>    <span class="mi">102</span>
+<span class="mi">5</span>    <span class="n">Train</span> <span class="n">operating</span> <span class="n">company</span>     <span class="mi">76</span>
+<span class="mi">6</span>       <span class="n">Platform</span> <span class="n">information</span>     <span class="mi">67</span>
+<span class="mi">7</span>                 <span class="n">Conjoining</span>     <span class="mi">66</span>
+<span class="mi">8</span>                    <span class="n">Weather</span>     <span class="mi">30</span>
+<span class="mi">9</span>                     <span class="n">Safety</span>     <span class="mi">15</span>
+<span class="mi">10</span>           <span class="n">Train</span> <span class="n">formation</span>     <span class="mi">14</span>
+<span class="mi">11</span>             <span class="n">Special</span> <span class="n">train</span>     <span class="mi">12</span>
+<span class="mi">12</span>               <span class="n">Operational</span>     <span class="mi">10</span>
+<span class="mi">13</span>                   <span class="n">Apology</span>      <span class="mi">8</span>
+<span class="mi">14</span>          <span class="n">Fare</span> <span class="n">information</span>      <span class="mi">7</span>
+<span class="mi">15</span>               <span class="n">Platform</span> <span class="n">ID</span>      <span class="mi">7</span>
+<span class="mi">16</span>          <span class="n">Heritage</span> <span class="n">Railway</span>      <span class="mi">6</span>
+<span class="mi">17</span>              <span class="n">Number</span> <span class="n">combo</span>      <span class="mi">4</span>
+<span class="mi">18</span>                 <span class="n">Non</span><span class="o">-</span><span class="n">vocal</span>      <span class="mi">3</span>
+<span class="mi">19</span>         <span class="n">Strathclyde</span> <span class="n">metro</span>      <span class="mi">3</span>
+<span class="mi">20</span>              <span class="n">Request</span> <span class="n">stop</span>      <span class="mi">2</span>
+<span class="mi">21</span>                   <span class="n">Station</span>      <span class="mi">1</span>
+<span class="mi">22</span>  <span class="n">Train</span> <span class="n">operating</span> <span class="n">company</span>       <span class="mi">1</span>
+</pre></div>
+<p>Here we can see there are 23 categories, with 90% of the audio clips falling
+into the first 6. A few categories to highlight:</p>
+<ul class="simple">
+<li><tt class="docutils literal">Destination</tt> is a ScotRail stop</li>
+<li><tt class="docutils literal">Reason</tt> is a reason for a cancellation. These are fun to look through.</li>
+<li><tt class="docutils literal">Passenger information</tt> is a bit of miscellaneous. (&quot;The train is ready to
+leave&quot; for example)</li>
+<li><tt class="docutils literal">Number</tt> and <tt class="docutils literal">Time</tt> are just clips of saying numbers and times</li>
+<li><tt class="docutils literal">Train operating company</tt> is the name of a train operating company</li>
+<li><tt class="docutils literal">Apology</tt> is the start of an apology for a service disruption (&quot;I am sorry
+to announce that the&quot; for example)</li>
+</ul>
+<p>The <tt class="docutils literal">Reason</tt> category is the most fun to look through. There are all sorts of
+reasons a train might be cancelled, from &quot;Sheep on the railway&quot; to &quot;A wartime
+bomb near the railway&quot;.</p>
+<p>One reoccuring reason is theft (err, &quot;attempted theft&quot;) of various things. Lets
+find all reasons involving &quot;theft&quot;.</p>
+<p>This can be done by using <tt class="docutils literal">.filter()</tt> to filter rows based on a predicate.
+Here we need two predicates:</p>
+<ul class="simple">
+<li><tt class="docutils literal">_.Category == &quot;Reason&quot;</tt> selects all rows that have a category of &quot;Reason&quot;</li>
+<li><tt class="docutils literal"><span class="pre">_.Transcription.contains(&quot;theft&quot;)</span></tt> selects all rows with a transcription
+containing the string &quot;theft&quot;</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">10</span><span class="p">]:</span> <span class="n">thefts</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">filter</span><span class="p">((</span><span class="n">_</span><span class="o">.</span><span class="n">Category</span> <span class="o">==</span> <span class="s2">&quot;Reason&quot;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">_</span><span class="o">.</span><span class="n">Transcription</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">&quot;theft&quot;</span><span class="p">))</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">thefts</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">10</span><span class="p">]:</span>
+    <span class="n">File</span>                                                             <span class="n">Transcription</span>  <span class="o">...</span> <span class="n">Timestamp</span> <span class="n">NRE_ID</span>
+<span class="mi">0</span>   <span class="mi">0969</span>                <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">overhead</span> <span class="n">line</span> <span class="n">electrification</span> <span class="n">equipment</span>  <span class="o">...</span>
+<span class="mi">1</span>   <span class="mi">0970</span>  <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">overhead</span> <span class="n">line</span> <span class="n">electrification</span> <span class="n">equipment</span> <span class="n">earlier</span> <span class="n">today</span>  <span class="o">...</span>
+<span class="mi">2</span>   <span class="mi">0971</span>      <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">overhead</span> <span class="n">line</span> <span class="n">electrification</span> <span class="n">equipment</span> <span class="n">yesterday</span>  <span class="o">...</span>
+<span class="mi">3</span>   <span class="mi">0972</span>                                      <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">railway</span> <span class="n">equipment</span>  <span class="o">...</span>
+<span class="mi">4</span>   <span class="mi">0973</span>                        <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">railway</span> <span class="n">equipment</span> <span class="n">earlier</span> <span class="n">today</span>  <span class="o">...</span>
+<span class="mi">5</span>   <span class="mi">0974</span>                            <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">railway</span> <span class="n">equipment</span> <span class="n">yesterday</span>  <span class="o">...</span>
+<span class="mi">6</span>   <span class="mi">0975</span>                                      <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">signalling</span> <span class="n">cables</span>  <span class="o">...</span>
+<span class="mi">7</span>   <span class="mi">0976</span>                        <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">signalling</span> <span class="n">cables</span> <span class="n">earlier</span> <span class="n">today</span>  <span class="o">...</span>
+<span class="mi">8</span>   <span class="mi">0977</span>                            <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">signalling</span> <span class="n">cables</span> <span class="n">yesterday</span>  <span class="o">...</span>
+<span class="mi">9</span>   <span class="mi">0978</span>                   <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">third</span> <span class="n">rail</span> <span class="n">electrification</span> <span class="n">equipment</span>  <span class="o">...</span>
+<span class="mi">10</span>  <span class="mi">0979</span>     <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">third</span> <span class="n">rail</span> <span class="n">electrification</span> <span class="n">equipment</span> <span class="n">earlier</span> <span class="n">today</span>  <span class="o">...</span>
+<span class="mi">11</span>  <span class="mi">0980</span>         <span class="n">Attempted</span> <span class="n">theft</span> <span class="n">of</span> <span class="n">third</span> <span class="n">rail</span> <span class="n">electrification</span> <span class="n">equipment</span> <span class="n">yesterday</span>  <span class="o">...</span>
+
+<span class="p">[</span><span class="mi">12</span> <span class="n">rows</span> <span class="n">x</span> <span class="mi">7</span> <span class="n">columns</span><span class="p">]</span>
+</pre></div>
+<p>All of these rows also include a link to an <cite>mp3</cite> file containing that clip. To
+play a clip in a jupyter notebook, we can make use of <cite>IPython.display.Audio</cite>.
+For example, lets play the first clip from above:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">12</span><span class="p">]:</span> <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Audio</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">mp3_url</span> <span class="o">=</span> <span class="n">thefts</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span><span class="o">.</span><span class="n">mp3</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">Audio</span><span class="p">(</span><span class="n">mp3_url</span><span class="p">)</span>
+</pre></div>
+<audio controls>
+<source src="https://github.com/matteason/scotrail-announcements-june-2022/raw/main/announcements/0969.mp3" type="audio/mpeg">
+Your browser does not support the audio element.
+</audio><div class="section" id="generating-a-random-apology">
+<h2>Generating a Random Apology</h2>
+<p>In <a class="reference external" href="https://simonwillison.net/2022/Aug/21/scotrail/">his blogpost</a> Simon
+wrote up a SQL query for generating a Random apology by combining a few random
+rows from different categories above. It generates surprisingly coherent
+sentences, you can see the datasette version <a class="reference external" href="https://scotrail.datasette.io/scotrail/random_apology">here</a>.</p>
+<p>If you're interested you can click &quot;show&quot; at the top to see the full SQL query
+- it's readable, but a bit long.</p>
+<p>I wanted to reproduce the same query using <tt class="docutils literal">ibis</tt>. Since <tt class="docutils literal">ibis</tt> is just a
+Python library, you can make use of things like functions to abstract away some
+of the repetitiveness in the SQL query above.</p>
+<p>Here's what I came up with:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">12</span><span class="p">]:</span> <span class="k">def</span> <span class="nf">random</span><span class="p">(</span><span class="n">category</span><span class="p">):</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="s2">&quot;&quot;&quot;Select a random row from a given category&quot;&quot;&quot;</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="k">return</span> <span class="p">(</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="n">t</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">_</span><span class="o">.</span><span class="n">Category</span> <span class="o">==</span> <span class="n">category</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>          <span class="o">.</span><span class="n">sort_by</span><span class="p">(</span><span class="n">ibis</span><span class="o">.</span><span class="n">random</span><span class="p">())</span>
+    <span class="o">...</span><span class="p">:</span>          <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;Transcription&quot;</span><span class="p">,</span> <span class="s2">&quot;mp3&quot;</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>          <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="k">def</span> <span class="nf">phrase</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="s2">&quot;&quot;&quot;Select a row with a specific transcription&quot;&quot;&quot;</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="k">return</span> <span class="p">(</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="n">t</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">_</span><span class="o">.</span><span class="n">Transcription</span> <span class="o">==</span> <span class="n">text</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>          <span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;Transcription&quot;</span><span class="p">,</span> <span class="s2">&quot;mp3&quot;</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>          <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">query</span> <span class="o">=</span> <span class="n">ibis</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">random</span><span class="p">(</span><span class="s2">&quot;Apology&quot;</span><span class="p">),</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">random</span><span class="p">(</span><span class="s2">&quot;Train operating company&quot;</span><span class="p">),</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">random</span><span class="p">(</span><span class="s2">&quot;Destination&quot;</span><span class="p">),</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">phrase</span><span class="p">(</span><span class="s2">&quot;has been cancelled&quot;</span><span class="p">),</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">phrase</span><span class="p">(</span><span class="s2">&quot;due to&quot;</span><span class="p">),</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">random</span><span class="p">(</span><span class="s2">&quot;Reason&quot;</span><span class="p">),</span>
+    <span class="o">...</span><span class="p">:</span> <span class="p">)</span>
+</pre></div>
+<p>Since the query selects random rows, if you run the cell below multiple times,
+you should see different results every time:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">13</span><span class="p">]:</span> <span class="n">query</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">13</span><span class="p">]:</span>
+                     <span class="n">Transcription</span>                                                                                            <span class="n">mp3</span>
+<span class="mi">0</span>  <span class="n">I</span> <span class="n">am</span> <span class="n">sorry</span> <span class="n">to</span> <span class="n">announce</span> <span class="n">that</span> <span class="n">the</span>  <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">matteason</span><span class="o">/</span><span class="n">scotrail</span><span class="o">-</span><span class="n">announcements</span><span class="o">-</span><span class="n">june</span><span class="o">-</span><span class="mi">2022</span><span class="o">/</span><span class="n">raw</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">announcements</span><span class="o">/</span><span class="mf">1529.</span><span class="n">mp3</span>
+<span class="mi">1</span>              <span class="n">Southeastern</span> <span class="n">Trains</span>  <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">matteason</span><span class="o">/</span><span class="n">scotrail</span><span class="o">-</span><span class="n">announcements</span><span class="o">-</span><span class="n">june</span><span class="o">-</span><span class="mi">2022</span><span class="o">/</span><span class="n">raw</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">announcements</span><span class="o">/</span><span class="mf">0201.</span><span class="n">mp3</span>
+<span class="mi">2</span>                          <span class="n">Dawlish</span>  <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">matteason</span><span class="o">/</span><span class="n">scotrail</span><span class="o">-</span><span class="n">announcements</span><span class="o">-</span><span class="n">june</span><span class="o">-</span><span class="mi">2022</span><span class="o">/</span><span class="n">raw</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">announcements</span><span class="o">/</span><span class="mf">0702.</span><span class="n">mp3</span>
+<span class="mi">3</span>               <span class="n">has</span> <span class="n">been</span> <span class="n">cancelled</span>  <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">matteason</span><span class="o">/</span><span class="n">scotrail</span><span class="o">-</span><span class="n">announcements</span><span class="o">-</span><span class="n">june</span><span class="o">-</span><span class="mi">2022</span><span class="o">/</span><span class="n">raw</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">announcements</span><span class="o">/</span><span class="mf">0340.</span><span class="n">mp3</span>
+<span class="mi">4</span>                           <span class="n">due</span> <span class="n">to</span>  <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">matteason</span><span class="o">/</span><span class="n">scotrail</span><span class="o">-</span><span class="n">announcements</span><span class="o">-</span><span class="n">june</span><span class="o">-</span><span class="mi">2022</span><span class="o">/</span><span class="n">raw</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">announcements</span><span class="o">/</span><span class="mf">1528.</span><span class="n">mp3</span>
+<span class="mi">5</span>    <span class="n">A</span> <span class="n">person</span> <span class="n">being</span> <span class="n">hit</span> <span class="n">by</span> <span class="n">a</span> <span class="n">train</span>  <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">matteason</span><span class="o">/</span><span class="n">scotrail</span><span class="o">-</span><span class="n">announcements</span><span class="o">-</span><span class="n">june</span><span class="o">-</span><span class="mi">2022</span><span class="o">/</span><span class="n">raw</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">announcements</span><span class="o">/</span><span class="mf">0834.</span><span class="n">mp3</span>
+</pre></div>
+<p>If we wanted to do all computation in the backend, we could use
+<tt class="docutils literal">group_concat</tt> (<a class="reference external" href="https://www.sqlite.org/lang_aggfunc.html#group_concat">docs</a>) to then concatenate
+the Transcription rows together, returning a single string:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">14</span><span class="p">]:</span> <span class="n">random_apology</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">Transcription</span><span class="o">.</span><span class="n">group_concat</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">random_apology</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">14</span><span class="p">]:</span> <span class="s1">&#39;we apologise for the inconvenience caused East Midlands Cartsdyke has</span>
+<span class="n">been</span> <span class="n">cancelled</span> <span class="n">due</span> <span class="n">to</span> <span class="n">A</span> <span class="n">train</span> <span class="ow">not</span> <span class="n">stopping</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">correct</span> <span class="n">position</span> <span class="n">at</span> <span class="n">a</span> <span class="n">station</span><span class="s1">&#39;</span>
+</pre></div>
+<p>Note that the full query above is translated to SQL and executed on the
+<tt class="docutils literal">datasette</tt> server, no computation is happening locally.</p>
+<p>If you want to see the generated SQL, you can use the <tt class="docutils literal">ibis.show_sql</tt>
+function. It's much longer than the Python code that generated it:</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">15</span><span class="p">]:</span> <span class="n">ibis</span><span class="o">.</span><span class="n">show_sql</span><span class="p">(</span><span class="n">random_apology</span><span class="p">)</span>
+<span class="n">WITH</span> <span class="n">anon_1</span> <span class="n">AS</span> <span class="p">(</span>
+  <span class="n">SELECT</span>
+    <span class="n">t1</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">t1</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="p">(</span>
+    <span class="n">SELECT</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;File&quot;</span> <span class="n">AS</span> <span class="s2">&quot;File&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Category&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Notes&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Notes&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Timestamp&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Timestamp&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;NRE_ID&quot;</span> <span class="n">AS</span> <span class="s2">&quot;NRE_ID&quot;</span>
+    <span class="n">FROM</span> <span class="n">main</span><span class="o">.</span><span class="n">announcements</span> <span class="n">AS</span> <span class="n">t2</span>
+    <span class="n">WHERE</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="o">=</span> <span class="s1">&#39;Apology&#39;</span>
+    <span class="n">ORDER</span> <span class="n">BY</span>
+      <span class="n">RANDOM</span><span class="p">()</span>
+  <span class="p">)</span> <span class="n">AS</span> <span class="n">t1</span>
+  <span class="n">LIMIT</span> <span class="mi">1</span>
+  <span class="n">OFFSET</span> <span class="mi">0</span>
+<span class="p">),</span> <span class="n">anon_2</span> <span class="n">AS</span> <span class="p">(</span>
+  <span class="n">SELECT</span>
+    <span class="n">t1</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">t1</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="p">(</span>
+    <span class="n">SELECT</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;File&quot;</span> <span class="n">AS</span> <span class="s2">&quot;File&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Category&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Notes&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Notes&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Timestamp&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Timestamp&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;NRE_ID&quot;</span> <span class="n">AS</span> <span class="s2">&quot;NRE_ID&quot;</span>
+    <span class="n">FROM</span> <span class="n">main</span><span class="o">.</span><span class="n">announcements</span> <span class="n">AS</span> <span class="n">t2</span>
+    <span class="n">WHERE</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="o">=</span> <span class="s1">&#39;Train operating company&#39;</span>
+    <span class="n">ORDER</span> <span class="n">BY</span>
+      <span class="n">RANDOM</span><span class="p">()</span>
+  <span class="p">)</span> <span class="n">AS</span> <span class="n">t1</span>
+  <span class="n">LIMIT</span> <span class="mi">1</span>
+  <span class="n">OFFSET</span> <span class="mi">0</span>
+<span class="p">),</span> <span class="n">anon_3</span> <span class="n">AS</span> <span class="p">(</span>
+  <span class="n">SELECT</span>
+    <span class="n">t1</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">t1</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="p">(</span>
+    <span class="n">SELECT</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;File&quot;</span> <span class="n">AS</span> <span class="s2">&quot;File&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Category&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Notes&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Notes&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Timestamp&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Timestamp&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;NRE_ID&quot;</span> <span class="n">AS</span> <span class="s2">&quot;NRE_ID&quot;</span>
+    <span class="n">FROM</span> <span class="n">main</span><span class="o">.</span><span class="n">announcements</span> <span class="n">AS</span> <span class="n">t2</span>
+    <span class="n">WHERE</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="o">=</span> <span class="s1">&#39;Destination&#39;</span>
+    <span class="n">ORDER</span> <span class="n">BY</span>
+      <span class="n">RANDOM</span><span class="p">()</span>
+  <span class="p">)</span> <span class="n">AS</span> <span class="n">t1</span>
+  <span class="n">LIMIT</span> <span class="mi">1</span>
+  <span class="n">OFFSET</span> <span class="mi">0</span>
+<span class="p">),</span> <span class="n">anon_4</span> <span class="n">AS</span> <span class="p">(</span>
+  <span class="n">SELECT</span>
+    <span class="n">t1</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">t1</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="p">(</span>
+    <span class="n">SELECT</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;File&quot;</span> <span class="n">AS</span> <span class="s2">&quot;File&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Category&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Notes&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Notes&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Timestamp&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Timestamp&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;NRE_ID&quot;</span> <span class="n">AS</span> <span class="s2">&quot;NRE_ID&quot;</span>
+    <span class="n">FROM</span> <span class="n">main</span><span class="o">.</span><span class="n">announcements</span> <span class="n">AS</span> <span class="n">t2</span>
+    <span class="n">WHERE</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="o">=</span> <span class="s1">&#39;has been cancelled&#39;</span>
+  <span class="p">)</span> <span class="n">AS</span> <span class="n">t1</span>
+  <span class="n">LIMIT</span> <span class="mi">1</span>
+  <span class="n">OFFSET</span> <span class="mi">0</span>
+<span class="p">),</span> <span class="n">anon_5</span> <span class="n">AS</span> <span class="p">(</span>
+  <span class="n">SELECT</span>
+    <span class="n">t1</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">t1</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="p">(</span>
+    <span class="n">SELECT</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;File&quot;</span> <span class="n">AS</span> <span class="s2">&quot;File&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Category&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Notes&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Notes&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Timestamp&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Timestamp&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;NRE_ID&quot;</span> <span class="n">AS</span> <span class="s2">&quot;NRE_ID&quot;</span>
+    <span class="n">FROM</span> <span class="n">main</span><span class="o">.</span><span class="n">announcements</span> <span class="n">AS</span> <span class="n">t2</span>
+    <span class="n">WHERE</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="o">=</span> <span class="s1">&#39;due to&#39;</span>
+  <span class="p">)</span> <span class="n">AS</span> <span class="n">t1</span>
+  <span class="n">LIMIT</span> <span class="mi">1</span>
+  <span class="n">OFFSET</span> <span class="mi">0</span>
+<span class="p">),</span> <span class="n">anon_6</span> <span class="n">AS</span> <span class="p">(</span>
+  <span class="n">SELECT</span>
+    <span class="n">t1</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">t1</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="p">(</span>
+    <span class="n">SELECT</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;File&quot;</span> <span class="n">AS</span> <span class="s2">&quot;File&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Category&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Notes&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Notes&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Timestamp&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Timestamp&quot;</span><span class="p">,</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;NRE_ID&quot;</span> <span class="n">AS</span> <span class="s2">&quot;NRE_ID&quot;</span>
+    <span class="n">FROM</span> <span class="n">main</span><span class="o">.</span><span class="n">announcements</span> <span class="n">AS</span> <span class="n">t2</span>
+    <span class="n">WHERE</span>
+      <span class="n">t2</span><span class="o">.</span><span class="s2">&quot;Category&quot;</span> <span class="o">=</span> <span class="s1">&#39;Reason&#39;</span>
+    <span class="n">ORDER</span> <span class="n">BY</span>
+      <span class="n">RANDOM</span><span class="p">()</span>
+  <span class="p">)</span> <span class="n">AS</span> <span class="n">t1</span>
+  <span class="n">LIMIT</span> <span class="mi">1</span>
+  <span class="n">OFFSET</span> <span class="mi">0</span>
+<span class="p">)</span>
+<span class="n">SELECT</span>
+  <span class="n">GROUP_CONCAT</span><span class="p">(</span><span class="n">t0</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="n">AS</span> <span class="n">tmp</span>
+<span class="n">FROM</span> <span class="p">(</span>
+  <span class="n">SELECT</span>
+    <span class="n">anon_1</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">anon_1</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="n">anon_1</span>
+  <span class="n">UNION</span> <span class="n">ALL</span>
+  <span class="n">SELECT</span>
+    <span class="n">anon_2</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">anon_2</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="n">anon_2</span>
+  <span class="n">UNION</span> <span class="n">ALL</span>
+  <span class="n">SELECT</span>
+    <span class="n">anon_3</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">anon_3</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="n">anon_3</span>
+  <span class="n">UNION</span> <span class="n">ALL</span>
+  <span class="n">SELECT</span>
+    <span class="n">anon_4</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">anon_4</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="n">anon_4</span>
+  <span class="n">UNION</span> <span class="n">ALL</span>
+  <span class="n">SELECT</span>
+    <span class="n">anon_5</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">anon_5</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="n">anon_5</span>
+  <span class="n">UNION</span> <span class="n">ALL</span>
+  <span class="n">SELECT</span>
+    <span class="n">anon_6</span><span class="o">.</span><span class="s2">&quot;Transcription&quot;</span> <span class="n">AS</span> <span class="s2">&quot;Transcription&quot;</span><span class="p">,</span>
+    <span class="n">anon_6</span><span class="o">.</span><span class="n">mp3</span> <span class="n">AS</span> <span class="n">mp3</span>
+  <span class="n">FROM</span> <span class="n">anon_6</span>
+<span class="p">)</span> <span class="n">AS</span> <span class="n">t0</span>
+</pre></div>
+<p>However, we're only using <tt class="docutils literal">ibis</tt> to push the bulk of the computation to the
+backend. We don't need to handle <em>everything</em> in SQL, only enough to reduce the
+size of the results to something reasonable to return from the <tt class="docutils literal">datasette</tt>
+server.</p>
+<p>We also have access to the full Python ecosystem to process results. This lets
+us do some things that wouldn't be possible in SQL alone, like concatenating
+<tt class="docutils literal">mp3</tt> files :).</p>
+</div>
+<div class="section" id="a-random-apology-button">
+<h2>A &quot;Random Apology&quot; Button</h2>
+<p>The <a class="reference external" href="https://ipywidgets.readthedocs.io">ipywidgets</a> library provides support for building simple UIs in Python,
+with the rendering handled by the notebook. This is nice for me, as I am <em>not</em>
+a web engineer - I'm a novice at best at javascript/html. However, I do know
+how to write Python.</p>
+<p>Below we hack together a quick UI with <tt class="docutils literal">ipywidgets</tt> to make a button for
+generating a random apology, complete with a merged <tt class="docutils literal">mp3</tt> file so you can
+listen to your work. You don't really need to understand this code, it has
+nothing to do with <tt class="docutils literal">ibis</tt> or <tt class="docutils literal"><span class="pre">ibis-datasette</span></tt> itself.</p>
+<p>Clicking the button will pull generate a new random apology, download and merge
+the mp3 files, and display both the apology sentence and merged mp3.</p>
+<p>Obviously this can't run for real in a static blogpost (it's most
+interesting in the interactive notebook on <a class="reference external" href="https://gke.mybinder.org/v2/gh/jcrist/ibis-datasette/main?urlpath=/tree/Scotrail.ipynb">mybinder</a>). To work around
+that, we include a single generated audio clip below.</p>
+<div class="highlight"><pre><span></span><span class="n">In</span> <span class="p">[</span><span class="mi">16</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">tempfile</span>
+    <span class="o">...</span><span class="p">:</span> <span class="kn">import</span> <span class="nn">os</span>
+    <span class="o">...</span><span class="p">:</span> <span class="kn">import</span> <span class="nn">pydub</span>
+    <span class="o">...</span><span class="p">:</span> <span class="kn">import</span> <span class="nn">httpx</span>
+    <span class="o">...</span><span class="p">:</span> <span class="kn">import</span> <span class="nn">ipywidgets</span>
+    <span class="o">...</span><span class="p">:</span> <span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">Audio</span><span class="p">,</span> <span class="n">display</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">output</span> <span class="o">=</span> <span class="n">ipywidgets</span><span class="o">.</span><span class="n">Output</span><span class="p">()</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">button</span> <span class="o">=</span> <span class="n">ipywidgets</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Random Apology&#39;</span><span class="p">,</span> <span class="n">icon</span><span class="o">=</span><span class="s2">&quot;repeat&quot;</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">UI</span> <span class="o">=</span> <span class="n">ipywidgets</span><span class="o">.</span><span class="n">VBox</span><span class="p">([</span><span class="n">button</span><span class="p">,</span> <span class="n">output</span><span class="p">])</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="k">def</span> <span class="nf">concatenate_mp3s</span><span class="p">(</span><span class="n">urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">,</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tempdir</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="n">output</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">urls</span><span class="p">):</span>
+    <span class="o">...</span><span class="p">:</span>             <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempdir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;part</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>                 <span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>                 <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+    <span class="o">...</span><span class="p">:</span>                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>             <span class="n">part</span> <span class="o">=</span> <span class="n">pydub</span><span class="o">.</span><span class="n">AudioSegment</span><span class="o">.</span><span class="n">from_mp3</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>             <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>                 <span class="n">output</span> <span class="o">=</span> <span class="n">part</span>
+    <span class="o">...</span><span class="p">:</span>             <span class="k">else</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>                 <span class="n">output</span> <span class="o">=</span> <span class="n">output</span> <span class="o">+</span> <span class="n">part</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="n">out_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempdir</span><span class="p">,</span> <span class="s2">&quot;output.mp3&quot;</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="n">output</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;mp3&quot;</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>             <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="nd">@button</span><span class="o">.</span><span class="n">on_click</span>
+    <span class="o">...</span><span class="p">:</span> <span class="k">def</span> <span class="nf">on_click</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">output</span><span class="o">.</span><span class="n">clear_output</span><span class="p">()</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">result</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">Transcription</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="n">mp3</span> <span class="o">=</span> <span class="n">concatenate_mp3s</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">mp3</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>     <span class="k">with</span> <span class="n">output</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="o">...</span><span class="p">:</span>         <span class="n">display</span><span class="p">(</span><span class="n">Audio</span><span class="p">(</span><span class="n">mp3</span><span class="p">))</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span>
+    <span class="o">...</span><span class="p">:</span> <span class="n">UI</span>
+</pre></div>
+<div class="highlight"><pre><span></span>I am sorry to announce that the Midland Mainline Turbostar service from
+Mitcham Eastfields has been cancelled due to The train conductor being
+taken ill
+</pre></div>
+<audio controls>
+<source src="/images/scotrail-madlib.mp3" type="audio/mpeg">
+Your browser does not support the audio element.
+</audio></div>
+<div class="section" id="review">
+<h2>Review</h2>
+<p><tt class="docutils literal">datasette</tt> makes it easier to publish accessible open data on the web, with
+a UI exposed for writing SQL queries. However, not everyone is extremely SQL
+literate (myself included). <tt class="docutils literal">ibis</tt> and <tt class="docutils literal"><span class="pre">ibis-datasette</span></tt> let Python
+programmers access this same data resource, but through a familiar
+dataframe-like interface.</p>
+<p>Interested in <tt class="docutils literal">ibis</tt> or <tt class="docutils literal"><span class="pre">ibis-datasette</span></tt>? Please feel free to reach out on
+<a class="reference external" href="https://github.com/jcrist">github</a> or <a class="reference external" href="https://twitter.com/jcristharif">twitter</a>.</p>
+</div>
+
+    </section>
+
+    <footer>
+        <p>
+            All content copyright 2014-2020 Jim Crist-Harif unless otherwise noted.
+            Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+        </p>
+        <p>
+        Find me on
+        <a href="https://twitter.com/jcristharif">Twitter</a>,
+        <a href="https://github.com/jcrist">GitHub</a>, or shoot me an
+        <a href="mailto:jcristharif@gmail.com">email</a>.
+        </p>
+    </footer>
+</body>
+</html>

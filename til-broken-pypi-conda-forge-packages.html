@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <!--RSS FEEDS-->
+        <link rel="alternate"  href="https://jcristharif.com/feeds/all.atom.xml" type="application/atom+xml" title="Jim Crist-Harif Full Atom Feed"/>
+
+    <title>TIL: How to mark a package as broken on PyPI & Conda-Forge // Jim Crist-Harif</title>
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/base.css" type="text/css" />
+    <link rel="stylesheet" href="https://jcristharif.com/theme/css/code.css" type="text/css" />
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+        TeX: { equationNumbers: { autoNumber: "all" } }
+    });
+</script>
+<script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+    <header>
+      <h1><a href="https://jcristharif.com/">Jim Crist-Harif</a></h1>
+      <ul>
+              <li><a href="https://jcristharif.com/blog.html">Blog</a></li>
+              <li><a href="https://jcristharif.com/about.html">About</a></li>
+              <li><a href="https://jcristharif.com/talks.html">Talks</a></li>
+      </ul>
+    </header>
+
+    <section>
+    <h1>TIL: How to mark a package as broken on PyPI &amp; Conda-Forge</h1>
+    <p class="article-date">Posted on February 10, 2023</p>
+    <p>It finally happened: I released a critically broken package (<a class="reference external" href="https://github.com/jcrist/msgspec">msgspec 0.13.0</a>) to PyPI and Conda-Forge. Mistakes
+happen, and a patch release was pushed up within 24 hours, but I still wanted
+to prevent users from accidentally installing the broken package.</p>
+<p>In these situations, neither <a class="reference external" href="https://pypi.org/">PyPI</a> nor <a class="reference external" href="https://conda-forge.org/">conda-forge</a> recommend (or support) deleting the release.
+Rather they have their own mechanisms for marking a release as &quot;broken&quot; so
+users will only end up with that version if they've pinned specifically to that
+version.</p>
+<div class="section" id="pypi">
+<h2>PyPI</h2>
+<p>For PyPI you'll want to <a class="reference external" href="https://pypi.org/help/#yanked">&quot;yank&quot;</a> the release.
+This may be done through the admin page on PyPI for your project. Click the &quot;Option&quot;
+dropdown next to the faulty release, then click &quot;Yank&quot;.</p>
+<img title="screenshot of PyPI.org" class="align-center" src="/images/pypi-yank.png" style="width: 60%;" /><p>Yanking a release removes that release from PyPI's UI. <tt class="docutils literal">pip</tt> and other tools
+will also avoid installing yanked releases <em>unless</em> the user has explicitly
+pinned to that version.</p>
+<div class="highlight"><pre><span></span># won&#39;t get the yanked release
+$ pip install msgspec
+
+# will get the yanked release, since they&#39;ve pinned to that version
+$ pip install msgspec=0.13.0
+</pre></div>
+</div>
+<div class="section" id="conda-forge">
+<h2>Conda-Forge</h2>
+<p>For Conda-Forge the process is a bit more involved, but has the same end
+effect. Following the instructions from the <a class="reference external" href="https://conda-forge.org/docs/maintainer/updating_pkgs.html#removing-broken-packages">official conda-forge docs</a>:</p>
+<ul class="simple">
+<li>I forked the <a class="reference external" href="https://github.com/conda-forge/admin-requests">conda-forge/admin-requests</a> repository to my personal
+GitHub account.</li>
+<li>Added a new <tt class="docutils literal">msgspec.txt</tt> file to the <tt class="docutils literal">broken/</tt> directory. Each line of
+that file should be a filename for a broken release artifact. In my case I
+wanted to mark all 24 different builds of <tt class="docutils literal">msgspec 0.13.0</tt> as broken. These
+filenames were easiest to find with a short script using the <a class="reference external" href="https://api.anaconda.org/docs">anaconda.org
+API</a>:</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="n">package</span> <span class="o">=</span> <span class="s2">&quot;msgspec&quot;</span>
+<span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;0.13.0&quot;</span>
+
+<span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://api.anaconda.org/release/conda-forge/</span><span class="si">{</span><span class="n">package</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">dist</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;distributions&quot;</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">dist</span><span class="p">[</span><span class="s2">&quot;basename&quot;</span><span class="p">])</span>
+</pre></div>
+<div class="highlight"><pre><span></span>linux-64/msgspec-0.13.0-py310h1fa729e_0.conda
+linux-64/msgspec-0.13.0-py311h2582759_0.conda
+linux-64/msgspec-0.13.0-py38h1de0b5d_0.conda
+linux-64/msgspec-0.13.0-py39h72bdee0_0.conda
+linux-aarch64/msgspec-0.13.0-py310hb89b984_0.conda
+linux-aarch64/msgspec-0.13.0-py311h1d6c08a_0.conda
+linux-aarch64/msgspec-0.13.0-py38hda48048_0.conda
+linux-aarch64/msgspec-0.13.0-py39h24fc6b6_0.conda
+linux-ppc64le/msgspec-0.13.0-py310h82c586f_0.conda
+linux-ppc64le/msgspec-0.13.0-py311h57b9580_0.conda
+linux-ppc64le/msgspec-0.13.0-py38h0c7bae7_0.conda
+linux-ppc64le/msgspec-0.13.0-py39h38a9e30_0.conda
+osx-64/msgspec-0.13.0-py310h90acd4f_0.conda
+osx-64/msgspec-0.13.0-py311h5547dcb_0.conda
+osx-64/msgspec-0.13.0-py38hef030d1_0.conda
+osx-64/msgspec-0.13.0-py39ha30fb19_0.conda
+osx-arm64/msgspec-0.13.0-py310h8e9501a_0.conda
+osx-arm64/msgspec-0.13.0-py311he2be06e_0.conda
+osx-arm64/msgspec-0.13.0-py38hb991d35_0.conda
+osx-arm64/msgspec-0.13.0-py39h02fc5c5_0.conda
+win-64/msgspec-0.13.0-py310h8d17308_0.conda
+win-64/msgspec-0.13.0-py311ha68e1ae_0.conda
+win-64/msgspec-0.13.0-py38h91455d4_0.conda
+win-64/msgspec-0.13.0-py39ha55989b_0.conda
+</pre></div>
+<ul class="simple">
+<li>Once that was done, I <a class="reference external" href="https://github.com/conda-forge/admin-requests/pull/675">pushed up a PR with the changes</a>. An admin merged
+this pretty quickly (thanks!), and the conda-forge bots marked the respective
+builds as broken.</li>
+</ul>
+</div>
+
+    </section>
+
+    <footer>
+        <p>
+            All content copyright 2014-2020 Jim Crist-Harif unless otherwise noted.
+            Licensed under <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">Creative Commons</a>.
+        </p>
+        <p>
+        Find me on
+        <a href="https://twitter.com/jcristharif">Twitter</a>,
+        <a href="https://github.com/jcrist">GitHub</a>, or shoot me an
+        <a href="mailto:jcristharif@gmail.com">email</a>.
+        </p>
+    </footer>
+</body>
+</html>

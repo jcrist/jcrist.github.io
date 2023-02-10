@@ -1,5 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/all.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2022-08-24T22:30:00-05:00</updated><entry><title>Exploring ScotRail Audio Clips using Ibis-Datasette</title><link href="https://jcristharif.com/ibis-datasette-scotrail.html" rel="alternate"></link><published>2022-08-24T22:30:00-05:00</published><updated>2022-08-24T22:30:00-05:00</updated><author><name>Jim Crist-Harif</name></author><id>tag:jcristharif.com,2022-08-24:/ibis-datasette-scotrail.html</id><summary type="html">&lt;p class="first last"&gt;Using ibis-datasette to explore a collection of ScotRail audio announcements&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Jim Crist-Harif</title><link href="https://jcristharif.com/" rel="alternate"></link><link href="https://jcristharif.com/feeds/all.atom.xml" rel="self"></link><id>https://jcristharif.com/</id><updated>2023-02-10T16:36:00-06:00</updated><entry><title>TIL: How to mark a package as broken on PyPI &amp; Conda-Forge</title><link href="https://jcristharif.com/til-broken-pypi-conda-forge-packages.html" rel="alternate"></link><published>2023-02-10T16:36:00-06:00</published><updated>2023-02-10T16:36:00-06:00</updated><author><name>Jim Crist-Harif</name></author><id>tag:jcristharif.com,2023-02-10:/til-broken-pypi-conda-forge-packages.html</id><summary type="html">&lt;p class="first last"&gt;What to do when you release a broken build to PyPI and Conda-Forge&lt;/p&gt;
+</summary><content type="html">&lt;p&gt;It finally happened: I released a critically broken package (&lt;a class="reference external" href="https://github.com/jcrist/msgspec"&gt;msgspec 0.13.0&lt;/a&gt;) to PyPI and Conda-Forge. Mistakes
+happen, and a patch release was pushed up within 24 hours, but I still wanted
+to prevent users from accidentally installing the broken package.&lt;/p&gt;
+&lt;p&gt;In these situations, neither &lt;a class="reference external" href="https://pypi.org/"&gt;PyPI&lt;/a&gt; nor &lt;a class="reference external" href="https://conda-forge.org/"&gt;conda-forge&lt;/a&gt; recommend (or support) deleting the release.
+Rather they have their own mechanisms for marking a release as &amp;quot;broken&amp;quot; so
+users will only end up with that version if they've pinned specifically to that
+version.&lt;/p&gt;
+&lt;div class="section" id="pypi"&gt;
+&lt;h2&gt;PyPI&lt;/h2&gt;
+&lt;p&gt;For PyPI you'll want to &lt;a class="reference external" href="https://pypi.org/help/#yanked"&gt;&amp;quot;yank&amp;quot;&lt;/a&gt; the release.
+This may be done through the admin page on PyPI for your project. Click the &amp;quot;Option&amp;quot;
+dropdown next to the faulty release, then click &amp;quot;Yank&amp;quot;.&lt;/p&gt;
+&lt;img title="screenshot of PyPI.org" class="align-center" src="/images/pypi-yank.png" style="width: 60%;" /&gt;&lt;p&gt;Yanking a release removes that release from PyPI's UI. &lt;tt class="docutils literal"&gt;pip&lt;/tt&gt; and other tools
+will also avoid installing yanked releases &lt;em&gt;unless&lt;/em&gt; the user has explicitly
+pinned to that version.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;# won&amp;#39;t get the yanked release
+$ pip install msgspec
+
+# will get the yanked release, since they&amp;#39;ve pinned to that version
+$ pip install msgspec=0.13.0
+&lt;/pre&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="section" id="conda-forge"&gt;
+&lt;h2&gt;Conda-Forge&lt;/h2&gt;
+&lt;p&gt;For Conda-Forge the process is a bit more involved, but has the same end
+effect. Following the instructions from the &lt;a class="reference external" href="https://conda-forge.org/docs/maintainer/updating_pkgs.html#removing-broken-packages"&gt;official conda-forge docs&lt;/a&gt;:&lt;/p&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;I forked the &lt;a class="reference external" href="https://github.com/conda-forge/admin-requests"&gt;conda-forge/admin-requests&lt;/a&gt; repository to my personal
+GitHub account.&lt;/li&gt;
+&lt;li&gt;Added a new &lt;tt class="docutils literal"&gt;msgspec.txt&lt;/tt&gt; file to the &lt;tt class="docutils literal"&gt;broken/&lt;/tt&gt; directory. Each line of
+that file should be a filename for a broken release artifact. In my case I
+wanted to mark all 24 different builds of &lt;tt class="docutils literal"&gt;msgspec 0.13.0&lt;/tt&gt; as broken. These
+filenames were easiest to find with a short script using the &lt;a class="reference external" href="https://api.anaconda.org/docs"&gt;anaconda.org
+API&lt;/a&gt;:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;requests&lt;/span&gt;
+
+&lt;span class="n"&gt;package&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;msgspec&amp;quot;&lt;/span&gt;
+&lt;span class="n"&gt;version&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;0.13.0&amp;quot;&lt;/span&gt;
+
+&lt;span class="n"&gt;resp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;requests&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;https://api.anaconda.org/release/conda-forge/&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;package&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;/&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;version&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;dist&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;resp&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;json&lt;/span&gt;&lt;span class="p"&gt;()[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;distributions&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]:&lt;/span&gt;
+    &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;dist&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;basename&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;linux-64/msgspec-0.13.0-py310h1fa729e_0.conda
+linux-64/msgspec-0.13.0-py311h2582759_0.conda
+linux-64/msgspec-0.13.0-py38h1de0b5d_0.conda
+linux-64/msgspec-0.13.0-py39h72bdee0_0.conda
+linux-aarch64/msgspec-0.13.0-py310hb89b984_0.conda
+linux-aarch64/msgspec-0.13.0-py311h1d6c08a_0.conda
+linux-aarch64/msgspec-0.13.0-py38hda48048_0.conda
+linux-aarch64/msgspec-0.13.0-py39h24fc6b6_0.conda
+linux-ppc64le/msgspec-0.13.0-py310h82c586f_0.conda
+linux-ppc64le/msgspec-0.13.0-py311h57b9580_0.conda
+linux-ppc64le/msgspec-0.13.0-py38h0c7bae7_0.conda
+linux-ppc64le/msgspec-0.13.0-py39h38a9e30_0.conda
+osx-64/msgspec-0.13.0-py310h90acd4f_0.conda
+osx-64/msgspec-0.13.0-py311h5547dcb_0.conda
+osx-64/msgspec-0.13.0-py38hef030d1_0.conda
+osx-64/msgspec-0.13.0-py39ha30fb19_0.conda
+osx-arm64/msgspec-0.13.0-py310h8e9501a_0.conda
+osx-arm64/msgspec-0.13.0-py311he2be06e_0.conda
+osx-arm64/msgspec-0.13.0-py38hb991d35_0.conda
+osx-arm64/msgspec-0.13.0-py39h02fc5c5_0.conda
+win-64/msgspec-0.13.0-py310h8d17308_0.conda
+win-64/msgspec-0.13.0-py311ha68e1ae_0.conda
+win-64/msgspec-0.13.0-py38h91455d4_0.conda
+win-64/msgspec-0.13.0-py39ha55989b_0.conda
+&lt;/pre&gt;&lt;/div&gt;
+&lt;ul class="simple"&gt;
+&lt;li&gt;Once that was done, I &lt;a class="reference external" href="https://github.com/conda-forge/admin-requests/pull/675"&gt;pushed up a PR with the changes&lt;/a&gt;. An admin merged
+this pretty quickly (thanks!), and the conda-forge bots marked the respective
+builds as broken.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+</content><category term="til"></category></entry><entry><title>Exploring ScotRail Audio Clips using Ibis-Datasette</title><link href="https://jcristharif.com/ibis-datasette-scotrail.html" rel="alternate"></link><published>2022-08-24T22:30:00-05:00</published><updated>2022-08-24T22:30:00-05:00</updated><author><name>Jim Crist-Harif</name></author><id>tag:jcristharif.com,2022-08-24:/ibis-datasette-scotrail.html</id><summary type="html">&lt;p class="first last"&gt;Using ibis-datasette to explore a collection of ScotRail audio announcements&lt;/p&gt;
 </summary><content type="html">&lt;p&gt;
 &lt;em&gt;
 Note: This blogpost is available as an interactive notebook
